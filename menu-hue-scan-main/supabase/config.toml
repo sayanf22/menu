@@ -1,0 +1,7 @@
+project_id = "owibhiiwghyznptfgfcr"
+
+[functions.validate-signup]
+verify_jwt = false
+
+[functions.get-client-info]
+verify_jwt = false
