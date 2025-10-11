@@ -32,6 +32,7 @@ const MenuView = () => {
   const [clientIp, setClientIp] = useState<string>("");
   const [deviceFingerprint, setDeviceFingerprint] = useState<string>("");
   const [canSubmitFeedback, setCanSubmitFeedback] = useState(true);
+  const [isHeaderLight, setIsHeaderLight] = useState(false);
 
   useEffect(() => {
     if (restaurantId) {
@@ -40,6 +41,41 @@ const MenuView = () => {
       fetchClientInfo();
     }
   }, [restaurantId]);
+
+  // Setup Intersection Observer for scroll animations
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('animate-slide-up');
+            entry.target.classList.remove('opacity-0');
+          }
+        });
+      },
+      { threshold: 0.1, rootMargin: '0px 0px -50px 0px' }
+    );
+
+    // Observe all menu cards
+    const cards = document.querySelectorAll('.menu-card');
+    cards.forEach((card) => observer.observe(card));
+
+    return () => observer.disconnect();
+  }, [menuImages]);
+
+  // Check if color is light or dark
+  const isLightColor = (hexColor: string) => {
+    const hex = hexColor.replace('#', '');
+    const r = parseInt(hex.substr(0, 2), 16);
+    const g = parseInt(hex.substr(2, 2), 16);
+    const b = parseInt(hex.substr(4, 2), 16);
+    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+    return brightness > 155;
+  };
+
+  useEffect(() => {
+    setIsHeaderLight(isLightColor(themeColor));
+  }, [themeColor]);
 
   const fetchClientInfo = async () => {
     try {
@@ -208,39 +244,76 @@ const MenuView = () => {
         <ThemeToggle />
       </div>
 
-      {/* Header - Mobile Optimized */}
+      {/* Header - Mobile Optimized - Matches Menu Color */}
       <header 
         className="py-8 sm:py-10 md:py-12 px-3 sm:px-4 shadow-xl relative overflow-hidden" 
         style={{ 
-          background: `linear-gradient(135deg, ${themeColor}, ${themeColor}dd, ${themeColor}aa)`
+          background: isHeaderLight 
+            ? `linear-gradient(135deg, ${themeColor}f0, ${themeColor}e0, ${themeColor}d0)`
+            : `linear-gradient(135deg, ${themeColor}e0, ${themeColor}c0, ${themeColor}a0)`
         }}
       >
-        <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
+        <div 
+          className="absolute inset-0 bg-gradient-to-br opacity-20"
+          style={{
+            background: isHeaderLight 
+              ? 'linear-gradient(135deg, rgba(0,0,0,0.05), rgba(0,0,0,0.1))'
+              : 'linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))'
+          }}
+        ></div>
         <div className="container mx-auto text-center relative z-10 max-w-4xl">
           {profile?.logo_url && (
             <div className="flex justify-center mb-4 sm:mb-6 animate-scale-in">
               <img
                 src={profile.logo_url}
                 alt={profile.restaurant_name}
-                className="w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 object-cover rounded-full border-4 border-white/30 shadow-2xl"
+                className={`w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 object-cover rounded-full border-4 shadow-2xl ${
+                  isHeaderLight ? 'border-black/20' : 'border-white/30'
+                }`}
               />
             </div>
           )}
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-3 sm:mb-4 text-white drop-shadow-[0_4px_20px_rgba(0,0,0,0.8)] animate-slide-up px-2">
+          <h1 
+            className={`text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-3 sm:mb-4 animate-slide-up px-2 ${
+              isHeaderLight 
+                ? 'text-gray-900 drop-shadow-[0_2px_10px_rgba(255,255,255,0.8)]' 
+                : 'text-white drop-shadow-[0_4px_20px_rgba(0,0,0,0.8)]'
+            }`}
+          >
             {profile?.restaurant_name || "Our Menu"}
           </h1>
           {profile?.restaurant_description && (
-            <p className="text-base sm:text-lg md:text-xl text-white/95 drop-shadow-[0_2px_12px_rgba(0,0,0,0.7)] max-w-2xl mx-auto animate-slide-up px-4" style={{ animationDelay: '0.2s' }}>
+            <p 
+              className={`text-base sm:text-lg md:text-xl max-w-2xl mx-auto animate-slide-up px-4 ${
+                isHeaderLight 
+                  ? 'text-gray-800 drop-shadow-[0_1px_6px_rgba(255,255,255,0.7)]' 
+                  : 'text-white/95 drop-shadow-[0_2px_12px_rgba(0,0,0,0.7)]'
+              }`}
+              style={{ animationDelay: '0.2s' }}
+            >
               {profile.restaurant_description}
             </p>
           )}
           <div className="mt-4 sm:mt-6 animate-bounce-gentle" style={{ animationDelay: '0.4s' }}>
-            <div className="inline-block px-4 sm:px-6 py-2 bg-white/20 backdrop-blur-sm rounded-full text-white text-sm sm:text-base font-medium">
+            <div 
+              className={`inline-block px-4 sm:px-6 py-2 backdrop-blur-sm rounded-full text-sm sm:text-base font-medium ${
+                isHeaderLight 
+                  ? 'bg-black/10 text-gray-900' 
+                  : 'bg-white/20 text-white'
+              }`}
+            >
               Scroll down to explore our menu
             </div>
           </div>
         </div>
-        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
+        <div 
+          className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent to-transparent"
+          style={{
+            background: isHeaderLight 
+              ? 'linear-gradient(90deg, transparent, rgba(0,0,0,0.2), transparent)'
+              : 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)'
+          }}
+        ></div>
       </header>
 
       {/* Menu Images Gallery - Vertical Scroll - Mobile Optimized */}
@@ -250,26 +323,22 @@ const MenuView = () => {
             {menuImages.map((image, index) => (
               <Card 
                 key={image.id}
-                className="overflow-hidden shadow-lg animate-slide-up transition-all duration-500 hover:shadow-2xl hover:scale-[1.02]"
-                style={{ 
-                  animationDelay: `${index * 0.15}s`,
-                  animationFillMode: 'backwards'
-                }}
+                className="menu-card overflow-hidden shadow-lg opacity-0 transition-all duration-700 hover:shadow-2xl hover:scale-[1.01]"
               >
                 <CardContent className="p-0 relative group">
                   <div className="relative overflow-hidden">
                     <OptimizedImage
                       src={image.image_url}
                       alt={`Menu ${index + 1}`}
-                      className="w-full h-auto object-contain cursor-zoom-in transition-transform duration-500 group-hover:scale-110"
+                      className="w-full h-auto object-contain cursor-zoom-in transition-transform duration-700 group-hover:scale-[1.03]"
                       priority={index < 2}
                       onLoad={() => handleImageLoad(image.id)}
                       onClick={() => setZoomedImage(image.image_url)}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 pointer-events-none" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 pointer-events-none" />
                     <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-y-2 group-hover:translate-y-0 pointer-events-none">
-                      <div className="bg-white/95 backdrop-blur-md rounded-full px-4 py-2 shadow-lg">
-                        <span className="text-sm font-semibold text-gray-800">Click to zoom</span>
+                      <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-md rounded-full px-4 py-2 shadow-lg">
+                        <span className="text-sm font-semibold text-gray-800 dark:text-gray-100">Click to zoom</span>
                       </div>
                     </div>
                   </div>

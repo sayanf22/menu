@@ -258,7 +258,7 @@ const MenuUpload = ({ restaurantId }: MenuUploadProps) => {
                 <img
                   src={image.image_url}
                   alt="Menu"
-                  className="w-full h-48 object-cover cursor-pointer transition-smooth group-hover:scale-105"
+                  className="w-full h-48 object-cover cursor-pointer transition-all duration-500 group-hover:scale-[1.03]"
                   onClick={() => openViewDialog(image.image_url)}
                 />
                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center gap-2">
