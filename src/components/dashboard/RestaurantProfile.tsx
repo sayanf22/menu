@@ -85,8 +85,8 @@ const RestaurantProfile = ({ restaurantId, onProfileUpdate }: RestaurantProfileP
     const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            if (file.size > 5 * 1024 * 1024) {
-                toast.error("Logo must be less than 5MB");
+            if (file.size > 500 * 1024) {
+                toast.error("Logo must be less than 500KB");
                 return;
             }
             if (!file.type.startsWith("image/")) {
@@ -315,7 +315,7 @@ const RestaurantProfile = ({ restaurantId, onProfileUpdate }: RestaurantProfileP
                                         {logoPreview ? "Change Logo" : "Upload Logo"}
                                     </Button>
                                     <p className="text-xs text-muted-foreground mt-2">
-                                        Max 5MB. Recommended: Square image (e.g., 512x512px)
+                                        Max 500KB. Recommended: Square image (e.g., 512x512px)
                                     </p>
                                 </div>
                             </div>

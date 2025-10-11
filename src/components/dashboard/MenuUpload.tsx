@@ -2,8 +2,24 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Upload, Loader2, Trash2 } from "lucide-react";
+import { Upload, Loader2, Trash2, Eye } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface MenuUploadProps {
   restaurantId: string;
@@ -13,6 +29,10 @@ const MenuUpload = ({ restaurantId }: MenuUploadProps) => {
   const [uploading, setUploading] = useState(false);
   const [menuImages, setMenuImages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [imageToDelete, setImageToDelete] = useState<{ id: string; url: string } | null>(null);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [imageToView, setImageToView] = useState<string | null>(null);
 
   useEffect(() => {
     fetchMenuImages();
@@ -109,7 +129,7 @@ const MenuUpload = ({ restaurantId }: MenuUploadProps) => {
           .getPublicUrl(filePath);
 
         // Ensure profile exists before inserting
-        const { error: profileError } = await supabase.rpc('ensure_profile_exists', {
+        const { error: profileError } = await supabase.rpc('ensure_profile_exists' as any, {
           user_id: restaurantId
         });
 
@@ -146,10 +166,17 @@ const MenuUpload = ({ restaurantId }: MenuUploadProps) => {
     }
   };
 
-  const handleDeleteImage = async (imageId: string, imageUrl: string) => {
+  const openDeleteDialog = (imageId: string, imageUrl: string) => {
+    setImageToDelete({ id: imageId, url: imageUrl });
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteImage = async () => {
+    if (!imageToDelete) return;
+
     try {
       // Extract file path from URL
-      const urlParts = imageUrl.split("/");
+      const urlParts = imageToDelete.url.split("/");
       const filePath = urlParts[urlParts.length - 1];
 
       // Delete from storage
@@ -163,7 +190,7 @@ const MenuUpload = ({ restaurantId }: MenuUploadProps) => {
       const { error: dbError } = await supabase
         .from("menu_images")
         .delete()
-        .eq("id", imageId);
+        .eq("id", imageToDelete.id);
 
       if (dbError) throw dbError;
 
@@ -171,7 +198,15 @@ const MenuUpload = ({ restaurantId }: MenuUploadProps) => {
       await fetchMenuImages();
     } catch (error: any) {
       toast.error(error.message || "Error deleting image");
+    } finally {
+      setDeleteDialogOpen(false);
+      setImageToDelete(null);
     }
+  };
+
+  const openViewDialog = (imageUrl: string) => {
+    setImageToView(imageUrl);
+    setViewDialogOpen(true);
   };
 
   if (loading) {
@@ -216,13 +251,22 @@ const MenuUpload = ({ restaurantId }: MenuUploadProps) => {
                 <img
                   src={image.image_url}
                   alt="Menu"
-                  className="w-full h-48 object-cover"
+                  className="w-full h-48 object-cover cursor-pointer"
+                  onClick={() => openViewDialog(image.image_url)}
                 />
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    onClick={() => openViewDialog(image.image_url)}
+                    className="bg-white/90 hover:bg-white"
+                  >
+                    <Eye className="h-4 w-4" />
+                  </Button>
                   <Button
                     variant="destructive"
                     size="icon"
-                    onClick={() => handleDeleteImage(image.id, image.image_url)}
+                    onClick={() => openDeleteDialog(image.id, image.image_url)}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -232,6 +276,47 @@ const MenuUpload = ({ restaurantId }: MenuUploadProps) => {
           ))}
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete this menu image. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setImageToDelete(null)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteImage}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* View Image Dialog */}
+      <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] p-0">
+          <DialogHeader className="p-4 pb-0">
+            <DialogTitle>Menu Image</DialogTitle>
+          </DialogHeader>
+          <div className="overflow-auto p-4">
+            {imageToView && (
+              <img
+                src={imageToView}
+                alt="Menu preview"
+                className="w-full h-auto rounded-lg"
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

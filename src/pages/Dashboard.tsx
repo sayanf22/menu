@@ -76,7 +76,7 @@ const Dashboard = () => {
     try {
       const lastViewedKey = `feedback_last_viewed_${userId}`;
       const lastViewed = localStorage.getItem(lastViewedKey);
-      
+
       const { data, error } = await supabase
         .from("feedback")
         .select("created_at")
@@ -144,8 +144,8 @@ const Dashboard = () => {
             </div>
             <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
               <ThemeToggle />
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 size="sm"
                 onClick={handleSignOut}
                 className="transition-bounce hover:scale-105 animate-slide-up h-8 sm:h-9"
@@ -172,8 +172,8 @@ const Dashboard = () => {
                 <TabsTrigger value="feedback" className="relative transition-smooth whitespace-nowrap text-xs sm:text-sm px-3 sm:px-4 py-2">
                   Feedback
                   {newFeedbackCount > 0 && (
-                    <Badge 
-                      variant="destructive" 
+                    <Badge
+                      variant="destructive"
                       className="ml-1 sm:ml-2 h-4 sm:h-5 min-w-4 sm:min-w-5 rounded-full px-1 sm:px-1.5 text-[10px] sm:text-xs animate-bounce-gentle"
                     >
                       {newFeedbackCount}
@@ -186,8 +186,8 @@ const Dashboard = () => {
 
           <TabsContent value="profile" className="space-y-6 animate-fade-in">
             <Suspense fallback={<div className="flex justify-center py-8"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
-              <RestaurantProfile 
-                restaurantId={user?.id} 
+              <RestaurantProfile
+                restaurantId={user?.id}
                 onProfileUpdate={(updatedProfile: any) => {
                   setProfile((prev: any) => ({ ...prev, ...updatedProfile }));
                 }}
