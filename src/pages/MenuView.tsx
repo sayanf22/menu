@@ -323,7 +323,10 @@ const MenuView = () => {
             {menuImages.map((image, index) => (
               <Card 
                 key={image.id}
-                className="menu-card overflow-hidden shadow-lg opacity-0 transition-all duration-700 hover:shadow-2xl hover:scale-[1.01]"
+                className={`menu-card overflow-hidden shadow-lg transition-all duration-700 hover:shadow-2xl hover:scale-[1.01] ${
+                  index < 2 ? 'animate-slide-up' : 'opacity-0'
+                }`}
+                style={index < 2 ? { animationDelay: `${index * 0.15}s`, animationFillMode: 'backwards' } : {}}
               >
                 <CardContent className="p-0 relative group">
                   <div className="relative overflow-hidden">
