@@ -17,28 +17,7 @@ export default defineConfig(({ mode }) => ({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: (id) => {
-          // Vendor chunks for better caching
-          if (id.includes('node_modules')) {
-            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
-              return 'react-vendor';
-            }
-            if (id.includes('@radix-ui')) {
-              return 'ui-vendor';
-            }
-            if (id.includes('@supabase')) {
-              return 'supabase-vendor';
-            }
-            if (id.includes('lucide-react') || id.includes('sonner') || id.includes('clsx')) {
-              return 'utils-vendor';
-            }
-            return 'vendor';
-          }
-          // Dashboard components
-          if (id.includes('/components/dashboard/')) {
-            return 'dashboard';
-          }
-        },
+        manualChunks: undefined,
         // Optimize asset file names for better caching
         assetFileNames: (assetInfo) => {
           if (!assetInfo.name) return `assets/[name]-[hash][extname]`;
