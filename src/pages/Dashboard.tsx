@@ -128,54 +128,61 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b glass-effect animate-slide-up">
-        <div className="container mx-auto px-4 py-6 flex justify-between items-center">
-          <div className="animate-slide-up" style={{ animationDelay: '0.1s' }}>
-            <h1 className="text-3xl font-bold gradient-text">
-              {profile?.restaurant_name || "MenuQR Dashboard"}
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1">{user?.email}</p>
-            {profile?.restaurant_description && (
-              <p className="text-sm text-muted-foreground mt-1 animate-fade-in" style={{ animationDelay: '0.3s' }}>
-                {profile.restaurant_description}
-              </p>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            <ThemeToggle />
-            <Button 
-              variant="outline" 
-              onClick={handleSignOut}
-              className="transition-bounce hover:scale-105 animate-slide-up"
-              style={{ animationDelay: '0.2s' }}
-            >
-              <LogOut className="mr-2 h-4 w-4" />
-              Sign Out
-            </Button>
+      <header className="sticky top-0 z-40 border-b glass-effect animate-slide-up backdrop-blur-lg">
+        <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
+          <div className="flex justify-between items-start gap-3">
+            <div className="flex-1 min-w-0 animate-slide-up" style={{ animationDelay: '0.1s' }}>
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold gradient-text truncate">
+                {profile?.restaurant_name || "MenuQR"}
+              </h1>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 truncate">{user?.email}</p>
+              {profile?.restaurant_description && (
+                <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 line-clamp-1 animate-fade-in" style={{ animationDelay: '0.3s' }}>
+                  {profile.restaurant_description}
+                </p>
+              )}
+            </div>
+            <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+              <ThemeToggle />
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleSignOut}
+                className="transition-bounce hover:scale-105 animate-slide-up h-8 sm:h-9"
+                style={{ animationDelay: '0.2s' }}
+              >
+                <LogOut className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Sign Out</span>
+              </Button>
+            </div>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
-        <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6 animate-slide-up glass-effect" style={{ animationDelay: '0.3s' }}>
-            <TabsTrigger value="profile" className="transition-smooth">Profile</TabsTrigger>
-            <TabsTrigger value="menu" className="transition-smooth">Menu</TabsTrigger>
-            <TabsTrigger value="qr" className="transition-smooth">QR Code</TabsTrigger>
-            <TabsTrigger value="analytics" className="transition-smooth">Analytics</TabsTrigger>
-            <TabsTrigger value="social" className="transition-smooth">Social</TabsTrigger>
-            <TabsTrigger value="feedback" className="relative transition-smooth">
-              Feedback
-              {newFeedbackCount > 0 && (
-                <Badge 
-                  variant="destructive" 
-                  className="ml-2 h-5 min-w-5 rounded-full px-1.5 text-xs animate-bounce-gentle"
-                >
-                  {newFeedbackCount}
-                </Badge>
-              )}
-            </TabsTrigger>
-          </TabsList>
+      <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 pb-20 sm:pb-8">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4 sm:space-y-6">
+          <div className="sticky top-[72px] sm:top-[80px] z-30 bg-background/95 backdrop-blur-sm pb-2 -mx-3 px-3 sm:-mx-4 sm:px-4">
+            <div className="overflow-x-auto scrollbar-hide -mx-3 px-3 sm:-mx-4 sm:px-4">
+              <TabsList className="inline-flex w-auto min-w-full sm:grid sm:w-full sm:grid-cols-6 animate-slide-up glass-effect h-auto p-1" style={{ animationDelay: '0.3s' }}>
+                <TabsTrigger value="profile" className="transition-smooth whitespace-nowrap text-xs sm:text-sm px-3 sm:px-4 py-2">Profile</TabsTrigger>
+                <TabsTrigger value="menu" className="transition-smooth whitespace-nowrap text-xs sm:text-sm px-3 sm:px-4 py-2">Menu</TabsTrigger>
+                <TabsTrigger value="qr" className="transition-smooth whitespace-nowrap text-xs sm:text-sm px-3 sm:px-4 py-2">QR Code</TabsTrigger>
+                <TabsTrigger value="analytics" className="transition-smooth whitespace-nowrap text-xs sm:text-sm px-3 sm:px-4 py-2">Analytics</TabsTrigger>
+                <TabsTrigger value="social" className="transition-smooth whitespace-nowrap text-xs sm:text-sm px-3 sm:px-4 py-2">Social</TabsTrigger>
+                <TabsTrigger value="feedback" className="relative transition-smooth whitespace-nowrap text-xs sm:text-sm px-3 sm:px-4 py-2">
+                  Feedback
+                  {newFeedbackCount > 0 && (
+                    <Badge 
+                      variant="destructive" 
+                      className="ml-1 sm:ml-2 h-4 sm:h-5 min-w-4 sm:min-w-5 rounded-full px-1 sm:px-1.5 text-[10px] sm:text-xs animate-bounce-gentle"
+                    >
+                      {newFeedbackCount}
+                    </Badge>
+                  )}
+                </TabsTrigger>
+              </TabsList>
+            </div>
+          </div>
 
           <TabsContent value="profile" className="space-y-6 animate-fade-in">
             <Suspense fallback={<div className="flex justify-center py-8"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
