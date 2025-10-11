@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -32,7 +32,6 @@ const MenuView = () => {
   const [clientIp, setClientIp] = useState<string>("");
   const [deviceFingerprint, setDeviceFingerprint] = useState<string>("");
   const [canSubmitFeedback, setCanSubmitFeedback] = useState(true);
-  const observerRef = useRef<IntersectionObserver | null>(null);
 
   useEffect(() => {
     if (restaurantId) {
@@ -82,27 +81,6 @@ const MenuView = () => {
       console.error('Error fetching client info:', error);
     }
   };
-
-  useEffect(() => {
-    // Setup Intersection Observer for lazy loading animations
-    observerRef.current = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const img = entry.target as HTMLImageElement;
-            img.classList.add('animate-slide-up');
-          }
-        });
-      },
-      { threshold: 0.1, rootMargin: '50px' }
-    );
-
-    return () => {
-      if (observerRef.current) {
-        observerRef.current.disconnect();
-      }
-    };
-  }, []);
 
   const handleImageLoad = (imageId: string) => {
     setLoadedImages(prev => new Set(prev).add(imageId));
@@ -272,11 +250,10 @@ const MenuView = () => {
             {menuImages.map((image, index) => (
               <Card 
                 key={image.id}
-                className="overflow-hidden shadow-lg opacity-0 transition-smooth hover:shadow-xl hover:scale-[1.02]"
-                ref={(el) => {
-                  if (el && observerRef.current) {
-                    observerRef.current.observe(el);
-                  }
+                className="overflow-hidden shadow-lg animate-slide-up transition-all duration-500 hover:shadow-2xl hover:scale-[1.02]"
+                style={{ 
+                  animationDelay: `${index * 0.15}s`,
+                  animationFillMode: 'backwards'
                 }}
               >
                 <CardContent className="p-0 relative group">
@@ -284,15 +261,15 @@ const MenuView = () => {
                     <OptimizedImage
                       src={image.image_url}
                       alt={`Menu ${index + 1}`}
-                      className="w-full h-auto object-contain cursor-zoom-in group-hover:scale-105"
+                      className="w-full h-auto object-contain cursor-zoom-in transition-transform duration-500 group-hover:scale-110"
                       priority={index < 2}
                       onLoad={() => handleImageLoad(image.id)}
                       onClick={() => setZoomedImage(image.image_url)}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-                    <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-                      <div className="bg-white/90 backdrop-blur-sm rounded-full px-3 py-1">
-                        <span className="text-sm font-medium text-gray-800">Click to zoom</span>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 pointer-events-none" />
+                    <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-y-2 group-hover:translate-y-0 pointer-events-none">
+                      <div className="bg-white/95 backdrop-blur-md rounded-full px-4 py-2 shadow-lg">
+                        <span className="text-sm font-semibold text-gray-800">Click to zoom</span>
                       </div>
                     </div>
                   </div>

@@ -219,8 +219,8 @@ const MenuUpload = ({ restaurantId }: MenuUploadProps) => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Button asChild disabled={uploading}>
+      <div className="flex items-center gap-4 animate-fade-in">
+        <Button asChild disabled={uploading} className="transition-bounce hover:scale-105">
           <label className="cursor-pointer">
             {uploading ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -238,28 +238,35 @@ const MenuUpload = ({ restaurantId }: MenuUploadProps) => {
             />
           </label>
         </Button>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-muted-foreground animate-slide-in-right" style={{ animationDelay: '0.1s' }}>
           {menuImages.length} image{menuImages.length !== 1 ? "s" : ""} uploaded (max 1MB each)
         </p>
       </div>
 
       {menuImages.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {menuImages.map((image) => (
-            <Card key={image.id} className="overflow-hidden">
+          {menuImages.map((image, index) => (
+            <Card 
+              key={image.id} 
+              className="overflow-hidden animate-slide-up transition-smooth hover:shadow-xl hover:scale-[1.02]"
+              style={{ 
+                animationDelay: `${index * 0.1}s`,
+                animationFillMode: 'backwards'
+              }}
+            >
               <div className="relative group">
                 <img
                   src={image.image_url}
                   alt="Menu"
-                  className="w-full h-48 object-cover cursor-pointer"
+                  className="w-full h-48 object-cover cursor-pointer transition-smooth group-hover:scale-105"
                   onClick={() => openViewDialog(image.image_url)}
                 />
-                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center gap-2">
                   <Button
                     variant="secondary"
                     size="icon"
                     onClick={() => openViewDialog(image.image_url)}
-                    className="bg-white/90 hover:bg-white"
+                    className="bg-white/90 hover:bg-white transform translate-y-2 group-hover:translate-y-0 transition-all duration-300"
                   >
                     <Eye className="h-4 w-4" />
                   </Button>
@@ -267,6 +274,7 @@ const MenuUpload = ({ restaurantId }: MenuUploadProps) => {
                     variant="destructive"
                     size="icon"
                     onClick={() => openDeleteDialog(image.id, image.image_url)}
+                    className="transform translate-y-2 group-hover:translate-y-0 transition-all duration-300 delay-75"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -302,16 +310,17 @@ const MenuUpload = ({ restaurantId }: MenuUploadProps) => {
 
       {/* View Image Dialog */}
       <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] p-0">
-          <DialogHeader className="p-4 pb-0">
+        <DialogContent className="max-w-4xl max-h-[90vh] p-0 animate-scale-in">
+          <DialogHeader className="p-4 pb-0 animate-fade-in">
             <DialogTitle>Menu Image</DialogTitle>
           </DialogHeader>
-          <div className="overflow-auto p-4">
+          <div className="overflow-auto p-4 smooth-scroll">
             {imageToView && (
               <img
                 src={imageToView}
                 alt="Menu preview"
-                className="w-full h-auto rounded-lg"
+                className="w-full h-auto rounded-lg animate-fade-in shadow-lg"
+                style={{ animationDelay: '0.1s' }}
               />
             )}
           </div>

@@ -111,6 +111,16 @@ All colors MUST be HSL.
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
+  /* Smooth scroll behavior */
+  .smooth-scroll {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
 }
 
 @layer utilities {
