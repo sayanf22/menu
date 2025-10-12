@@ -1,0 +1,39 @@
+# Allow all crawlers
+# AddMenu - Digital Menu QR Code for Restaurants in Tripura
+User-agent: *
+Allow: /
+Disallow: /dashboard/
+Disallow: /api/
+Disallow: /admin/
+
+# Sitemaps
+Sitemap: https://addmenu.in/sitemap-index.xml
+Sitemap: https://addmenu.in/sitemap.xml
+Sitemap: https://addmenu.in/sitemap-main.xml
+Sitemap: https://addmenu.in/sitemap-cities-north.xml
+Sitemap: https://addmenu.in/sitemap-cities-south.xml
+Sitemap: https://addmenu.in/sitemap-cities-west.xml
+Sitemap: https://addmenu.in/sitemap-cities-east.xml
+
+# Crawl-delay for better server performance
+Crawl-delay: 1
+
+# Specific bot rules
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 0
+
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 1
+
+User-agent: Slurp
+Allow: /
+Crawl-delay: 1
+
+# Disallow admin/dashboard pages
+Disallow: /dashboard
+Disallow: /auth
+
+# Sitemap
+Sitemap: https://your-domain.com/sitemap.xml
