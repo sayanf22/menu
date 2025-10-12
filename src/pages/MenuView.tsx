@@ -96,7 +96,7 @@ const MenuView = () => {
       
       const timer = setTimeout(() => {
         setShowSplash(false);
-      }, 2500);
+      }, 2000);
       return () => clearTimeout(timer);
     }
   }, [loading, profile, audioPlayed]);
@@ -333,11 +333,6 @@ const MenuView = () => {
               <Loader2 className="h-4 w-4 animate-spin" />
               <span>Loading menu...</span>
             </div>
-            {!audioPlayed && (
-              <p className="text-xs text-muted-foreground mt-4 animate-pulse">
-                Tap anywhere to enable sound
-              </p>
-            )}
           </div>
         </div>
       </div>
