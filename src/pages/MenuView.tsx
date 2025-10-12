@@ -43,9 +43,48 @@ const MenuView = () => {
     }
   }, [restaurantId]);
 
+  // Play welcome sound
+  const playWelcomeSound = () => {
+    try {
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      
+      // Create a pleasant chime sound
+      const playNote = (frequency: number, startTime: number, duration: number) => {
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.frequency.value = frequency;
+        oscillator.type = 'sine';
+        
+        // Envelope for smooth sound
+        gainNode.gain.setValueAtTime(0, startTime);
+        gainNode.gain.linearRampToValueAtTime(0.3, startTime + 0.01);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
+        
+        oscillator.start(startTime);
+        oscillator.stop(startTime + duration);
+      };
+      
+      // Play a pleasant chord (C major)
+      const now = audioContext.currentTime;
+      playNote(523.25, now, 0.5); // C5
+      playNote(659.25, now + 0.1, 0.5); // E5
+      playNote(783.99, now + 0.2, 0.6); // G5
+      
+    } catch (error) {
+      console.log('Audio not supported or blocked:', error);
+    }
+  };
+
   // Hide splash screen after data loads and 2 seconds minimum
   useEffect(() => {
     if (!loading && profile) {
+      // Play sound when data is loaded
+      playWelcomeSound();
+      
       const timer = setTimeout(() => {
         setShowSplash(false);
       }, 2000);
