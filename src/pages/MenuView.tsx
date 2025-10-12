@@ -34,6 +34,7 @@ const MenuView = () => {
   const [deviceFingerprint, setDeviceFingerprint] = useState<string>("");
   const [canSubmitFeedback, setCanSubmitFeedback] = useState(true);
   const [isHeaderLight, setIsHeaderLight] = useState(false);
+  const [audioPlayed, setAudioPlayed] = useState(false);
 
   useEffect(() => {
     if (restaurantId) {
@@ -43,13 +44,18 @@ const MenuView = () => {
     }
   }, [restaurantId]);
 
-  // Play welcome sound
-  const playWelcomeSound = () => {
+  // Play welcome sound with better volume and user interaction
+  const playWelcomeSound = async () => {
     try {
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
       
-      // Create a pleasant chime sound
-      const playNote = (frequency: number, startTime: number, duration: number) => {
+      // Resume audio context (required for autoplay policy)
+      if (audioContext.state === 'suspended') {
+        await audioContext.resume();
+      }
+      
+      // Create a pleasant chime sound with better volume
+      const playNote = (frequency: number, startTime: number, duration: number, volume: number = 0.5) => {
         const oscillator = audioContext.createOscillator();
         const gainNode = audioContext.createGain();
         
@@ -59,20 +65,20 @@ const MenuView = () => {
         oscillator.frequency.value = frequency;
         oscillator.type = 'sine';
         
-        // Envelope for smooth sound
+        // Envelope for smooth sound with higher volume
         gainNode.gain.setValueAtTime(0, startTime);
-        gainNode.gain.linearRampToValueAtTime(0.3, startTime + 0.01);
+        gainNode.gain.linearRampToValueAtTime(volume, startTime + 0.02);
         gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
         
         oscillator.start(startTime);
         oscillator.stop(startTime + duration);
       };
       
-      // Play a pleasant chord (C major)
+      // Play a pleasant chord (C major) with better volume
       const now = audioContext.currentTime;
-      playNote(523.25, now, 0.5); // C5
-      playNote(659.25, now + 0.1, 0.5); // E5
-      playNote(783.99, now + 0.2, 0.6); // G5
+      playNote(523.25, now, 0.6, 0.6); // C5
+      playNote(659.25, now + 0.1, 0.6, 0.5); // E5
+      playNote(783.99, now + 0.2, 0.7, 0.4); // G5
       
     } catch (error) {
       console.log('Audio not supported or blocked:', error);
@@ -81,16 +87,27 @@ const MenuView = () => {
 
   // Hide splash screen after data loads and 2 seconds minimum
   useEffect(() => {
-    if (!loading && profile) {
-      // Play sound when data is loaded
-      playWelcomeSound();
+    if (!loading && profile && !audioPlayed) {
+      // Small delay to ensure page is interactive
+      setTimeout(async () => {
+        await playWelcomeSound();
+        setAudioPlayed(true);
+      }, 100);
       
       const timer = setTimeout(() => {
         setShowSplash(false);
-      }, 2000);
+      }, 2500);
       return () => clearTimeout(timer);
     }
-  }, [loading, profile]);
+  }, [loading, profile, audioPlayed]);
+
+  // Handle tap to play sound if autoplay blocked
+  const handleSplashTap = async () => {
+    if (!audioPlayed) {
+      await playWelcomeSound();
+      setAudioPlayed(true);
+    }
+  };
 
   // Setup Intersection Observer for scroll animations
   useEffect(() => {
@@ -282,7 +299,10 @@ const MenuView = () => {
   // Splash Screen
   if (showSplash) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden">
+      <div 
+        className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden cursor-pointer"
+        onClick={handleSplashTap}
+      >
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-accent/5 animate-pulse"></div>
         <div className="relative z-10 text-center px-4 animate-scale-in">
           {profile?.logo_url ? (
@@ -313,6 +333,11 @@ const MenuView = () => {
               <Loader2 className="h-4 w-4 animate-spin" />
               <span>Loading menu...</span>
             </div>
+            {!audioPlayed && (
+              <p className="text-xs text-muted-foreground mt-4 animate-pulse">
+                Tap anywhere to enable sound
+              </p>
+            )}
           </div>
         </div>
       </div>
