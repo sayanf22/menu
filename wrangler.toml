@@ -1,4 +1,0 @@
-# Cloudflare Pages configuration
-name = "menuqr"
-compatibility_date = "2024-10-11"
-pages_build_output_dir = "dist"

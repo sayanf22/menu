@@ -55,41 +55,41 @@ All colors MUST be HSL.
   }
 
   .dark {
-    --background: 0 0% 3%;
-    --foreground: 0 0% 98%;
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
 
-    --card: 0 0% 8%;
-    --card-foreground: 0 0% 98%;
+    --card: 0 0% 5%;
+    --card-foreground: 0 0% 100%;
 
-    --popover: 0 0% 8%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 0 0% 5%;
+    --popover-foreground: 0 0% 100%;
 
     --primary: 25 95% 53%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 0 0% 12%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 0 0% 10%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 0 0% 12%;
-    --muted-foreground: 0 0% 70%;
+    --muted: 0 0% 10%;
+    --muted-foreground: 0 0% 65%;
 
     --accent: 32 98% 60%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 18%;
-    --input: 0 0% 18%;
+    --border: 0 0% 15%;
+    --input: 0 0% 15%;
     --ring: 25 95% 53%;
 
-    --sidebar-background: 0 0% 8%;
+    --sidebar-background: 0 0% 5%;
     --sidebar-foreground: 0 0% 95%;
     --sidebar-primary: 224.3 76.3% 48%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 12%;
+    --sidebar-accent: 0 0% 10%;
     --sidebar-accent-foreground: 0 0% 95%;
-    --sidebar-border: 0 0% 18%;
+    --sidebar-border: 0 0% 15%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 }
@@ -147,15 +147,6 @@ All colors MUST be HSL.
   
   .animate-glow {
     animation: glow 2s ease-in-out infinite alternate;
-  }
-  
-  .animate-logo-entrance {
-    animation: logoEntrance 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-  }
-  
-  .animate-fade-in-up {
-    animation: fadeInUp 0.6s ease-out forwards;
-    opacity: 0;
   }
   
   /* Smooth hover transitions */
@@ -278,54 +269,4 @@ All colors MUST be HSL.
   }
 }
 
-@keyframes logoEntrance {
-  0% {
-    opacity: 0;
-    transform: scale(1.5);
-  }
-  50% {
-    opacity: 0.8;
-    transform: scale(1.1);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes fadeInSlideZoom {
-  0% {
-    opacity: 0;
-    transform: translateY(32px) scale(1.5);
-  }
-  60% {
-    opacity: 0.9;
-    transform: translateY(-4px) scale(1.05);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-@keyframes fadeInSlideUp {
-  from {
-    opacity: 0;
-    transform: translateY(32px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
+/* All animations now handled by Tailwind config */

@@ -88,19 +88,18 @@ const MenuView = () => {
     }
   };
 
-  // Hide splash screen after animations complete
+  // Hide splash after smooth animations
   useEffect(() => {
     if (!loading && profile && menuImages.length > 0) {
-      // Play sound in background (non-blocking)
       if (!audioPlayed) {
         playWelcomeSound().catch(() => {});
         setAudioPlayed(true);
       }
       
-      // Wait for logo animation to complete (1s) + small buffer
+      // Optimized timing: 900ms animation + 200ms buffer
       const timer = setTimeout(() => {
         setShowSplash(false);
-      }, 1200);
+      }, 1100);
       return () => clearTimeout(timer);
     }
   }, [loading, profile, menuImages, audioPlayed]);
@@ -357,61 +356,70 @@ const MenuView = () => {
     );
   }
 
-  // Beautiful splash screen with smooth Tailwind animations
+  // Beautiful splash screen with smooth pop-up and slide-in animations
   if (showSplash) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 relative overflow-hidden">
-        {/* Subtle animated background */}
-        <div className="absolute inset-0 opacity-20">
-          <div className="absolute top-1/3 left-1/3 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-pulse"></div>
+      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-black relative overflow-hidden">
+        {/* Animated blur orbs - small and subtle */}
+        <div className="absolute inset-0 opacity-30 dark:opacity-20">
+          <div className="absolute top-1/4 left-1/4 w-48 h-48 bg-primary/20 rounded-full blur-2xl animate-pulse"></div>
+          <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-accent/15 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
         </div>
 
         <div className="relative z-10 text-center px-4">
-          {/* Logo with fade-in, slide-up and zoom-out animation */}
+          {/* Logo with pop-up, zoom, and fade animation */}
           {profile?.logo_url ? (
             <div className="flex justify-center mb-6">
-              <div className="opacity-0 translate-y-8 scale-150 animate-[fadeInSlideZoom_1s_ease-out_forwards]">
-                <img
-                  src={profile.logo_url}
-                  alt={profile.restaurant_name || "Restaurant"}
-                  className="w-28 h-28 sm:w-36 sm:h-36 object-cover rounded-full shadow-2xl border-4 border-primary/20"
-                  loading="eager"
-                />
+              <div className="opacity-0 animate-fadeInSlideZoom">
+                <div className="relative">
+                  {/* Animated glow effect behind logo */}
+                  <div className="absolute inset-0 bg-primary/30 rounded-full blur-xl scale-110 animate-pulse"></div>
+                  <img
+                    src={profile.logo_url}
+                    alt={profile.restaurant_name || "Restaurant"}
+                    className="relative w-24 h-24 sm:w-32 sm:h-32 object-cover rounded-full shadow-2xl border-4 border-primary/30 dark:border-primary/20 transition-transform duration-300 hover:scale-105"
+                    loading="eager"
+                    fetchPriority="high"
+                  />
+                </div>
               </div>
             </div>
           ) : (
-            <div className="flex justify-center mb-6 opacity-0 animate-[fadeIn_0.5s_ease-out_forwards]">
-              <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-full bg-primary/10 flex items-center justify-center">
-                <Loader2 className="h-14 w-14 animate-spin text-primary" />
+            <div className="flex justify-center mb-6 opacity-0 animate-popIn">
+              <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-primary/10 dark:bg-primary/5 flex items-center justify-center backdrop-blur-sm">
+                <Loader2 className="h-12 w-12 animate-spin text-primary" />
               </div>
             </div>
           )}
           
-          {/* Restaurant name with slide-up from bottom animation */}
+          {/* Restaurant name with pop-in and slide-up effect */}
           {profile?.restaurant_name && (
             <h1 
-              className="text-3xl sm:text-4xl font-bold mb-3 opacity-0 translate-y-8 animate-[fadeInSlideUp_0.8s_ease-out_0.4s_forwards]"
+              className="text-3xl sm:text-4xl font-bold mb-3 text-gray-900 dark:text-white opacity-0 animate-fadeInSlideUp drop-shadow-lg"
+              style={{ animationDelay: '0.3s' }}
             >
               {profile.restaurant_name}
             </h1>
           )}
           
-          {/* Description with delayed slide-up */}
+          {/* Description with slide-in from left and fade */}
           {profile?.restaurant_description && (
             <p 
-              className="text-base sm:text-lg text-muted-foreground max-w-md mx-auto mb-6 opacity-0 translate-y-6 animate-[fadeInSlideUp_0.8s_ease-out_0.7s_forwards]"
+              className="text-base sm:text-lg text-gray-600 dark:text-gray-300 max-w-md mx-auto mb-6 opacity-0 animate-slideInFade"
+              style={{ animationDelay: '0.6s' }}
             >
               {profile.restaurant_description}
             </p>
           )}
           
-          {/* Loading indicator with fade-in */}
+          {/* Loading indicator with pop-in effect */}
           <div 
-            className="mt-6 opacity-0 animate-[fadeIn_0.5s_ease-out_1s_forwards]"
+            className="mt-6 opacity-0 animate-popIn"
+            style={{ animationDelay: '0.9s' }}
           >
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 dark:bg-black/80 backdrop-blur-md border border-primary/20 shadow-lg hover:shadow-xl transition-shadow duration-300">
               <Loader2 className="h-4 w-4 animate-spin text-primary" />
-              <span className="text-sm font-medium text-primary">Loading menu...</span>
+              <span className="text-sm font-medium text-gray-900 dark:text-white">Loading menu...</span>
             </div>
           </div>
         </div>
