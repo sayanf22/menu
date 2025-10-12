@@ -38,9 +38,12 @@ const MenuView = () => {
 
   useEffect(() => {
     if (restaurantId) {
-      fetchMenuData();
-      logView();
-      fetchClientInfo();
+      // Run all fetches in parallel for faster loading
+      Promise.all([
+        fetchMenuData(),
+        logView(),
+        fetchClientInfo()
+      ]);
     }
   }, [restaurantId]);
 
@@ -85,7 +88,7 @@ const MenuView = () => {
     }
   };
 
-  // Hide splash screen after data loads and 2 seconds minimum
+  // Hide splash screen after data loads - reduced delay for faster loading
   useEffect(() => {
     if (!loading && profile && !audioPlayed) {
       // Small delay to ensure page is interactive
@@ -94,9 +97,10 @@ const MenuView = () => {
         setAudioPlayed(true);
       }, 100);
       
+      // Reduced from 2000ms to 800ms for faster loading
       const timer = setTimeout(() => {
         setShowSplash(false);
-      }, 2000);
+      }, 800);
       return () => clearTimeout(timer);
     }
   }, [loading, profile, audioPlayed]);
@@ -146,42 +150,38 @@ const MenuView = () => {
 
   const fetchClientInfo = async () => {
     try {
-      // Get device fingerprint
+      // Get device fingerprint immediately (no async needed)
       const fingerprint = generateDeviceFingerprint();
       setDeviceFingerprint(fingerprint);
 
-      // Get IP address from edge function
-      const { data, error } = await supabase.functions.invoke('get-client-info');
-      
-      if (error) throw error;
-      
-      if (data?.ip) {
-        setClientIp(data.ip);
-      }
-
-      // Check if user can submit feedback
-      if (restaurantId && (data?.ip || fingerprint)) {
-        const { data: existingFeedback, error: checkError } = await supabase
+      // Get IP and check feedback in parallel (non-blocking)
+      Promise.all([
+        supabase.functions.invoke('get-client-info'),
+        restaurantId ? supabase
           .from('feedback')
           .select('created_at')
           .eq('restaurant_id', restaurantId)
-          .or(`customer_ip.eq.${data?.ip},device_fingerprint.eq.${fingerprint}`)
+          .eq('device_fingerprint', fingerprint)
           .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
-          .maybeSingle();
-
-        if (checkError) {
-          console.error('Error checking feedback:', checkError);
+          .maybeSingle() : Promise.resolve({ data: null })
+      ]).then(([ipResult, feedbackResult]) => {
+        // Handle IP
+        if (ipResult.data?.ip) {
+          setClientIp(ipResult.data.ip);
         }
 
-        if (existingFeedback) {
+        // Handle feedback check
+        if (feedbackResult.data) {
           setCanSubmitFeedback(false);
-          const nextAvailableDate = new Date(existingFeedback.created_at);
+          const nextAvailableDate = new Date(feedbackResult.data.created_at);
           nextAvailableDate.setDate(nextAvailableDate.getDate() + 7);
           toast.info(`You can submit feedback again after ${nextAvailableDate.toLocaleDateString()}`);
         }
-      }
+      }).catch(error => {
+        console.error('Error fetching client info:', error);
+      });
     } catch (error) {
-      console.error('Error fetching client info:', error);
+      console.error('Error in fetchClientInfo:', error);
     }
   };
 
@@ -203,44 +203,43 @@ const MenuView = () => {
     try {
       setLoading(true);
 
-      // Fetch profile
-      const { data: profileData, error: profileError } = await supabase
-        .from("profiles")
-        .select("restaurant_name, restaurant_description, logo_url")
-        .eq("id", restaurantId)
-        .maybeSingle();
+      // Fetch all data in parallel for faster loading
+      const [profileResult, imagesResult, socialResult] = await Promise.allSettled([
+        supabase
+          .from("profiles")
+          .select("restaurant_name, restaurant_description, logo_url")
+          .eq("id", restaurantId)
+          .maybeSingle(),
+        supabase
+          .from("menu_images")
+          .select("*")
+          .eq("restaurant_id", restaurantId)
+          .order("display_order", { ascending: true }),
+        supabase.rpc("get_public_social_links", { rest_id: restaurantId })
+      ]);
 
-      if (profileError) {
-        // Profiles are private; continue without blocking public menu
-        console.warn("Profile not accessible, continuing with public data:", profileError);
-      }
-      if (profileData) {
-        setProfile(profileData);
-      }
-
-      // Fetch menu images
-      const { data: imagesData, error: imagesError } = await supabase
-        .from("menu_images")
-        .select("*")
-        .eq("restaurant_id", restaurantId)
-        .order("display_order", { ascending: true });
-
-      if (imagesError) throw imagesError;
-      setMenuImages(imagesData || []);
-
-      // Extract dominant color from first image if available
-      if (imagesData && imagesData.length > 0 && imagesData[0].dominant_color) {
-        setThemeColor(imagesData[0].dominant_color);
+      // Handle profile data
+      if (profileResult.status === 'fulfilled' && profileResult.value.data) {
+        setProfile(profileResult.value.data);
       }
 
-      // Fetch social links using secure function (WhatsApp hidden for security)
-      const { data: socialData, error: socialError } = await supabase
-        .rpc("get_public_social_links", { rest_id: restaurantId });
+      // Handle menu images
+      if (imagesResult.status === 'fulfilled' && imagesResult.value.data) {
+        const imagesData = imagesResult.value.data;
+        setMenuImages(imagesData || []);
+        
+        // Extract dominant color from first image if available
+        if (imagesData && imagesData.length > 0 && imagesData[0].dominant_color) {
+          setThemeColor(imagesData[0].dominant_color);
+        }
+      }
 
-      if (socialError) {
-        console.error("Error fetching social links:", socialError);
-      } else if (socialData && socialData.length > 0) {
-        setSocialLinks(socialData[0]);
+      // Handle social links
+      if (socialResult.status === 'fulfilled' && socialResult.value.data) {
+        const socialData = socialResult.value.data;
+        if (socialData && socialData.length > 0) {
+          setSocialLinks(socialData[0]);
+        }
       }
     } catch (error) {
       console.error("Error fetching menu data:", error);
