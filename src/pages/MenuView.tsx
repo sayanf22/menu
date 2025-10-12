@@ -16,7 +16,7 @@ import { generateDeviceFingerprint } from "@/lib/deviceFingerprint";
 const MenuView = () => {
   const { restaurantId } = useParams();
   const [loading, setLoading] = useState(true);
-  const [showSplash, setShowSplash] = useState(true);
+  const [showSplash, setShowSplash] = useState(false); // Disabled for faster loading
   const [profile, setProfile] = useState<any>(null);
   const [menuImages, setMenuImages] = useState<any[]>([]);
   const [socialLinks, setSocialLinks] = useState<any>(null);
@@ -88,22 +88,13 @@ const MenuView = () => {
     }
   };
 
-  // Hide splash screen after data loads - reduced delay for faster loading
+  // Play welcome sound once data loads (non-blocking)
   useEffect(() => {
-    if (!loading && profile && !audioPlayed) {
-      // Small delay to ensure page is interactive
-      setTimeout(async () => {
-        await playWelcomeSound();
-        setAudioPlayed(true);
-      }, 100);
-      
-      // Reduced from 2000ms to 800ms for faster loading
-      const timer = setTimeout(() => {
-        setShowSplash(false);
-      }, 800);
-      return () => clearTimeout(timer);
+    if (!loading && !audioPlayed && profile) {
+      playWelcomeSound().catch(() => {});
+      setAudioPlayed(true);
     }
-  }, [loading, profile, audioPlayed]);
+  }, [loading, audioPlayed, profile]);
 
   // Handle tap to play sound if autoplay blocked
   const handleSplashTap = async () => {
@@ -294,49 +285,6 @@ const MenuView = () => {
       setSubmitting(false);
     }
   };
-
-  // Splash Screen
-  if (showSplash) {
-    return (
-      <div 
-        className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden cursor-pointer"
-        onClick={handleSplashTap}
-      >
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-accent/5 animate-pulse"></div>
-        <div className="relative z-10 text-center px-4 animate-scale-in">
-          {profile?.logo_url ? (
-            <div className="flex justify-center mb-6 animate-bounce-gentle">
-              <img
-                src={profile.logo_url}
-                alt={profile.restaurant_name}
-                className="w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 object-cover rounded-full border-4 border-primary/20 shadow-2xl"
-              />
-            </div>
-          ) : (
-            <Loader2 className="h-16 w-16 sm:h-20 sm:w-20 animate-spin text-primary mx-auto mb-6" />
-          )}
-          {profile?.restaurant_name && (
-            <>
-              <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-4 gradient-text animate-slide-up">
-                {profile.restaurant_name}
-              </h1>
-              {profile.restaurant_description && (
-                <p className="text-lg sm:text-xl text-muted-foreground max-w-md mx-auto animate-slide-up" style={{ animationDelay: '0.2s' }}>
-                  {profile.restaurant_description}
-                </p>
-              )}
-            </>
-          )}
-          <div className="mt-8 animate-fade-in" style={{ animationDelay: '0.4s' }}>
-            <div className="inline-flex items-center gap-2 text-sm text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              <span>Loading menu...</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   if (loading) {
     return (
