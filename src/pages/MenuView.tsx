@@ -16,6 +16,7 @@ import { generateDeviceFingerprint } from "@/lib/deviceFingerprint";
 const MenuView = () => {
   const { restaurantId } = useParams();
   const [loading, setLoading] = useState(true);
+  const [showSplash, setShowSplash] = useState(true);
   const [profile, setProfile] = useState<any>(null);
   const [menuImages, setMenuImages] = useState<any[]>([]);
   const [socialLinks, setSocialLinks] = useState<any>(null);
@@ -41,6 +42,16 @@ const MenuView = () => {
       fetchClientInfo();
     }
   }, [restaurantId]);
+
+  // Hide splash screen after data loads and 2 seconds minimum
+  useEffect(() => {
+    if (!loading && profile) {
+      const timer = setTimeout(() => {
+        setShowSplash(false);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [loading, profile]);
 
   // Setup Intersection Observer for scroll animations
   useEffect(() => {
@@ -229,6 +240,46 @@ const MenuView = () => {
     }
   };
 
+  // Splash Screen
+  if (showSplash) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-accent/5 animate-pulse"></div>
+        <div className="relative z-10 text-center px-4 animate-scale-in">
+          {profile?.logo_url ? (
+            <div className="flex justify-center mb-6 animate-bounce-gentle">
+              <img
+                src={profile.logo_url}
+                alt={profile.restaurant_name}
+                className="w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 object-cover rounded-full border-4 border-primary/20 shadow-2xl"
+              />
+            </div>
+          ) : (
+            <Loader2 className="h-16 w-16 sm:h-20 sm:w-20 animate-spin text-primary mx-auto mb-6" />
+          )}
+          {profile?.restaurant_name && (
+            <>
+              <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-4 gradient-text animate-slide-up">
+                {profile.restaurant_name}
+              </h1>
+              {profile.restaurant_description && (
+                <p className="text-lg sm:text-xl text-muted-foreground max-w-md mx-auto animate-slide-up" style={{ animationDelay: '0.2s' }}>
+                  {profile.restaurant_description}
+                </p>
+              )}
+            </>
+          )}
+          <div className="mt-8 animate-fade-in" style={{ animationDelay: '0.4s' }}>
+            <div className="inline-flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>Loading menu...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -244,104 +295,56 @@ const MenuView = () => {
         <ThemeToggle />
       </div>
 
-      {/* Header - Mobile Optimized - Matches Menu Color */}
-      <header 
-        className="py-8 sm:py-10 md:py-12 px-3 sm:px-4 shadow-xl relative overflow-hidden" 
-        style={{ 
-          background: isHeaderLight 
-            ? `linear-gradient(135deg, ${themeColor}f0, ${themeColor}e0, ${themeColor}d0)`
-            : `linear-gradient(135deg, ${themeColor}e0, ${themeColor}c0, ${themeColor}a0)`
-        }}
-      >
-        <div 
-          className="absolute inset-0 bg-gradient-to-br opacity-20"
-          style={{
-            background: isHeaderLight 
-              ? 'linear-gradient(135deg, rgba(0,0,0,0.05), rgba(0,0,0,0.1))'
-              : 'linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))'
-          }}
-        ></div>
-        <div className="container mx-auto text-center relative z-10 max-w-4xl">
-          {profile?.logo_url && (
-            <div className="flex justify-center mb-4 sm:mb-6 animate-scale-in">
+      {/* Simple Header - Black/White Theme */}
+      <header className="py-6 sm:py-8 px-3 sm:px-4 border-b bg-card/50 backdrop-blur-sm sticky top-0 z-40 animate-slide-up">
+        <div className="container mx-auto max-w-4xl flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
+            {profile?.logo_url && (
               <img
                 src={profile.logo_url}
                 alt={profile.restaurant_name}
-                className={`w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 object-cover rounded-full border-4 shadow-2xl ${
-                  isHeaderLight ? 'border-black/20' : 'border-white/30'
-                }`}
+                className="w-12 h-12 sm:w-14 sm:h-14 object-cover rounded-full border-2 border-border shadow-lg flex-shrink-0"
               />
-            </div>
-          )}
-          <h1 
-            className={`text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-3 sm:mb-4 animate-slide-up px-2 ${
-              isHeaderLight 
-                ? 'text-gray-900 drop-shadow-[0_2px_10px_rgba(255,255,255,0.8)]' 
-                : 'text-white drop-shadow-[0_4px_20px_rgba(0,0,0,0.8)]'
-            }`}
-          >
-            {profile?.restaurant_name || "Our Menu"}
-          </h1>
-          {profile?.restaurant_description && (
-            <p 
-              className={`text-base sm:text-lg md:text-xl max-w-2xl mx-auto animate-slide-up px-4 ${
-                isHeaderLight 
-                  ? 'text-gray-800 drop-shadow-[0_1px_6px_rgba(255,255,255,0.7)]' 
-                  : 'text-white/95 drop-shadow-[0_2px_12px_rgba(0,0,0,0.7)]'
-              }`}
-              style={{ animationDelay: '0.2s' }}
-            >
-              {profile.restaurant_description}
-            </p>
-          )}
-          <div className="mt-4 sm:mt-6 animate-bounce-gentle" style={{ animationDelay: '0.4s' }}>
-            <div 
-              className={`inline-block px-4 sm:px-6 py-2 backdrop-blur-sm rounded-full text-sm sm:text-base font-medium ${
-                isHeaderLight 
-                  ? 'bg-black/10 text-gray-900' 
-                  : 'bg-white/20 text-white'
-              }`}
-            >
-              Scroll down to explore our menu
+            )}
+            <div className="flex-1 min-w-0">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold truncate">
+                {profile?.restaurant_name || "Menu"}
+              </h1>
+              {profile?.restaurant_description && (
+                <p className="text-xs sm:text-sm text-muted-foreground truncate">
+                  {profile.restaurant_description}
+                </p>
+              )}
             </div>
           </div>
         </div>
-        <div 
-          className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent to-transparent"
-          style={{
-            background: isHeaderLight 
-              ? 'linear-gradient(90deg, transparent, rgba(0,0,0,0.2), transparent)'
-              : 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)'
-          }}
-        ></div>
       </header>
 
-      {/* Menu Images Gallery - Vertical Scroll - Mobile Optimized */}
-      <div className="container mx-auto px-3 sm:px-4 mt-4 sm:mt-6 md:mt-8 space-y-4 sm:space-y-6 max-w-4xl">
+      {/* Menu Images Gallery - Clean & Simple */}
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6 max-w-4xl">
         {menuImages.length > 0 ? (
           <>
             {menuImages.map((image, index) => (
               <Card 
                 key={image.id}
-                className={`menu-card overflow-hidden shadow-lg transition-all duration-700 hover:shadow-2xl hover:scale-[1.01] ${
+                className={`menu-card overflow-hidden border-2 transition-all duration-700 hover:border-primary/50 hover:shadow-xl ${
                   index < 2 ? 'animate-slide-up' : 'opacity-0'
                 }`}
                 style={index < 2 ? { animationDelay: `${index * 0.15}s`, animationFillMode: 'backwards' } : {}}
               >
                 <CardContent className="p-0 relative group">
-                  <div className="relative overflow-hidden">
+                  <div className="relative overflow-hidden bg-muted/20">
                     <OptimizedImage
                       src={image.image_url}
                       alt={`Menu ${index + 1}`}
-                      className="w-full h-auto object-contain cursor-zoom-in transition-transform duration-700 group-hover:scale-[1.03]"
+                      className="w-full h-auto object-contain cursor-zoom-in transition-transform duration-700 group-hover:scale-[1.02]"
                       priority={index < 2}
                       onLoad={() => handleImageLoad(image.id)}
                       onClick={() => setZoomedImage(image.image_url)}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 pointer-events-none" />
                     <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-y-2 group-hover:translate-y-0 pointer-events-none">
-                      <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-md rounded-full px-4 py-2 shadow-lg">
-                        <span className="text-sm font-semibold text-gray-800 dark:text-gray-100">Click to zoom</span>
+                      <div className="bg-background/95 backdrop-blur-md rounded-full px-4 py-2 shadow-lg border">
+                        <span className="text-sm font-semibold">Tap to zoom</span>
                       </div>
                     </div>
                   </div>
@@ -350,10 +353,10 @@ const MenuView = () => {
             ))}
           </>
         ) : (
-          <Card className="p-8 text-center animate-fade-in">
+          <Card className="p-8 text-center animate-fade-in border-2 border-dashed">
             <div className="animate-bounce-gentle">
-              <p className="text-muted-foreground text-lg">No menu images available</p>
-              <p className="text-sm text-muted-foreground mt-2">Check back soon for our delicious menu!</p>
+              <p className="text-muted-foreground text-lg font-medium">No menu available yet</p>
+              <p className="text-sm text-muted-foreground mt-2">Check back soon!</p>
             </div>
           </Card>
         )}
