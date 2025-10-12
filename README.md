@@ -1,10 +1,30 @@
-# 🍽️ MenuQR - Digital Restaurant Menu Platform
+# 🍽️ AddMenu - Digital Menu QR Code for Restaurants in Tripura
 
 **Version:** 1.0.0  
 **Status:** ✅ Production Ready  
-**Last Updated:** January 11, 2025
+**Last Updated:** October 13, 2025
 
-Transform your restaurant menu into a modern digital experience with QR codes, analytics, and customer feedback.
+**AddMenu** is the leading digital menu platform for restaurants across **Tripura**. Serve customers in Agartala, Khowai, Belonia, Udaipur, Dharmanagar, and all Tripura cities with professional QR code menus, real-time analytics, and customer feedback.
+
+## 🗺️ Serving All of Tripura
+
+AddMenu proudly serves restaurants in:
+- **Agartala** - Capital city restaurants
+- **Khowai** - Local eateries
+- **Belonia** - South Tripura
+- **Udaipur** - Gomati district
+- **Dharmanagar** - North Tripura
+- **Kailashahar** - Unakoti district
+- **Ambassa** - Dhalai district
+- **Teliamura** - Khowai district
+- **Sabroom** - South Tripura
+- **Sonamura** - Sepahijala district
+- **Bishalgarh** - West Tripura
+- **Kamalpur** - Dhalai district
+- **Amarpur** - Gomati district
+- **Ranir Bazar** - Sepahijala
+- **Santir Bazar** - South Tripura
+- **Melaghar** - West Tripura
 
 ---
 
@@ -651,6 +671,10 @@ For issues or questions:
 
 ---
 
-**Built with ❤️ for restaurants everywhere**
+**Built with ❤️ for restaurants across Tripura**
 
-*Last Updated: January 11, 2025*
+## 🔍 SEO Keywords
+
+Digital Menu Tripura, QR Code Menu Agartala, Restaurant Menu Khowai, Contactless Menu Belonia, Menu Maker Tripura, Restaurant QR Code Agartala, Digital Menu Udaipur, QR Menu Dharmanagar, Restaurant Technology Tripura, Menu App Agartala, Contactless Dining Tripura, Digital Restaurant Menu, QR Code Generator Tripura, AddMenu Tripura, AddMenu Agartala
+
+*Last Updated: October 13, 2025*

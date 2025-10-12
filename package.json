@@ -1,11 +1,23 @@
 {
-  "name": "menuqr",
+  "name": "addmenu",
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "Digital Restaurant Menu Platform with QR codes, analytics, and customer feedback",
-  "author": "MenuQR",
+  "description": "AddMenu - Digital Menu QR Code for Restaurants in Tripura. Best contactless menu solution for Agartala, Khowai, Belonia and all Tripura cities.",
+  "author": "AddMenu",
   "license": "MIT",
+  "keywords": [
+    "digital menu",
+    "QR code menu",
+    "restaurant menu",
+    "Tripura",
+    "Agartala",
+    "Khowai",
+    "Belonia",
+    "contactless menu",
+    "menu maker",
+    "restaurant technology"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "vite build",

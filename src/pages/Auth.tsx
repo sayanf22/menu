@@ -56,29 +56,25 @@ const Auth = () => {
       return;
     }
 
-    if (signUpData.signupCode.length !== 12) {
-      toast.error("Signup code must be exactly 12 characters (10 digits + 2 letters)");
-      return;
-    }
-
-    if (!/^[A-Z0-9]{12}$/.test(signUpData.signupCode.toUpperCase())) {
-      toast.error("Signup code must contain only numbers and letters");
-      return;
-    }
-
     setLoading(true);
 
     try {
-      // First validate the signup code BEFORE creating the account
-      const { data: validateData, error: validateError } = await supabase.functions.invoke(
+      // Validate signup code first
+      const { data: validationData, error: validationError } = await supabase.functions.invoke(
         'validate-signup',
         {
-          body: { signupCode: signUpData.signupCode.toUpperCase() }
+          body: { signupCode: signUpData.signupCode }
         }
       );
 
-      if (validateError || !validateData?.valid) {
-        toast.error("Invalid signup code. Please check your code and try again.");
+      if (validationError) {
+        toast.error("Error validating signup code");
+        setLoading(false);
+        return;
+      }
+
+      if (!validationData?.valid) {
+        toast.error(validationData?.error || "Invalid signup code");
         setLoading(false);
         return;
       }
@@ -88,7 +84,11 @@ const Auth = () => {
         email: signUpData.email,
         password: signUpData.password,
         options: {
-          emailRedirectTo: `${window.location.origin}/dashboard`,
+          emailRedirectTo: `${window.location.origin}/auth`,
+          data: {
+            restaurant_name: signUpData.restaurantName,
+            restaurant_description: signUpData.restaurantDescription || ""
+          }
         },
       });
 
@@ -96,43 +96,32 @@ const Auth = () => {
 
       if (!authData.user) throw new Error("Failed to create user");
 
-      // If email confirmation is disabled, the user will be signed in immediately
-      // If email confirmation is enabled, we need to wait for confirmation
-      if (authData.session) {
-        // User is signed in immediately, create profile using the function
-        const { data: profileResult, error: profileError } = await supabase.rpc('create_user_profile', {
-          user_id: authData.user.id,
-          restaurant_name: signUpData.restaurantName,
-          restaurant_description: signUpData.restaurantDescription || ""
-        });
+      // Create profile
+      const { data: profileResult, error: profileError} = await supabase.rpc('create_user_profile' as any, {
+        user_id: authData.user.id,
+        restaurant_name: signUpData.restaurantName,
+        restaurant_description: signUpData.restaurantDescription || ""
+      }) as { data: any; error: any };
 
-        if (profileError || !profileResult?.success) {
-          console.error('Profile creation error:', profileError || profileResult);
-          
-          // Try to sign out the user if profile creation failed
-          await supabase.auth.signOut();
-          
-          const errorMessage = profileResult?.error || profileError?.message || "Unknown error";
-          toast.error(`Failed to create restaurant profile: ${errorMessage}`);
-          setLoading(false);
-          return;
-        }
-
-        toast.success("Account created successfully!");
-        navigate("/dashboard");
-      } else {
-        // Email confirmation required - show instructions
-        toast.success("Account created! Please check your email to confirm your account, then return to sign in.");
+      if (profileError || !(profileResult as any)?.success) {
+        console.error('Profile creation error:', profileError || profileResult);
         
-        // Clear the form
-        setSignUpData({
-          email: "",
-          password: "",
-          restaurantName: "",
-          restaurantDescription: "",
-          signupCode: "",
-        });
+        const errorMessage = (profileResult as any)?.error || profileError?.message || "Unknown error";
+        toast.error(`Failed to create restaurant profile: ${errorMessage}`);
+        setLoading(false);
+        return;
       }
+
+      toast.success("Account created successfully! Please check your email to confirm your account.");
+      
+      // Clear the form
+      setSignUpData({
+        email: "",
+        password: "",
+        restaurantName: "",
+        restaurantDescription: "",
+        signupCode: "",
+      });
     } catch (error: any) {
       toast.error(error.message || "Error creating account");
     } finally {
@@ -145,7 +134,7 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email: signInData.email,
         password: signInData.password,
       });
@@ -359,20 +348,17 @@ const Auth = () => {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="signup-code">
-                    Signup Code <span className="text-destructive">*</span>
-                  </Label>
+                  <Label htmlFor="signup-code">Signup Code</Label>
                   <Input
                     id="signup-code"
                     type="text"
-                    placeholder="Enter your 12-character code"
+                    placeholder="Enter your signup code"
                     value={signUpData.signupCode}
-                    onChange={(e) => setSignUpData({ ...signUpData, signupCode: e.target.value.replace(/[^A-Z0-9]/gi, '').slice(0, 12).toUpperCase() })}
-                    maxLength={12}
+                    onChange={(e) => setSignUpData({ ...signUpData, signupCode: e.target.value })}
                     required
                   />
                   <p className="text-xs text-muted-foreground">
-                    Contact us to receive your signup code
+                    Contact support to get a signup code
                   </p>
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>

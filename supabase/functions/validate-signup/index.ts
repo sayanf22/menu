@@ -25,29 +25,16 @@ serve(async (req) => {
       )
     }
 
-    // Universal signup code - always valid, never gets marked as used
-    const UNIVERSAL_CODE = '8119811655SS'
-    
-    if (signupCode === UNIVERSAL_CODE) {
-      return new Response(
-        JSON.stringify({ valid: true }),
-        { 
-          status: 200, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
-    }
-
-    // Create Supabase client with service role key for other codes
+    // Create Supabase client with service role key - ALWAYS check database
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Check if code exists and is unused
+    // Check if code exists in database
     const { data: codeData, error: fetchError } = await supabase
       .from('signup_codes')
-      .select('id, is_used')
+      .select('id, code, is_used')
       .eq('code', signupCode)
       .single()
 
@@ -61,6 +48,21 @@ serve(async (req) => {
       )
     }
 
+    // Universal code: Shy8119811655@34 - never gets marked as used
+    const UNIVERSAL_CODE = 'Shy8119811655@34'
+    
+    if (codeData.code === UNIVERSAL_CODE) {
+      // Universal code is always valid, don't mark as used
+      return new Response(
+        JSON.stringify({ valid: true }),
+        { 
+          status: 200, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
+
+    // For non-universal codes, check if already used
     if (codeData.is_used) {
       return new Response(
         JSON.stringify({ valid: false, error: 'Signup code already used' }),
@@ -71,7 +73,7 @@ serve(async (req) => {
       )
     }
 
-    // Mark code as used (only for non-universal codes)
+    // Mark non-universal code as used
     const { error: updateError } = await supabase
       .from('signup_codes')
       .update({ 
