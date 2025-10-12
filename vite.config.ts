@@ -17,7 +17,21 @@ export default defineConfig(({ mode }) => ({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: undefined,
+        manualChunks: (id) => {
+          // Split vendor chunks for better caching
+          if (id.includes('node_modules')) {
+            if (id.includes('react') || id.includes('react-dom')) {
+              return 'react-vendor';
+            }
+            if (id.includes('@supabase')) {
+              return 'supabase-vendor';
+            }
+            if (id.includes('@radix-ui')) {
+              return 'ui-vendor';
+            }
+            return 'vendor';
+          }
+        },
         // Optimize asset file names for better caching
         assetFileNames: (assetInfo) => {
           if (!assetInfo.name) return `assets/[name]-[hash][extname]`;
@@ -35,19 +49,24 @@ export default defineConfig(({ mode }) => ({
       }
     },
     // Optimize chunk size
-    chunkSizeWarningLimit: 1000,
-    // Enable source maps for better debugging
-    sourcemap: mode === 'development',
-    // Minify for production
-    minify: mode === 'production' ? 'esbuild' : false,
+    chunkSizeWarningLimit: 600,
+    // Disable source maps in production for smaller files
+    sourcemap: false,
+    // Fast minification with esbuild
+    minify: 'esbuild',
+    esbuild: {
+      drop: mode === 'production' ? ['console', 'debugger'] : [],
+    },
     // Target modern browsers for better performance
-    target: 'esnext',
+    target: 'es2020',
     // CSS code splitting
     cssCodeSplit: true,
-    // Optimize assets
-    assetsInlineLimit: 4096,
+    // Inline small assets
+    assetsInlineLimit: 2048,
     // Report compressed size
-    reportCompressedSize: true
+    reportCompressedSize: true,
+    // Optimize CSS
+    cssMinify: true,
   },
   // Performance optimizations
   optimizeDeps: {
