@@ -16,7 +16,7 @@ import { generateDeviceFingerprint } from "@/lib/deviceFingerprint";
 const MenuView = () => {
   const { restaurantId } = useParams();
   const [loading, setLoading] = useState(true);
-  const [showSplash, setShowSplash] = useState(false); // Disabled for faster loading
+  const [showSplash, setShowSplash] = useState(true);
   const [profile, setProfile] = useState<any>(null);
   const [menuImages, setMenuImages] = useState<any[]>([]);
   const [socialLinks, setSocialLinks] = useState<any>(null);
@@ -88,13 +88,22 @@ const MenuView = () => {
     }
   };
 
-  // Play welcome sound once data loads (non-blocking)
+  // Hide splash screen immediately after data loads
   useEffect(() => {
-    if (!loading && !audioPlayed && profile) {
-      playWelcomeSound().catch(() => {});
-      setAudioPlayed(true);
+    if (!loading && profile) {
+      // Play sound in background (non-blocking)
+      if (!audioPlayed) {
+        playWelcomeSound().catch(() => {});
+        setAudioPlayed(true);
+      }
+      
+      // Very quick transition - 300ms only
+      const timer = setTimeout(() => {
+        setShowSplash(false);
+      }, 300);
+      return () => clearTimeout(timer);
     }
-  }, [loading, audioPlayed, profile]);
+  }, [loading, profile, audioPlayed]);
 
   // Handle tap to play sound if autoplay blocked
   const handleSplashTap = async () => {
@@ -194,13 +203,23 @@ const MenuView = () => {
     try {
       setLoading(true);
 
-      // Fetch all data in parallel for faster loading
+      // Fetch profile first for splash screen
+      const profilePromise = supabase
+        .from("profiles")
+        .select("restaurant_name, restaurant_description, logo_url")
+        .eq("id", restaurantId)
+        .maybeSingle();
+
+      // Start profile fetch and update UI immediately
+      profilePromise.then(({ data }) => {
+        if (data) {
+          setProfile(data);
+        }
+      });
+
+      // Fetch all data in parallel
       const [profileResult, imagesResult, socialResult] = await Promise.allSettled([
-        supabase
-          .from("profiles")
-          .select("restaurant_name, restaurant_description, logo_url")
-          .eq("id", restaurantId)
-          .maybeSingle(),
+        profilePromise,
         supabase
           .from("menu_images")
           .select("*")
@@ -208,11 +227,6 @@ const MenuView = () => {
           .order("display_order", { ascending: true }),
         supabase.rpc("get_public_social_links", { rest_id: restaurantId })
       ]);
-
-      // Handle profile data
-      if (profileResult.status === 'fulfilled' && profileResult.value.data) {
-        setProfile(profileResult.value.data);
-      }
 
       // Handle menu images
       if (imagesResult.status === 'fulfilled' && imagesResult.value.data) {
@@ -286,6 +300,97 @@ const MenuView = () => {
     }
   };
 
+  // Optimized Splash Screen - Fast & Smooth
+  if (showSplash) {
+    return (
+      <div 
+        className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 relative overflow-hidden"
+        onClick={handleSplashTap}
+      >
+        {/* Animated background gradient */}
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-accent/10 animate-pulse" style={{ animationDuration: '3s' }}></div>
+        
+        <div className="relative z-10 text-center px-4 max-w-md mx-auto">
+          {/* Logo with smooth scale animation */}
+          {profile?.logo_url ? (
+            <div className="flex justify-center mb-6 animate-in fade-in zoom-in duration-500">
+              <img
+                src={profile.logo_url}
+                alt={profile.restaurant_name}
+                className="w-24 h-24 sm:w-32 sm:h-32 object-cover rounded-full border-4 border-primary/20 shadow-2xl"
+                loading="eager"
+              />
+            </div>
+          ) : (
+            <div className="flex justify-center mb-6">
+              <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-primary/10 flex items-center justify-center animate-pulse">
+                <Loader2 className="h-12 w-12 animate-spin text-primary" />
+              </div>
+            </div>
+          )}
+          
+          {/* Restaurant name with slide up animation */}
+          {profile?.restaurant_name ? (
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent animate-in slide-in-from-bottom-4 duration-500 delay-100">
+              {profile.restaurant_name}
+            </h1>
+          ) : (
+            <div className="h-12 w-48 mx-auto bg-muted/20 rounded-lg animate-pulse mb-3"></div>
+          )}
+          
+          {/* Description with fade in */}
+          {profile?.restaurant_description && (
+            <p className="text-base sm:text-lg text-muted-foreground animate-in fade-in duration-500 delay-200">
+              {profile.restaurant_description}
+            </p>
+          )}
+          
+          {/* Loading indicator */}
+          <div className="mt-8 animate-in fade-in duration-500 delay-300">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 backdrop-blur-sm">
+              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+              <span className="text-sm font-medium text-primary">Loading menu...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Lightweight splash screen - shows only while loading
+  if (showSplash && loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center px-4">
+          {profile?.logo_url ? (
+            <div className="flex justify-center mb-4">
+              <img
+                src={profile.logo_url}
+                alt={profile.restaurant_name || "Restaurant"}
+                className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-full shadow-lg"
+                loading="eager"
+              />
+            </div>
+          ) : (
+            <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
+          )}
+          
+          {profile?.restaurant_name && (
+            <h1 className="text-2xl sm:text-3xl font-bold mb-2">
+              {profile.restaurant_name}
+            </h1>
+          )}
+          
+          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span>Loading menu...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading spinner if still loading after splash
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
