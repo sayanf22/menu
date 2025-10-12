@@ -149,6 +149,15 @@ All colors MUST be HSL.
     animation: glow 2s ease-in-out infinite alternate;
   }
   
+  .animate-logo-entrance {
+    animation: logoEntrance 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+  
+  .animate-fade-in-up {
+    animation: fadeInUp 0.6s ease-out forwards;
+    opacity: 0;
+  }
+  
   /* Smooth hover transitions */
   .transition-smooth {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -266,5 +275,57 @@ All colors MUST be HSL.
   }
   to {
     box-shadow: 0 0 30px rgba(249, 158, 11, 0.6);
+  }
+}
+
+@keyframes logoEntrance {
+  0% {
+    opacity: 0;
+    transform: scale(1.5);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInSlideZoom {
+  0% {
+    opacity: 0;
+    transform: translateY(32px) scale(1.5);
+  }
+  60% {
+    opacity: 0.9;
+    transform: translateY(-4px) scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes fadeInSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(32px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

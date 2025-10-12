@@ -88,22 +88,22 @@ const MenuView = () => {
     }
   };
 
-  // Hide splash screen immediately after data loads
+  // Hide splash screen after animations complete
   useEffect(() => {
-    if (!loading && profile) {
+    if (!loading && profile && menuImages.length > 0) {
       // Play sound in background (non-blocking)
       if (!audioPlayed) {
         playWelcomeSound().catch(() => {});
         setAudioPlayed(true);
       }
       
-      // Very quick transition - 300ms only
+      // Wait for logo animation to complete (1s) + small buffer
       const timer = setTimeout(() => {
         setShowSplash(false);
-      }, 300);
+      }, 1200);
       return () => clearTimeout(timer);
     }
-  }, [loading, profile, audioPlayed]);
+  }, [loading, profile, menuImages, audioPlayed]);
 
   // Handle tap to play sound if autoplay blocked
   const handleSplashTap = async () => {
@@ -357,33 +357,62 @@ const MenuView = () => {
     );
   }
 
-  // Lightweight splash screen - shows only while loading
-  if (showSplash && loading) {
+  // Beautiful splash screen with smooth Tailwind animations
+  if (showSplash) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center px-4">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 relative overflow-hidden">
+        {/* Subtle animated background */}
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute top-1/3 left-1/3 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-pulse"></div>
+        </div>
+
+        <div className="relative z-10 text-center px-4">
+          {/* Logo with fade-in, slide-up and zoom-out animation */}
           {profile?.logo_url ? (
-            <div className="flex justify-center mb-4">
-              <img
-                src={profile.logo_url}
-                alt={profile.restaurant_name || "Restaurant"}
-                className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-full shadow-lg"
-                loading="eager"
-              />
+            <div className="flex justify-center mb-6">
+              <div className="opacity-0 translate-y-8 scale-150 animate-[fadeInSlideZoom_1s_ease-out_forwards]">
+                <img
+                  src={profile.logo_url}
+                  alt={profile.restaurant_name || "Restaurant"}
+                  className="w-28 h-28 sm:w-36 sm:h-36 object-cover rounded-full shadow-2xl border-4 border-primary/20"
+                  loading="eager"
+                />
+              </div>
             </div>
           ) : (
-            <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
+            <div className="flex justify-center mb-6 opacity-0 animate-[fadeIn_0.5s_ease-out_forwards]">
+              <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-full bg-primary/10 flex items-center justify-center">
+                <Loader2 className="h-14 w-14 animate-spin text-primary" />
+              </div>
+            </div>
           )}
           
+          {/* Restaurant name with slide-up from bottom animation */}
           {profile?.restaurant_name && (
-            <h1 className="text-2xl sm:text-3xl font-bold mb-2">
+            <h1 
+              className="text-3xl sm:text-4xl font-bold mb-3 opacity-0 translate-y-8 animate-[fadeInSlideUp_0.8s_ease-out_0.4s_forwards]"
+            >
               {profile.restaurant_name}
             </h1>
           )}
           
-          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            <span>Loading menu...</span>
+          {/* Description with delayed slide-up */}
+          {profile?.restaurant_description && (
+            <p 
+              className="text-base sm:text-lg text-muted-foreground max-w-md mx-auto mb-6 opacity-0 translate-y-6 animate-[fadeInSlideUp_0.8s_ease-out_0.7s_forwards]"
+            >
+              {profile.restaurant_description}
+            </p>
+          )}
+          
+          {/* Loading indicator with fade-in */}
+          <div 
+            className="mt-6 opacity-0 animate-[fadeIn_0.5s_ease-out_1s_forwards]"
+          >
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10">
+              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+              <span className="text-sm font-medium text-primary">Loading menu...</span>
+            </div>
           </div>
         </div>
       </div>

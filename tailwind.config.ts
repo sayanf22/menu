@@ -92,6 +92,34 @@ export default {
           "0%, 100%": { boxShadow: "0 0 20px hsl(var(--primary) / 0.3)" },
           "50%": { boxShadow: "0 0 30px hsl(var(--primary) / 0.5)" },
         },
+        "fadeInSlideZoom": {
+          "0%": { 
+            opacity: "0", 
+            transform: "translateY(32px) scale(1.5)" 
+          },
+          "60%": { 
+            opacity: "0.9", 
+            transform: "translateY(-4px) scale(1.05)" 
+          },
+          "100%": { 
+            opacity: "1", 
+            transform: "translateY(0) scale(1)" 
+          },
+        },
+        "fadeInSlideUp": {
+          "0%": { 
+            opacity: "0", 
+            transform: "translateY(32px)" 
+          },
+          "100%": { 
+            opacity: "1", 
+            transform: "translateY(0)" 
+          },
+        },
+        "fadeIn": {
+          "0%": { opacity: "0" },
+          "100%": { opacity: "1" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -101,6 +129,9 @@ export default {
         "slide-in": "slide-in 0.3s ease-out",
         "slide-up": "slide-up 0.6s ease-out forwards",
         "glow": "glow 2s ease-in-out infinite",
+        "fadeInSlideZoom": "fadeInSlideZoom 1s ease-out forwards",
+        "fadeInSlideUp": "fadeInSlideUp 0.8s ease-out forwards",
+        "fadeIn": "fadeIn 0.5s ease-out forwards",
       },
     },
   },
