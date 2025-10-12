@@ -17,21 +17,7 @@ export default defineConfig(({ mode }) => ({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: (id) => {
-          // Split vendor chunks for better caching
-          if (id.includes('node_modules')) {
-            if (id.includes('react') || id.includes('react-dom')) {
-              return 'react-vendor';
-            }
-            if (id.includes('@supabase')) {
-              return 'supabase-vendor';
-            }
-            if (id.includes('@radix-ui')) {
-              return 'ui-vendor';
-            }
-            return 'vendor';
-          }
-        },
+        manualChunks: undefined,
         // Optimize asset file names for better caching
         assetFileNames: (assetInfo) => {
           if (!assetInfo.name) return `assets/[name]-[hash][extname]`;
@@ -49,7 +35,7 @@ export default defineConfig(({ mode }) => ({
       }
     },
     // Optimize chunk size
-    chunkSizeWarningLimit: 600,
+    chunkSizeWarningLimit: 1000,
     // Disable source maps in production for smaller files
     sourcemap: false,
     // Fast minification with esbuild
