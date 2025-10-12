@@ -165,7 +165,7 @@ out/
 
 # Gatsby files
 .cache/
-public/
+# public/ - We need public folder for sitemaps and static assets
 
 # Serverless directories
 .serverless/
