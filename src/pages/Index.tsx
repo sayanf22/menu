@@ -30,16 +30,24 @@ const Index = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Link to="/auth">
                 <Button size="lg" className="text-lg px-8 shadow-[var(--shadow-elegant)] hover:shadow-[var(--shadow-glow)] transition-shadow">
-                  Start Free Trial <ArrowRight className="ml-2 h-5 w-5" />
+                  Get Started Now <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
-              <p className="text-sm text-muted-foreground">
-                ✓ Free for 30 days • ✓ No credit card required
-              </p>
+              <a 
+                href="https://wa.me/917005832798?text=Hi%2C%20I%27m%20interested%20in%20AddMenu%20digital%20menu%20service%20for%20my%20restaurant%20in%20Tripura.%20Please%20share%20more%20details." 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
+              >
+                <svg className="w-6 h-6 text-green-500" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+                </svg>
+                <span className="font-medium">WhatsApp: +91 7005832798</span>
+              </a>
             </div>
             <div className="pt-4">
               <p className="text-sm text-muted-foreground">
-                Serving restaurants in: <strong>Agartala</strong> • <strong>Khowai</strong> • <strong>Belonia</strong> • <strong>Udaipur</strong> • <strong>Dharmanagar</strong> • <strong>Kailashahar</strong> • <strong>Ambassa</strong> • <strong>Teliamura</strong> • <strong>Sabroom</strong> • <strong>Sonamura</strong> • <strong>Bishalgarh</strong> • <strong>Kamalpur</strong>
+                Serving restaurants in: <strong>Agartala</strong> • <strong>Khowai</strong> • <strong>Belonia</strong> • <strong>Udaipur</strong> • <strong>Dharmanagar</strong> • <strong>Kailashahar</strong> • <strong>Ambassa</strong> • <strong>Teliamura</strong> • <strong>Sabroom</strong> • <strong>Sonamura</strong> • <strong>Bishalgarh</strong> • <strong>Kamalpur</strong> • <strong>Amarpur</strong> • <strong>Ranir Bazar</strong> • <strong>Santir Bazar</strong> • <strong>Melaghar</strong> • <strong>Jirania</strong> • <strong>Mohanpur</strong> • <strong>Kumarghat</strong> • <strong>Panisagar</strong> • <strong>Kanchanpur</strong> • <strong>Manu</strong> • <strong>Longtharai Valley</strong> • <strong>Dhalai</strong> • <strong>Gandacherra</strong> • <strong>Boxanagar</strong>
               </p>
             </div>
           </div>
@@ -106,14 +114,17 @@ const Index = () => {
             AddMenu is trusted by restaurants in all major cities of Tripura
           </p>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 max-w-5xl mx-auto">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 max-w-6xl mx-auto">
           {[
             "Agartala", "Khowai", "Belonia", "Udaipur", "Dharmanagar", "Kailashahar",
             "Ambassa", "Teliamura", "Sabroom", "Sonamura", "Bishalgarh", "Kamalpur",
-            "Amarpur", "Ranir Bazar", "Santir Bazar", "Melaghar"
+            "Amarpur", "Ranir Bazar", "Santir Bazar", "Melaghar", "Jirania", "Mohanpur",
+            "Kumarghat", "Kamalghat", "Panisagar", "Kanchanpur", "Manu", "Longtharai Valley", 
+            "Dhalai", "Gandacherra", "Boxanagar", "Dumburnagar", "Fatikroy", "Pecharthal",
+            "Kadamtala", "Chailengta", "Hrishyamukh", "Radhakishorepur", "Takarjala"
           ].map((city) => (
             <Card key={city} className="p-4 text-center hover:shadow-md transition-shadow">
-              <p className="font-semibold">{city}</p>
+              <p className="font-semibold text-sm">{city}</p>
             </Card>
           ))}
         </div>
@@ -159,18 +170,31 @@ const Index = () => {
         <Card className="p-12 text-center space-y-6 bg-gradient-to-br from-primary/5 to-accent/5 border-primary/20">
           <h2 className="text-4xl font-bold">Join 100+ Tripura Restaurants Using AddMenu</h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Start your free 30-day trial today. No credit card required. Perfect for restaurants in Agartala, Khowai, Belonia, and all Tripura cities.
+            Transform your restaurant with digital menus. Perfect for restaurants in Agartala, Khowai, Belonia, Udaipur, Dharmanagar, and all Tripura cities.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Link to="/auth">
               <Button size="lg" className="text-lg px-12">
-                Create Free Account
+                Get Started Now
               </Button>
             </Link>
-            <p className="text-sm text-muted-foreground">
-              ⭐ Rated 4.8/5 by Tripura restaurants
-            </p>
+            <a 
+              href="https://wa.me/917005832798?text=Hi%2C%20I%27m%20interested%20in%20AddMenu%20digital%20menu%20service%20for%20my%20restaurant%20in%20Tripura.%20Please%20share%20more%20details." 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="flex items-center gap-2"
+            >
+              <Button size="lg" variant="outline" className="text-lg px-8">
+                <svg className="w-5 h-5 mr-2 text-green-500" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+                </svg>
+                Contact on WhatsApp
+              </Button>
+            </a>
           </div>
+          <p className="text-sm text-muted-foreground">
+            ⭐ Rated 4.8/5 by Tripura restaurants • 📱 Quick Setup • 🚀 Instant QR Codes
+          </p>
         </Card>
       </section>
 
@@ -184,7 +208,7 @@ const Index = () => {
             <strong>AddMenu</strong> is the leading digital menu platform designed specifically for restaurants, cafes, and food businesses across <strong>Tripura</strong>. Whether you run a restaurant in <strong>Agartala</strong>, a cafe in <strong>Khowai</strong>, or a food joint in <strong>Belonia</strong>, AddMenu helps you create professional QR code menus in minutes.
           </p>
           <p className="text-muted-foreground mb-4">
-            Our platform serves restaurants in all major cities of Tripura including <strong>Udaipur</strong>, <strong>Dharmanagar</strong>, <strong>Kailashahar</strong>, <strong>Ambassa</strong>, <strong>Teliamura</strong>, <strong>Sabroom</strong>, <strong>Sonamura</strong>, <strong>Bishalgarh</strong>, <strong>Kamalpur</strong>, <strong>Amarpur</strong>, <strong>Ranir Bazar</strong>, and <strong>Santir Bazar</strong>.
+            Our platform serves restaurants in all major cities and towns of Tripura including <strong>Agartala</strong>, <strong>Khowai</strong>, <strong>Belonia</strong>, <strong>Udaipur</strong>, <strong>Dharmanagar</strong>, <strong>Kailashahar</strong>, <strong>Ambassa</strong>, <strong>Teliamura</strong>, <strong>Sabroom</strong>, <strong>Sonamura</strong>, <strong>Bishalgarh</strong>, <strong>Kamalpur</strong>, <strong>Amarpur</strong>, <strong>Ranir Bazar</strong>, <strong>Santir Bazar</strong>, <strong>Melaghar</strong>, <strong>Jirania</strong>, <strong>Mohanpur</strong>, <strong>Kumarghat</strong>, <strong>Panisagar</strong>, <strong>Kanchanpur</strong>, <strong>Manu</strong>, <strong>Longtharai Valley</strong>, <strong>Dhalai</strong>, <strong>Gandacherra</strong>, <strong>Boxanagar</strong>, <strong>Dumburnagar</strong>, <strong>Fatikroy</strong>, and <strong>Pecharthal</strong>.
           </p>
           <h3 className="text-2xl font-bold mt-8 mb-4">
             How AddMenu Works for Tripura Restaurants
@@ -235,10 +259,20 @@ const Index = () => {
             </div>
             <div>
               <h4 className="font-semibold mb-4">Contact</h4>
-              <p className="text-sm text-muted-foreground">
-                Serving all of Tripura<br/>
-                Email: support@addmenu.in
+              <p className="text-sm text-muted-foreground mb-2">
+                Serving all of Tripura
               </p>
+              <a 
+                href="https://wa.me/917005832798?text=Hi%2C%20I%27m%20interested%20in%20AddMenu%20digital%20menu%20service%20for%20my%20restaurant%20in%20Tripura.%20Please%20share%20more%20details." 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-sm text-green-600 hover:text-green-700 transition-colors"
+              >
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+                </svg>
+                <span className="font-medium">WhatsApp: +91 7005832798</span>
+              </a>
             </div>
           </div>
           <div className="border-t pt-8 text-center text-sm text-muted-foreground">
