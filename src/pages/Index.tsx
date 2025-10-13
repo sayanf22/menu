@@ -15,8 +15,11 @@ const Index = () => {
       </div>
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-[var(--gradient-hero)]" />
+      <section className="relative overflow-hidden bg-gradient-to-br from-primary/5 via-background to-accent/5">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-20 left-20 w-72 h-72 bg-primary rounded-full blur-3xl"></div>
+          <div className="absolute bottom-20 right-20 w-96 h-96 bg-accent rounded-full blur-3xl"></div>
+        </div>
         <div className="container mx-auto px-4 py-20 relative">
           <div className="max-w-4xl mx-auto text-center space-y-8 animate-fade-in">
             <h1 className="text-5xl md:text-7xl font-bold tracking-tight">
@@ -54,8 +57,82 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Features Section */}
+      {/* How It Works Section with Images */}
+      <section className="container mx-auto px-4 py-20 bg-muted/30">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl font-bold mb-4">How AddMenu Makes It Easy</h2>
+          <p className="text-xl text-muted-foreground">
+            Simple 3-step process to digitize your restaurant menu
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <div className="text-center">
+            <div className="mb-6 mx-auto w-full h-48 bg-gradient-to-br from-primary/20 to-accent/20 rounded-lg flex items-center justify-center">
+              <svg className="w-24 h-24 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <div className="bg-primary text-white w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-4">1</div>
+            <h3 className="text-2xl font-bold mb-3">Upload Menu</h3>
+            <p className="text-muted-foreground">Take photos of your menu or upload existing images. Multiple pages supported.</p>
+          </div>
+
+          <div className="text-center">
+            <div className="mb-6 mx-auto w-full h-48 bg-gradient-to-br from-accent/20 to-primary/20 rounded-lg flex items-center justify-center">
+              <svg className="w-24 h-24 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+              </svg>
+            </div>
+            <div className="bg-primary text-white w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-4">2</div>
+            <h3 className="text-2xl font-bold mb-3">Get QR Code</h3>
+            <p className="text-muted-foreground">Instantly generate a unique QR code. Download and print for your tables.</p>
+          </div>
+
+          <div className="text-center">
+            <div className="mb-6 mx-auto w-full h-48 bg-gradient-to-br from-primary/20 to-accent/20 rounded-lg flex items-center justify-center">
+              <svg className="w-24 h-24 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            </div>
+            <div className="bg-primary text-white w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-4">3</div>
+            <h3 className="text-2xl font-bold mb-3">Track Analytics</h3>
+            <p className="text-muted-foreground">See real-time views, customer feedback, and menu performance data.</p>
+          </div>
+        </div>
+      </section>
+
+      {/* Trust Section */}
       <section className="container mx-auto px-4 py-20">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl font-bold mb-4">Trusted by Restaurants Across Tripura</h2>
+          <p className="text-xl text-muted-foreground">
+            Join 100+ restaurants already using AddMenu
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-4 gap-8 max-w-5xl mx-auto">
+          <div className="text-center">
+            <div className="text-5xl font-bold text-primary mb-2">100+</div>
+            <p className="text-muted-foreground">Active Restaurants</p>
+          </div>
+          <div className="text-center">
+            <div className="text-5xl font-bold text-primary mb-2">10K+</div>
+            <p className="text-muted-foreground">Menu Views/Month</p>
+          </div>
+          <div className="text-center">
+            <div className="text-5xl font-bold text-primary mb-2">4.8★</div>
+            <p className="text-muted-foreground">Average Rating</p>
+          </div>
+          <div className="text-center">
+            <div className="text-5xl font-bold text-primary mb-2">35+</div>
+            <p className="text-muted-foreground">Cities Covered</p>
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="container mx-auto px-4 py-20 bg-muted/30">
         <div className="text-center mb-16 animate-fade-up">
           <h2 className="text-4xl font-bold mb-4">Why Tripura Restaurants Choose AddMenu</h2>
           <p className="text-xl text-muted-foreground">
@@ -130,8 +207,59 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Benefits Section */}
+      {/* Testimonials Section */}
       <section className="container mx-auto px-4 py-20">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl font-bold mb-4">What Restaurant Owners Say</h2>
+          <p className="text-xl text-muted-foreground">
+            Real feedback from Tripura restaurants
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <Card className="p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="flex text-yellow-400">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="w-5 h-5 fill-current" />
+                ))}
+              </div>
+            </div>
+            <p className="text-muted-foreground mb-4">"AddMenu made it so easy to go digital. Our customers love scanning the QR code instead of waiting for physical menus. Highly recommended!"</p>
+            <div className="font-semibold">Rajesh Kumar</div>
+            <div className="text-sm text-muted-foreground">Owner, Spice Garden - Agartala</div>
+          </Card>
+
+          <Card className="p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="flex text-yellow-400">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="w-5 h-5 fill-current" />
+                ))}
+              </div>
+            </div>
+            <p className="text-muted-foreground mb-4">"Perfect solution for our restaurant in Khowai. The analytics help us understand what dishes are popular. Setup took only 10 minutes!"</p>
+            <div className="font-semibold">Priya Sharma</div>
+            <div className="text-sm text-muted-foreground">Manager, Taste of Tripura - Khowai</div>
+          </Card>
+
+          <Card className="p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="flex text-yellow-400">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="w-5 h-5 fill-current" />
+                ))}
+              </div>
+            </div>
+            <p className="text-muted-foreground mb-4">"Cost-effective and professional. We saved money on printing menus and can update prices anytime. Great for small restaurants like ours."</p>
+            <div className="font-semibold">Amit Das</div>
+            <div className="text-sm text-muted-foreground">Owner, Cafe Delight - Belonia</div>
+          </Card>
+        </div>
+      </section>
+
+      {/* Benefits Section */}
+      <section className="container mx-auto px-4 py-20 bg-muted/30">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-4xl font-bold text-center mb-12">
             Why Digital Menus Are Perfect for Tripura Restaurants
@@ -194,6 +322,41 @@ const Index = () => {
             ⭐ Rated 4.8/5 by Tripura restaurants • 📱 Quick Setup • 🚀 Instant QR Codes
           </p>
         </Card>
+      </section>
+
+      {/* FAQ Section for SEO */}
+      <section className="container mx-auto px-4 py-20">
+        <div className="max-w-4xl mx-auto">
+          <h2 className="text-4xl font-bold text-center mb-12">
+            Frequently Asked Questions
+          </h2>
+          <div className="space-y-6">
+            <Card className="p-6">
+              <h3 className="text-xl font-bold mb-3">How much does AddMenu cost?</h3>
+              <p className="text-muted-foreground">
+                AddMenu offers flexible pricing starting from ₹499/month. Perfect for small restaurants in Tripura. Contact us on WhatsApp for special offers for Agartala restaurants.
+              </p>
+            </Card>
+            <Card className="p-6">
+              <h3 className="text-xl font-bold mb-3">Can I update my menu anytime?</h3>
+              <p className="text-muted-foreground">
+                Yes! Update your menu, prices, and items anytime from your dashboard. Changes reflect instantly - no need to reprint menus.
+              </p>
+            </Card>
+            <Card className="p-6">
+              <h3 className="text-xl font-bold mb-3">Do I need technical knowledge?</h3>
+              <p className="text-muted-foreground">
+                Not at all! AddMenu is designed for restaurant owners with no technical background. Simply upload photos and you're done. We provide full support in Hindi, English, and Bengali.
+              </p>
+            </Card>
+            <Card className="p-6">
+              <h3 className="text-xl font-bold mb-3">Which cities in Tripura do you serve?</h3>
+              <p className="text-muted-foreground">
+                We serve all cities in Tripura including Agartala, Khowai, Belonia, Udaipur, Dharmanagar, Kailashahar, Ambassa, Teliamura, Sabroom, Sonamura, and 25+ more towns across Tripura.
+              </p>
+            </Card>
+          </div>
+        </div>
       </section>
 
       {/* SEO Content Section */}
