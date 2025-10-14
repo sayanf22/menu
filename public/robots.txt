@@ -31,9 +31,5 @@ User-agent: Slurp
 Allow: /
 Crawl-delay: 1
 
-# Disallow admin/dashboard pages
-Disallow: /dashboard
-Disallow: /auth
-
-# Sitemap
-Sitemap: https://your-domain.com/sitemap.xml
+# Allow auth page for indexing
+Allow: /auth

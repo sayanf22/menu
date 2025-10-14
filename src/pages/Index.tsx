@@ -23,20 +23,22 @@ const Index = () => {
         <div className="container mx-auto px-4 py-20 relative">
           <div className="max-w-4xl mx-auto text-center space-y-8 animate-fade-in">
             {/* Logo */}
-            <div className="flex justify-center mb-6">
+            <div className="flex justify-center mb-8">
               <img 
                 src="/favicon.png" 
                 alt="AddMenu Logo" 
-                className="w-24 h-24 md:w-32 md:h-32 object-contain animate-fade-in"
+                className="w-32 h-32 md:w-40 md:h-40 object-contain animate-fade-in drop-shadow-2xl"
               />
             </div>
-            <h1 className="text-5xl md:text-7xl font-bold tracking-tight">
-              <span className="text-primary">AddMenu</span> - Digital Menu QR Code for Restaurants in{" "}
-              <span className="text-primary">Tripura</span>
+            <h1 className="text-4xl md:text-6xl font-bold tracking-tight leading-tight">
+              <span className="text-primary">AddMenu</span>
+              <br />
+              <span className="text-2xl md:text-4xl font-normal text-muted-foreground">
+                Digital Menu QR Code for Restaurants
+              </span>
             </h1>
-            <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto">
-              Best digital menu solution for restaurants in Agartala, Khowai, Belonia, Udaipur, Dharmanagar & all Tripura cities. 
-              Create QR code menus, track analytics, and get customer feedback instantly.
+            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
+              Create contactless QR menus in minutes. Perfect for restaurants in Tripura.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Link to="/auth">
@@ -56,10 +58,13 @@ const Index = () => {
                 </svg>
               </a>
             </div>
-            <div className="pt-4">
-              <p className="text-sm text-muted-foreground">
-                Serving restaurants in: <strong>Agartala</strong> • <strong>Khowai</strong> • <strong>Belonia</strong> • <strong>Udaipur</strong> • <strong>Dharmanagar</strong> • <strong>Kailashahar</strong> • <strong>Ambassa</strong> • <strong>Teliamura</strong> • <strong>Sabroom</strong> • <strong>Sonamura</strong> • <strong>Bishalgarh</strong> • <strong>Kamalpur</strong> • <strong>Amarpur</strong> • <strong>Ranir Bazar</strong> • <strong>Santir Bazar</strong> • <strong>Melaghar</strong> • <strong>Jirania</strong> • <strong>Mohanpur</strong> • <strong>Kumarghat</strong> • <strong>Panisagar</strong> • <strong>Kanchanpur</strong> • <strong>Manu</strong> • <strong>Longtharai Valley</strong> • <strong>Dhalai</strong> • <strong>Gandacherra</strong> • <strong>Boxanagar</strong>
-              </p>
+            <div className="pt-6 flex flex-wrap justify-center gap-3 text-sm">
+              <span className="px-4 py-2 bg-primary/10 rounded-full">Agartala</span>
+              <span className="px-4 py-2 bg-primary/10 rounded-full">Khowai</span>
+              <span className="px-4 py-2 bg-primary/10 rounded-full">Belonia</span>
+              <span className="px-4 py-2 bg-primary/10 rounded-full">Udaipur</span>
+              <span className="px-4 py-2 bg-primary/10 rounded-full">Dharmanagar</span>
+              <span className="px-4 py-2 bg-primary/10 rounded-full">+30 More Cities</span>
             </div>
           </div>
         </div>
