@@ -35,6 +35,8 @@ const MenuView = () => {
   const [canSubmitFeedback, setCanSubmitFeedback] = useState(true);
   const [isHeaderLight, setIsHeaderLight] = useState(false);
   const [audioPlayed, setAudioPlayed] = useState(false);
+  const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
+  const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
     if (restaurantId) {
@@ -90,7 +92,8 @@ const MenuView = () => {
 
   // Hide splash after smooth animations
   useEffect(() => {
-    if (!loading && profile && menuImages.length > 0) {
+    if (!loading && profile) {
+      // Always hide splash after loading completes, even if no menu images
       if (!audioPlayed) {
         playWelcomeSound().catch(() => {});
         setAudioPlayed(true);
@@ -102,7 +105,7 @@ const MenuView = () => {
       }, 1100);
       return () => clearTimeout(timer);
     }
-  }, [loading, profile, menuImages, audioPlayed]);
+  }, [loading, profile, audioPlayed]);
 
   // Handle tap to play sound if autoplay blocked
   const handleSplashTap = async () => {
@@ -112,26 +115,7 @@ const MenuView = () => {
     }
   };
 
-  // Setup Intersection Observer for scroll animations
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('animate-slide-up');
-            entry.target.classList.remove('opacity-0');
-          }
-        });
-      },
-      { threshold: 0.1, rootMargin: '0px 0px -50px 0px' }
-    );
 
-    // Observe all menu cards
-    const cards = document.querySelectorAll('.menu-card');
-    cards.forEach((card) => observer.observe(card));
-
-    return () => observer.disconnect();
-  }, [menuImages]);
 
   // Check if color is light or dark
   const isLightColor = (hexColor: string) => {
@@ -188,6 +172,11 @@ const MenuView = () => {
     setLoadedImages(prev => new Set(prev).add(imageId));
   };
 
+  const handleImageError = (imageId: string) => {
+    console.error(`Failed to load image: ${imageId}`);
+    setImageErrors(prev => new Set(prev).add(imageId));
+  };
+
   const logView = async () => {
     try {
       await supabase.from("view_logs").insert({
@@ -230,12 +219,16 @@ const MenuView = () => {
       // Handle menu images
       if (imagesResult.status === 'fulfilled' && imagesResult.value.data) {
         const imagesData = imagesResult.value.data;
+        console.log('Fetched menu images:', imagesData); // Debug log
         setMenuImages(imagesData || []);
         
         // Extract dominant color from first image if available
         if (imagesData && imagesData.length > 0 && imagesData[0].dominant_color) {
           setThemeColor(imagesData[0].dominant_color);
         }
+      } else {
+        console.error('Failed to fetch menu images:', imagesResult);
+        setHasError(true);
       }
 
       // Handle social links
@@ -356,76 +349,7 @@ const MenuView = () => {
     );
   }
 
-  // Beautiful splash screen with smooth pop-up and slide-in animations
-  if (showSplash) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-black relative overflow-hidden">
-        {/* Animated blur orbs - small and subtle */}
-        <div className="absolute inset-0 opacity-30 dark:opacity-20">
-          <div className="absolute top-1/4 left-1/4 w-48 h-48 bg-primary/20 rounded-full blur-2xl animate-pulse"></div>
-          <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-accent/15 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-        </div>
 
-        <div className="relative z-10 text-center px-4">
-          {/* Logo with pop-up, zoom, and fade animation */}
-          {profile?.logo_url ? (
-            <div className="flex justify-center mb-6">
-              <div className="opacity-0 animate-fadeInSlideZoom">
-                <div className="relative">
-                  {/* Animated glow effect behind logo */}
-                  <div className="absolute inset-0 bg-primary/30 rounded-full blur-xl scale-110 animate-pulse"></div>
-                  <img
-                    src={profile.logo_url}
-                    alt={profile.restaurant_name || "Restaurant"}
-                    className="relative w-24 h-24 sm:w-32 sm:h-32 object-cover rounded-full shadow-2xl border-4 border-primary/30 dark:border-primary/20 transition-transform duration-300 hover:scale-105"
-                    loading="eager"
-                    fetchPriority="high"
-                  />
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="flex justify-center mb-6 opacity-0 animate-popIn">
-              <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-primary/10 dark:bg-primary/5 flex items-center justify-center backdrop-blur-sm">
-                <Loader2 className="h-12 w-12 animate-spin text-primary" />
-              </div>
-            </div>
-          )}
-          
-          {/* Restaurant name with pop-in and slide-up effect */}
-          {profile?.restaurant_name && (
-            <h1 
-              className="text-3xl sm:text-4xl font-bold mb-3 text-gray-900 dark:text-white opacity-0 animate-fadeInSlideUp drop-shadow-lg"
-              style={{ animationDelay: '0.3s' }}
-            >
-              {profile.restaurant_name}
-            </h1>
-          )}
-          
-          {/* Description with slide-in from left and fade */}
-          {profile?.restaurant_description && (
-            <p 
-              className="text-base sm:text-lg text-gray-600 dark:text-gray-300 max-w-md mx-auto mb-6 opacity-0 animate-slideInFade"
-              style={{ animationDelay: '0.6s' }}
-            >
-              {profile.restaurant_description}
-            </p>
-          )}
-          
-          {/* Loading indicator with pop-in effect */}
-          <div 
-            className="mt-6 opacity-0 animate-popIn"
-            style={{ animationDelay: '0.9s' }}
-          >
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 dark:bg-black/80 backdrop-blur-md border border-primary/20 shadow-lg hover:shadow-xl transition-shadow duration-300">
-              <Loader2 className="h-4 w-4 animate-spin text-primary" />
-              <span className="text-sm font-medium text-gray-900 dark:text-white">Loading menu...</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   // Show loading spinner if still loading after splash
   if (loading) {
@@ -468,28 +392,58 @@ const MenuView = () => {
         </div>
       </header>
 
+
+
       {/* Menu Images Gallery - Clean & Simple */}
       <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6 max-w-4xl">
-        {menuImages.length > 0 ? (
+        {hasError ? (
+          <Card className="p-8 text-center animate-fade-in border-2 border-destructive/20">
+            <div className="text-destructive">
+              <p className="text-lg font-medium">Error loading menu</p>
+              <p className="text-sm mt-2">Please try refreshing the page</p>
+              <Button 
+                onClick={() => window.location.reload()} 
+                className="mt-4"
+                variant="outline"
+              >
+                Refresh Page
+              </Button>
+            </div>
+          </Card>
+        ) : menuImages.length > 0 ? (
           <>
             {menuImages.map((image, index) => (
               <Card 
                 key={image.id}
-                className={`menu-card overflow-hidden border-2 transition-all duration-700 hover:border-primary/50 hover:shadow-xl ${
-                  index < 2 ? 'animate-slide-up' : 'opacity-0'
-                }`}
-                style={index < 2 ? { animationDelay: `${index * 0.15}s`, animationFillMode: 'backwards' } : {}}
+                className="overflow-hidden border-2 transition-all duration-300 hover:border-primary/50 hover:shadow-xl"
               >
                 <CardContent className="p-0 relative group">
                   <div className="relative overflow-hidden bg-muted/20">
-                    <OptimizedImage
-                      src={image.image_url}
-                      alt={`Menu ${index + 1}`}
-                      className="w-full h-auto object-contain cursor-zoom-in transition-transform duration-700 group-hover:scale-[1.02]"
-                      priority={index < 2}
-                      onLoad={() => handleImageLoad(image.id)}
-                      onClick={() => setZoomedImage(image.image_url)}
-                    />
+                    {!imageErrors.has(image.id) ? (
+                      <div className="relative">
+                        <OptimizedImage
+                          src={image.image_url}
+                          alt={`Menu ${index + 1}`}
+                          className="w-full h-auto object-contain cursor-zoom-in transition-transform duration-700 group-hover:scale-[1.02]"
+                          priority={index < 2}
+                          onLoad={() => handleImageLoad(image.id)}
+                          onClick={() => setZoomedImage(image.image_url)}
+                        />
+                        <img
+                          src={image.image_url}
+                          alt=""
+                          className="hidden"
+                          onError={() => handleImageError(image.id)}
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-full h-64 flex items-center justify-center bg-muted/20 text-muted-foreground">
+                        <div className="text-center">
+                          <p className="text-lg font-medium">Image failed to load</p>
+                          <p className="text-sm">Menu item {index + 1}</p>
+                        </div>
+                      </div>
+                    )}
                     <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-y-2 group-hover:translate-y-0 pointer-events-none">
                       <div className="bg-background/95 backdrop-blur-md rounded-full px-4 py-2 shadow-lg border">
                         <span className="text-sm font-semibold">Tap to zoom</span>

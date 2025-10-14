@@ -8,6 +8,7 @@ interface OptimizedImageProps {
   onClick?: () => void;
   priority?: boolean;
   onLoad?: () => void;
+  onError?: () => void;
 }
 
 export const OptimizedImage = ({ 
@@ -16,10 +17,12 @@ export const OptimizedImage = ({
   className = '', 
   onClick, 
   priority = false,
-  onLoad 
+  onLoad,
+  onError 
 }: OptimizedImageProps) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isInView, setIsInView] = useState(false);
+  const [hasError, setHasError] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
@@ -45,14 +48,26 @@ export const OptimizedImage = ({
     onLoad?.();
   };
 
+  const handleError = () => {
+    setHasError(true);
+    onError?.();
+  };
+
   const shouldLoad = priority || isInView;
 
   return (
     <div ref={imgRef} className="relative">
-      {!isLoaded && (
+      {!isLoaded && !hasError && (
         <Skeleton className="w-full h-[500px] animate-pulse" />
       )}
-      {shouldLoad && (
+      {hasError ? (
+        <div className="w-full h-[500px] flex items-center justify-center bg-muted/20 text-muted-foreground">
+          <div className="text-center">
+            <p className="text-lg font-medium">Failed to load image</p>
+            <p className="text-sm">Please try refreshing</p>
+          </div>
+        </div>
+      ) : shouldLoad && (
         <img
           src={src}
           alt={alt}
@@ -62,6 +77,7 @@ export const OptimizedImage = ({
           loading={priority ? 'eager' : 'lazy'}
           decoding="async"
           onLoad={handleLoad}
+          onError={handleError}
           onClick={onClick}
         />
       )}
