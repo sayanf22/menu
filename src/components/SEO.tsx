@@ -13,7 +13,7 @@ export const SEO = ({
   title = "AddMenu - Digital Menu QR Code for Restaurants in Tripura | Agartala, Khowai, Belonia",
   description = "AddMenu - Best digital menu QR code solution for restaurants in Tripura. Serve customers in Agartala, Khowai, Belonia, Udaipur, Dharmanagar. Free QR menu maker with analytics & feedback.",
   keywords = "AddMenu, digital menu Tripura, QR code menu Agartala, restaurant menu Tripura, digital menu Khowai, QR menu Belonia, contactless menu Tripura, restaurant QR code Agartala",
-  ogImage = "https://menu-hue-scan-main-cvf.pages.dev/og-image.jpg",
+  ogImage = "https://addmenu.in/favicon.png",
   canonical
 }: SEOProps) => {
   const location = useLocation();

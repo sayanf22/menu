@@ -27,6 +27,12 @@
   Cache-Control: public, max-age=31536000, immutable
 /*.png
   Cache-Control: public, max-age=31536000, immutable
+  Content-Type: image/png
+
+# Favicon specifically
+/favicon.png
+  Cache-Control: public, max-age=31536000, immutable
+  Content-Type: image/png
 /*.svg
   Cache-Control: public, max-age=31536000, immutable
 /*.webp

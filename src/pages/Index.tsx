@@ -22,6 +22,14 @@ const Index = () => {
         </div>
         <div className="container mx-auto px-4 py-20 relative">
           <div className="max-w-4xl mx-auto text-center space-y-8 animate-fade-in">
+            {/* Logo */}
+            <div className="flex justify-center mb-6">
+              <img 
+                src="/favicon.png" 
+                alt="AddMenu Logo" 
+                className="w-24 h-24 md:w-32 md:h-32 object-contain animate-fade-in"
+              />
+            </div>
             <h1 className="text-5xl md:text-7xl font-bold tracking-tight">
               <span className="text-primary">AddMenu</span> - Digital Menu QR Code for Restaurants in{" "}
               <span className="text-primary">Tripura</span>
@@ -394,9 +402,21 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-4 gap-8 mb-8">
             <div>
-              <h3 className="font-bold text-lg mb-4">AddMenu</h3>
+              <div className="flex items-center gap-3 mb-4">
+                <img 
+                  src="/favicon.png" 
+                  alt="AddMenu Logo" 
+                  className="w-10 h-10 object-contain"
+                />
+                <h3 className="font-bold text-lg">AddMenu</h3>
+              </div>
               <p className="text-sm text-muted-foreground">
                 Digital menu QR code solution for restaurants in Tripura
+              </p>
+              <p className="text-sm text-muted-foreground mt-2">
+                <a href="https://addmenu.in" className="hover:text-primary transition-colors">
+                  www.addmenu.in
+                </a>
               </p>
             </div>
             <div>
