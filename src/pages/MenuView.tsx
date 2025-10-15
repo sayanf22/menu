@@ -38,6 +38,31 @@ const MenuView = () => {
   const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
   const [hasError, setHasError] = useState(false);
 
+  // Debug: Log when zoom modal opens/closes and handle escape key
+  useEffect(() => {
+    console.log('Zoom modal state:', zoomedImage ? 'OPEN' : 'CLOSED');
+    if (zoomedImage) {
+      // Prevent body scroll when modal is open
+      document.body.style.overflow = 'hidden';
+      
+      // Close on escape key
+      const handleEscape = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          console.log('Escape key pressed - closing modal');
+          setZoomedImage(null);
+        }
+      };
+      window.addEventListener('keydown', handleEscape);
+      
+      return () => {
+        document.body.style.overflow = 'unset';
+        window.removeEventListener('keydown', handleEscape);
+      };
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+  }, [zoomedImage]);
+
   useEffect(() => {
     if (restaurantId) {
       // Run all fetches in parallel for faster loading
@@ -419,31 +444,15 @@ const MenuView = () => {
               >
                 <CardContent className="p-0 relative group">
                   <div className="relative overflow-hidden bg-muted/20">
-                    {!imageErrors.has(image.id) ? (
-                      <div className="relative">
-                        <OptimizedImage
-                          src={image.image_url}
-                          alt={`Menu ${index + 1}`}
-                          className="w-full h-auto object-contain cursor-zoom-in transition-transform duration-700 group-hover:scale-[1.02]"
-                          priority={index < 2}
-                          onLoad={() => handleImageLoad(image.id)}
-                          onClick={() => setZoomedImage(image.image_url)}
-                        />
-                        <img
-                          src={image.image_url}
-                          alt=""
-                          className="hidden"
-                          onError={() => handleImageError(image.id)}
-                        />
-                      </div>
-                    ) : (
-                      <div className="w-full h-64 flex items-center justify-center bg-muted/20 text-muted-foreground">
-                        <div className="text-center">
-                          <p className="text-lg font-medium">Image failed to load</p>
-                          <p className="text-sm">Menu item {index + 1}</p>
-                        </div>
-                      </div>
-                    )}
+                    <OptimizedImage
+                      src={image.image_url}
+                      alt={`Menu ${index + 1}`}
+                      className="w-full h-auto object-contain cursor-zoom-in transition-transform duration-300 group-hover:scale-[1.02]"
+                      priority={index < 3}
+                      onLoad={() => handleImageLoad(image.id)}
+                      onError={() => handleImageError(image.id)}
+                      onClick={() => setZoomedImage(image.image_url)}
+                    />
                     <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-y-2 group-hover:translate-y-0 pointer-events-none">
                       <div className="bg-background/95 backdrop-blur-md rounded-full px-4 py-2 shadow-lg border">
                         <span className="text-sm font-semibold">Tap to zoom</span>
@@ -625,28 +634,35 @@ const MenuView = () => {
       {/* Zoom Modal */}
       {zoomedImage && (
         <div 
-          className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4 animate-fade-in backdrop-blur-sm"
-          onClick={() => setZoomedImage(null)}
+          className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 animate-fade-in"
+          onClick={() => {
+            console.log('Closing zoom modal');
+            setZoomedImage(null);
+          }}
+          role="dialog"
+          aria-modal="true"
         >
-          <div className="relative max-w-7xl max-h-screen overflow-auto animate-scale-in">
+          <div className="relative max-w-7xl w-full animate-scale-in" onClick={(e) => e.stopPropagation()}>
             <Button
               variant="outline"
               size="icon"
-              className="absolute top-4 right-4 bg-white/90 hover:bg-white z-10 transition-bounce hover:scale-110"
-              onClick={(e) => {
-                e.stopPropagation();
+              className="absolute -top-12 right-0 bg-white hover:bg-white/90 z-10 transition-all hover:scale-110"
+              onClick={() => {
+                console.log('Close button clicked');
                 setZoomedImage(null);
               }}
+              aria-label="Close zoom"
             >
               ✕
             </Button>
-            <img
-              src={zoomedImage}
-              alt="Zoomed menu"
-              className="w-full h-auto object-contain transition-transform duration-300 hover:scale-105"
-              style={{ maxHeight: '90vh' }}
-              loading="eager"
-            />
+            <div className="max-h-[90vh] overflow-auto">
+              <img
+                src={zoomedImage}
+                alt="Zoomed menu"
+                className="w-full h-auto object-contain"
+                loading="eager"
+              />
+            </div>
           </div>
         </div>
       )}

@@ -56,23 +56,23 @@ export const OptimizedImage = ({
   const shouldLoad = priority || isInView;
 
   return (
-    <div ref={imgRef} className="relative">
-      {!isLoaded && !hasError && (
-        <Skeleton className="w-full h-[500px] animate-pulse" />
+    <div ref={imgRef} className="relative w-full">
+      {!isLoaded && !hasError && shouldLoad && (
+        <Skeleton className="w-full aspect-[4/3] animate-pulse" />
       )}
       {hasError ? (
-        <div className="w-full h-[500px] flex items-center justify-center bg-muted/20 text-muted-foreground">
-          <div className="text-center">
+        <div className="w-full aspect-[4/3] flex items-center justify-center bg-muted/20 text-muted-foreground rounded-lg">
+          <div className="text-center p-4">
             <p className="text-lg font-medium">Failed to load image</p>
-            <p className="text-sm">Please try refreshing</p>
+            <p className="text-sm mt-1">Please try refreshing</p>
           </div>
         </div>
-      ) : shouldLoad && (
+      ) : shouldLoad ? (
         <img
           src={src}
           alt={alt}
-          className={`transition-all duration-500 ${
-            isLoaded ? 'opacity-100' : 'opacity-0 absolute'
+          className={`w-full h-auto transition-opacity duration-500 ${
+            isLoaded ? 'opacity-100' : 'opacity-0'
           } ${className}`}
           loading={priority ? 'eager' : 'lazy'}
           decoding="async"
@@ -80,6 +80,8 @@ export const OptimizedImage = ({
           onError={handleError}
           onClick={onClick}
         />
+      ) : (
+        <div className="w-full aspect-[4/3] bg-muted/10" />
       )}
     </div>
   );
