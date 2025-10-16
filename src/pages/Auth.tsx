@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Eye, EyeOff } from "lucide-react";
+import { Loader2, Eye, EyeOff, Home } from "lucide-react";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -188,10 +188,46 @@ const Auth = () => {
 
       <Card className="w-full max-w-md animate-fade-in">
         <CardHeader>
-          <CardTitle className="text-3xl font-bold text-center">MenuQR</CardTitle>
+          <div className="flex items-center justify-center mb-4">
+            <img src="/favicon.png" alt="AddMenu Logo" className="w-16 h-16" />
+          </div>
+          <CardTitle className="text-3xl font-bold text-center">AddMenu</CardTitle>
           <CardDescription className="text-center">
             Create your digital menu in minutes
           </CardDescription>
+          <div className="mt-4 p-4 bg-primary/5 rounded-lg border border-primary/20">
+            <p className="text-sm text-center font-medium mb-2">🔐 Account Creation Required</p>
+            <p className="text-xs text-center text-muted-foreground">
+              To create an account, please contact us for a signup code. We offer custom pricing based on your restaurant's needs.
+            </p>
+            <div className="flex gap-2 mt-3 justify-center">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => window.open('https://wa.me/917005832798?text=Hi%2C%20I%20want%20to%20create%20an%20AddMenu%20account', '_blank')}
+                className="text-xs"
+              >
+                WhatsApp Us
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => window.location.href = 'mailto:addmenu.in@gmail.com?subject=Account%20Creation%20Request'}
+                className="text-xs"
+              >
+                Email Us
+              </Button>
+            </div>
+          </div>
+          <div className="mt-3 text-center">
+            <Button
+              variant="link"
+              onClick={() => navigate('/')}
+              className="text-sm"
+            >
+              ← Back to Home
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="signin" className="w-full">
