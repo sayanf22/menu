@@ -7,13 +7,145 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "13.0.5"
   }
   public: {
     Tables: {
+      admin_credentials: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: string
+          last_login: string | null
+          password_hash: string
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id?: string
+          last_login?: string | null
+          password_hash: string
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: string
+          last_login?: string | null
+          password_hash?: string
+        }
+        Relationships: []
+      }
+      admin_sessions: {
+        Row: {
+          admin_id: string | null
+          created_at: string | null
+          expires_at: string
+          id: string
+          session_token: string
+        }
+        Insert: {
+          admin_id?: string | null
+          created_at?: string | null
+          expires_at: string
+          id?: string
+          session_token: string
+        }
+        Update: {
+          admin_id?: string | null
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          session_token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_sessions_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "admin_credentials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          approval_status: string | null
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string | null
+          disabled_at: string | null
+          disabled_by: string | null
+          id: string
+          is_disabled: boolean | null
+          logo_url: string | null
+          restaurant_description: string | null
+          restaurant_name: string
+          updated_at: string | null
+        }
+        Insert: {
+          approval_status?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string | null
+          disabled_at?: string | null
+          disabled_by?: string | null
+          id: string
+          is_disabled?: boolean | null
+          logo_url?: string | null
+          restaurant_description?: string | null
+          restaurant_name: string
+          updated_at?: string | null
+        }
+        Update: {
+          approval_status?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string | null
+          disabled_at?: string | null
+          disabled_by?: string | null
+          id?: string
+          is_disabled?: boolean | null
+          logo_url?: string | null
+          restaurant_description?: string | null
+          restaurant_name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      signup_codes: {
+        Row: {
+          code: string
+          created_at: string | null
+          current_uses: number | null
+          id: string
+          is_used: boolean | null
+          max_uses: number | null
+          used_at: string | null
+          used_by: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          current_uses?: number | null
+          id?: string
+          is_used?: boolean | null
+          max_uses?: number | null
+          used_at?: string | null
+          used_by?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          current_uses?: number | null
+          id?: string
+          is_used?: boolean | null
+          max_uses?: number | null
+          used_at?: string | null
+          used_by?: string | null
+        }
+        Relationships: []
+      }
       feedback: {
         Row: {
           comment: string | null
@@ -45,15 +177,7 @@ export type Database = {
           rating?: number
           restaurant_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "feedback_restaurant_id_fkey"
-            columns: ["restaurant_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       menu_images: {
         Row: {
@@ -79,65 +203,6 @@ export type Database = {
           id?: string
           image_url?: string
           restaurant_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "menu_images_restaurant_id_fkey"
-            columns: ["restaurant_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      profiles: {
-        Row: {
-          created_at: string | null
-          id: string
-          restaurant_description: string | null
-          restaurant_name: string
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id: string
-          restaurant_description?: string | null
-          restaurant_name: string
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          restaurant_description?: string | null
-          restaurant_name?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      signup_codes: {
-        Row: {
-          code: string
-          created_at: string | null
-          id: string
-          is_used: boolean | null
-          used_at: string | null
-          used_by: string | null
-        }
-        Insert: {
-          code: string
-          created_at?: string | null
-          id?: string
-          is_used?: boolean | null
-          used_at?: string | null
-          used_by?: string | null
-        }
-        Update: {
-          code?: string
-          created_at?: string | null
-          id?: string
-          is_used?: boolean | null
-          used_at?: string | null
-          used_by?: string | null
         }
         Relationships: []
       }
@@ -178,15 +243,7 @@ export type Database = {
           whatsapp?: string | null
           youtube?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "social_links_restaurant_id_fkey"
-            columns: ["restaurant_id"]
-            isOneToOne: true
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       view_logs: {
         Row: {
@@ -204,30 +261,100 @@ export type Database = {
           restaurant_id?: string
           viewed_at?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "view_logs_restaurant_id_fkey"
-            columns: ["restaurant_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
+      }
+      approval_tokens: {
+        Row: {
+          action: string
+          created_at: string | null
+          expires_at: string
+          id: string
+          token: string
+          used: boolean | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          token: string
+          used?: boolean | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          token?: string
+          used?: boolean | null
+          user_id?: string
+        }
+        Relationships: []
       }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      get_public_social_links: {
-        Args: { rest_id: string }
+      admin_get_signup_codes: {
+        Args: Record<string, never>
         Returns: {
-          facebook: string
-          instagram: string
-          twitter: string
-          website: string
-          youtube: string
+          id: string
+          code: string
+          max_uses: number
+          current_uses: number
+          created_at: string
         }[]
+      }
+      admin_get_profiles: {
+        Args: Record<string, never>
+        Returns: {
+          id: string
+          email: string
+          restaurant_name: string
+          restaurant_description: string | null
+          created_at: string
+          is_disabled: boolean | null
+          disabled_at: string | null
+          approval_status: string | null
+        }[]
+      }
+      admin_create_signup_code: {
+        Args: {
+          code_value: string
+          max_uses_value?: number
+        }
+        Returns: Json
+      }
+      admin_delete_signup_code: {
+        Args: {
+          code_id: string
+        }
+        Returns: Json
+      }
+      admin_update_profile_status: {
+        Args: {
+          profile_id: string
+          is_disabled_value: boolean
+          disabled_by_email?: string
+        }
+        Returns: Json
+      }
+      use_signup_code: {
+        Args: {
+          code_value: string
+        }
+        Returns: Json
+      }
+      create_user_profile: {
+        Args: {
+          user_id: string
+          restaurant_name: string
+          restaurant_description?: string
+        }
+        Returns: Json
       }
     }
     Enums: {
@@ -238,126 +365,3 @@ export type Database = {
     }
   }
 }
-
-type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
-
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
-
-export type Tables<
-  DefaultSchemaTableNameOrOptions extends
-    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-    | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
-      Row: infer R
-    }
-    ? R
-    : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])
-    ? (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
-        Row: infer R
-      }
-      ? R
-      : never
-    : never
-
-export type TablesInsert<
-  DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Insert: infer I
-    }
-    ? I
-    : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Insert: infer I
-      }
-      ? I
-      : never
-    : never
-
-export type TablesUpdate<
-  DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Update: infer U
-    }
-    ? U
-    : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Update: infer U
-      }
-      ? U
-      : never
-    : never
-
-export type Enums<
-  DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema["Enums"]
-    | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
-> = DefaultSchemaEnumNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
-  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
-    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
-    : never
-
-export type CompositeTypes<
-  PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
-> = PublicCompositeTypeNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-    : never
-
-export const Constants = {
-  public: {
-    Enums: {},
-  },
-} as const

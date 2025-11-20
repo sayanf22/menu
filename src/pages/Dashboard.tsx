@@ -65,6 +65,7 @@ const Dashboard = () => {
         .single();
 
       if (error) throw error;
+      
       setProfile(data);
       checkNewFeedback(userId);
     } catch (error) {
@@ -122,6 +123,54 @@ const Dashboard = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // Show payment message if account is disabled
+  if (profile?.is_disabled) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-gray-50 to-gray-100">
+        <Card className="max-w-md w-full shadow-lg">
+          <CardHeader className="text-center">
+            <div className="mx-auto mb-4 w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center">
+              <svg className="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <CardTitle className="text-2xl">Account Suspended</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4 text-center">
+            <p className="text-gray-700">
+              Your account has been temporarily suspended. This usually happens when there's a pending payment or subscription renewal.
+            </p>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-left">
+              <p className="font-semibold text-blue-900 mb-2">To reactivate your account:</p>
+              <ul className="text-sm text-blue-800 space-y-1">
+                <li>• Complete your pending payment</li>
+                <li>• Contact our support team</li>
+                <li>• We'll reactivate your account immediately</li>
+              </ul>
+            </div>
+            <div className="bg-gray-50 rounded-lg p-4 text-left">
+              <p className="font-semibold text-gray-900 mb-2">Contact Support:</p>
+              <p className="text-sm text-gray-700">Email: support@addmenu.com</p>
+              <p className="text-sm text-gray-700">Phone: +91-XXXXXXXXXX</p>
+              <p className="text-sm text-gray-700 mt-2">WhatsApp: +91-XXXXXXXXXX</p>
+            </div>
+            <Button 
+              onClick={async () => {
+                await supabase.auth.signOut();
+                navigate("/auth");
+              }} 
+              variant="outline"
+              className="w-full mt-4"
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              Logout
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }

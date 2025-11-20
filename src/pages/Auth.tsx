@@ -59,22 +59,28 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      // Validate signup code first
-      const { data: validationData, error: validationError } = await supabase.functions.invoke(
-        'validate-signup',
-        {
-          body: { signupCode: signUpData.signupCode }
-        }
-      );
+      // Validate signup code first using RPC function directly
+      const { data: validationData, error: validationError } = await supabase
+        .rpc('use_signup_code', { code_value: signUpData.signupCode });
 
       if (validationError) {
+        console.error("Validation error:", validationError);
         toast.error("Error validating signup code");
         setLoading(false);
         return;
       }
 
-      if (!validationData?.valid) {
-        toast.error(validationData?.error || "Invalid signup code");
+      // Check if validation was successful
+      if (!validationData || typeof validationData !== 'object') {
+        toast.error("Invalid response from server");
+        setLoading(false);
+        return;
+      }
+
+      const result = validationData as { valid?: boolean; error?: string };
+      
+      if (!result.valid) {
+        toast.error(result.error || "Invalid signup code");
         setLoading(false);
         return;
       }

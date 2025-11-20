@@ -1,34 +1,34 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
-  <!-- Main Pages Sitemap -->
+  <!-- Main Pages & Services Sitemap -->
   <sitemap>
     <loc>https://addmenu.in/sitemap-main.xml</loc>
-    <lastmod>2025-10-13</lastmod>
+    <lastmod>2025-11-21</lastmod>
   </sitemap>
   
-  <!-- Tripura Cities Sitemap - North -->
+  <!-- Tripura Cities Sitemap - North Region -->
   <sitemap>
     <loc>https://addmenu.in/sitemap-cities-north.xml</loc>
-    <lastmod>2025-10-13</lastmod>
+    <lastmod>2025-11-21</lastmod>
   </sitemap>
   
-  <!-- Tripura Cities Sitemap - South -->
+  <!-- Tripura Cities Sitemap - South Region -->
   <sitemap>
     <loc>https://addmenu.in/sitemap-cities-south.xml</loc>
-    <lastmod>2025-10-13</lastmod>
+    <lastmod>2025-11-21</lastmod>
   </sitemap>
   
-  <!-- Tripura Cities Sitemap - West -->
+  <!-- Tripura Cities Sitemap - West Region -->
   <sitemap>
     <loc>https://addmenu.in/sitemap-cities-west.xml</loc>
-    <lastmod>2025-10-13</lastmod>
+    <lastmod>2025-11-21</lastmod>
   </sitemap>
   
-  <!-- Tripura Cities Sitemap - East -->
+  <!-- Tripura Cities Sitemap - East Region -->
   <sitemap>
     <loc>https://addmenu.in/sitemap-cities-east.xml</loc>
-    <lastmod>2025-10-13</lastmod>
+    <lastmod>2025-11-21</lastmod>
   </sitemap>
   
 </sitemapindex>

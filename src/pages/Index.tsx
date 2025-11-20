@@ -28,15 +28,21 @@ const Index = () => {
                 className="w-32 h-32 md:w-40 md:h-40 object-contain animate-fade-in drop-shadow-2xl"
               />
             </div>
-            <h1 className="text-4xl md:text-6xl font-bold tracking-tight leading-tight">
-              <span className="text-primary">AddMenu</span>
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-tight">
+              <span className="bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
+                AddMenu
+              </span>
               <br />
-              <span className="text-2xl md:text-4xl font-normal text-muted-foreground">
-                Digital Menu QR Code for Restaurants
+              <span className="text-2xl md:text-4xl lg:text-5xl font-semibold text-foreground mt-2 block">
+                Digital Menu & Online Ordering
+              </span>
+              <span className="text-xl md:text-2xl lg:text-3xl font-normal text-muted-foreground mt-2 block">
+                for Restaurants in Tripura
               </span>
             </h1>
-            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
-              Create contactless QR menus in minutes. Perfect for restaurants in Tripura.
+            <p className="text-lg md:text-xl lg:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+              Create contactless QR code menus, accept online orders, and manage table bookings. 
+              Complete restaurant management solution for Agartala, Khowai, Belonia & all Tripura cities.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Link to="/auth">
@@ -326,8 +332,297 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Pricing Section */}
+      <section className="container mx-auto px-4 py-20" id="pricing">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl md:text-5xl font-bold mb-4">Choose Your Plan</h2>
+          <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto">
+            Start with our Basic digital menu or scale up with Premium's complete restaurant management system
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+          {/* Basic Plan */}
+          <Card className="p-8 space-y-6 hover:shadow-xl transition-shadow border-2">
+            <div className="text-center">
+              <h3 className="text-3xl font-bold mb-2">Basic</h3>
+              <p className="text-muted-foreground mb-4">Perfect for small restaurants</p>
+              <div className="text-5xl font-bold mb-2">₹499<span className="text-xl text-muted-foreground">/month</span></div>
+            </div>
+            
+            <div className="space-y-3">
+              <div className="flex items-start gap-3">
+                <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <span>Digital Menu with QR Code</span>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <span>Upload Menu Images</span>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <span>Basic Analytics Dashboard</span>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <span>Customer Feedback</span>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <span>Social Media Links</span>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <span>Unlimited Menu Updates</span>
+              </div>
+            </div>
+
+            <Link to="/auth" className="block">
+              <Button size="lg" className="w-full text-lg">
+                Get Started with Basic
+              </Button>
+            </Link>
+          </Card>
+
+          {/* Premium Plan */}
+          <Card className="p-8 space-y-6 hover:shadow-xl transition-shadow border-2 border-primary relative overflow-hidden bg-gradient-to-br from-primary/5 to-accent/5">
+            <div className="absolute top-0 right-0 bg-gradient-to-r from-primary to-accent text-white px-6 py-2 text-sm font-bold shadow-lg">
+              MOST POPULAR
+            </div>
+            
+            <div className="text-center pt-4">
+              <h3 className="text-3xl font-bold mb-2 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Premium</h3>
+              <p className="text-muted-foreground mb-4">Complete restaurant management solution</p>
+              <div className="text-4xl font-bold mb-2">
+                Custom Pricing
+              </div>
+              <p className="text-sm text-muted-foreground">Based on your restaurant needs</p>
+            </div>
+            
+            <div className="space-y-3">
+              <div className="flex items-start gap-3">
+                <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <span className="font-semibold">Everything in Basic, plus:</span>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <span><strong>Online Food Ordering System</strong></span>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <span><strong>Multi-Location Support</strong></span>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <span><strong>WhatsApp Integration</strong></span>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <span><strong>Advanced Analytics & Reports</strong></span>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <span><strong>Menu Categories & Organization</strong></span>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <span><strong>Restaurant Logo & Branding</strong></span>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <span>Custom Branding & White Label</span>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <span>Dedicated Account Manager</span>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <span>24/7 Priority Support</span>
+              </div>
+            </div>
+
+            <a 
+              href="https://menu-premium.pages.dev" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="block"
+            >
+              <Button size="lg" className="w-full text-lg bg-gradient-to-r from-primary to-accent hover:opacity-90 shadow-lg">
+                Explore Premium Features
+              </Button>
+            </a>
+            <p className="text-xs text-center text-muted-foreground">
+              Contact us for a personalized quote
+            </p>
+          </Card>
+        </div>
+
+        <div className="text-center mt-12">
+          <p className="text-muted-foreground mb-4 text-lg">
+            Need a custom plan? Contact us for enterprise solutions
+          </p>
+          <a 
+            href="https://wa.me/917005832798?text=Hi%2C%20I%27m%20interested%20in%20AddMenu%20pricing%20for%20my%20restaurant%20in%20Tripura." 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 text-primary hover:underline text-lg font-semibold"
+          >
+            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+            </svg>
+            Chat with us on WhatsApp for Custom Pricing
+          </a>
+        </div>
+      </section>
+
+      {/* Feature Comparison Section */}
+      <section className="container mx-auto px-4 py-20 bg-muted/30">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl font-bold mb-4">Basic vs Premium: What's Right for You?</h2>
+          <p className="text-xl text-muted-foreground">
+            Compare features and choose the perfect plan for your restaurant
+          </p>
+        </div>
+
+        <div className="max-w-6xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="md:col-span-1">
+              <Card className="p-6 h-full">
+                <h3 className="text-2xl font-bold mb-4">Feature</h3>
+                <div className="space-y-4 text-sm">
+                  <div className="py-3 border-b">Digital Menu QR Code</div>
+                  <div className="py-3 border-b">Menu Image Upload</div>
+                  <div className="py-3 border-b">Analytics Dashboard</div>
+                  <div className="py-3 border-b">Customer Feedback</div>
+                  <div className="py-3 border-b">Social Media Links</div>
+                  <div className="py-3 border-b">Online Ordering</div>
+                  <div className="py-3 border-b">WhatsApp Integration</div>
+                  <div className="py-3 border-b">Multi-Location Support</div>
+                  <div className="py-3 border-b">Menu Categories</div>
+                  <div className="py-3 border-b">Restaurant Logo</div>
+                  <div className="py-3 border-b">Custom Branding</div>
+                  <div className="py-3">24/7 Support</div>
+                </div>
+              </Card>
+            </div>
+
+            <div className="md:col-span-1">
+              <Card className="p-6 h-full border-2">
+                <div className="text-center mb-4">
+                  <h3 className="text-2xl font-bold">Basic</h3>
+                  <p className="text-3xl font-bold text-primary mt-2">₹499/mo</p>
+                </div>
+                <div className="space-y-4 text-sm text-center">
+                  <div className="py-3 border-b"><span className="text-green-500 text-2xl">✓</span></div>
+                  <div className="py-3 border-b"><span className="text-green-500 text-2xl">✓</span></div>
+                  <div className="py-3 border-b"><span className="text-green-500 text-2xl">✓</span></div>
+                  <div className="py-3 border-b"><span className="text-green-500 text-2xl">✓</span></div>
+                  <div className="py-3 border-b"><span className="text-green-500 text-2xl">✓</span></div>
+                  <div className="py-3 border-b"><span className="text-gray-300 text-2xl">✗</span></div>
+                  <div className="py-3 border-b"><span className="text-gray-300 text-2xl">✗</span></div>
+                  <div className="py-3 border-b"><span className="text-gray-300 text-2xl">✗</span></div>
+                  <div className="py-3 border-b"><span className="text-gray-300 text-2xl">✗</span></div>
+                  <div className="py-3 border-b"><span className="text-gray-300 text-2xl">✗</span></div>
+                  <div className="py-3 border-b"><span className="text-gray-300 text-2xl">✗</span></div>
+                  <div className="py-3">Email Support</div>
+                </div>
+              </Card>
+            </div>
+
+            <div className="md:col-span-1">
+              <Card className="p-6 h-full border-2 border-primary bg-gradient-to-br from-primary/5 to-accent/5">
+                <div className="text-center mb-4">
+                  <div className="inline-block bg-primary text-white px-3 py-1 rounded-full text-xs font-bold mb-2">RECOMMENDED</div>
+                  <h3 className="text-2xl font-bold">Premium</h3>
+                  <p className="text-2xl font-bold text-primary mt-2">Custom</p>
+                </div>
+                <div className="space-y-4 text-sm text-center">
+                  <div className="py-3 border-b"><span className="text-primary text-2xl">✓</span></div>
+                  <div className="py-3 border-b"><span className="text-primary text-2xl">✓</span></div>
+                  <div className="py-3 border-b"><span className="text-primary text-2xl">✓</span></div>
+                  <div className="py-3 border-b"><span className="text-primary text-2xl">✓</span></div>
+                  <div className="py-3 border-b"><span className="text-primary text-2xl">✓</span></div>
+                  <div className="py-3 border-b"><span className="text-primary text-2xl font-bold">✓</span></div>
+                  <div className="py-3 border-b"><span className="text-primary text-2xl font-bold">✓</span></div>
+                  <div className="py-3 border-b"><span className="text-primary text-2xl font-bold">✓</span></div>
+                  <div className="py-3 border-b"><span className="text-primary text-2xl font-bold">✓</span></div>
+                  <div className="py-3 border-b"><span className="text-primary text-2xl font-bold">✓</span></div>
+                  <div className="py-3 border-b"><span className="text-primary text-2xl font-bold">✓</span></div>
+                  <div className="py-3">24/7 Priority</div>
+                </div>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
-      <section className="container mx-auto px-4 py-20">
+      <section className="container mx-auto px-4 py-20 bg-muted/30">
         <Card className="p-12 text-center space-y-6 bg-gradient-to-br from-primary/5 to-accent/5 border-primary/20">
           <h2 className="text-4xl font-bold">Join 100+ Tripura Restaurants Using AddMenu</h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
@@ -367,7 +662,13 @@ const Index = () => {
             <Card className="p-6">
               <h3 className="text-xl font-bold mb-3">How much does AddMenu cost?</h3>
               <p className="text-muted-foreground">
-                AddMenu offers flexible pricing starting from ₹499/month. Perfect for small restaurants in Tripura. Contact us on WhatsApp for special offers for Agartala restaurants.
+                AddMenu offers two plans: <strong>Basic at ₹499/month</strong> with digital menu, QR codes, and analytics, and <strong>Premium with custom pricing</strong> that includes online ordering, WhatsApp integration, multi-location support, advanced analytics, and more. Contact us on WhatsApp for Premium pricing based on your restaurant size and needs.
+              </p>
+            </Card>
+            <Card className="p-6">
+              <h3 className="text-xl font-bold mb-3">What's included in the Premium plan?</h3>
+              <p className="text-muted-foreground">
+                Premium includes everything in Basic plus: Online food ordering system, WhatsApp integration for orders, multi-location support, advanced analytics & reports, menu categories & organization, restaurant logo & branding, custom white-label options, dedicated account manager, and 24/7 priority support. Perfect for restaurants looking to scale their operations in Tripura.
               </p>
             </Card>
             <Card className="p-6">
@@ -394,31 +695,104 @@ const Index = () => {
 
       {/* SEO Content Section */}
       <section className="container mx-auto px-4 py-20 bg-muted/20">
-        <div className="max-w-4xl mx-auto prose prose-lg">
-          <h2 className="text-3xl font-bold mb-6">
-            Digital Menu QR Code Solution for Restaurants in Tripura
-          </h2>
-          <p className="text-muted-foreground mb-4">
-            <strong>AddMenu</strong> is the leading digital menu platform designed specifically for restaurants, cafes, and food businesses across <strong>Tripura</strong>. Whether you run a restaurant in <strong>Agartala</strong>, a cafe in <strong>Khowai</strong>, or a food joint in <strong>Belonia</strong>, AddMenu helps you create professional QR code menus in minutes.
-          </p>
-          <p className="text-muted-foreground mb-4">
-            Our platform serves restaurants in all major cities and towns of Tripura including <strong>Agartala</strong>, <strong>Khowai</strong>, <strong>Belonia</strong>, <strong>Udaipur</strong>, <strong>Dharmanagar</strong>, <strong>Kailashahar</strong>, <strong>Ambassa</strong>, <strong>Teliamura</strong>, <strong>Sabroom</strong>, <strong>Sonamura</strong>, <strong>Bishalgarh</strong>, <strong>Kamalpur</strong>, <strong>Amarpur</strong>, <strong>Ranir Bazar</strong>, <strong>Santir Bazar</strong>, <strong>Melaghar</strong>, <strong>Jirania</strong>, <strong>Mohanpur</strong>, <strong>Kumarghat</strong>, <strong>Panisagar</strong>, <strong>Kanchanpur</strong>, <strong>Manu</strong>, <strong>Longtharai Valley</strong>, <strong>Dhalai</strong>, <strong>Gandacherra</strong>, <strong>Boxanagar</strong>, <strong>Dumburnagar</strong>, <strong>Fatikroy</strong>, and <strong>Pecharthal</strong>.
-          </p>
-          <h3 className="text-2xl font-bold mt-8 mb-4">
-            How AddMenu Works for Tripura Restaurants
-          </h3>
-          <p className="text-muted-foreground mb-4">
-            1. <strong>Upload Your Menu</strong> - Take photos of your menu or upload existing images<br/>
-            2. <strong>Generate QR Code</strong> - Get a unique QR code for your restaurant instantly<br/>
-            3. <strong>Print & Display</strong> - Download and print your QR code for tables<br/>
-            4. <strong>Track Analytics</strong> - See how many customers view your menu daily
-          </p>
-          <h3 className="text-2xl font-bold mt-8 mb-4">
-            Perfect for All Restaurant Types in Tripura
-          </h3>
-          <p className="text-muted-foreground">
-            AddMenu works great for fine dining restaurants, casual cafes, street food vendors, cloud kitchens, bakeries, sweet shops, and all food businesses across Tripura. Start your digital transformation today!
-          </p>
+        <div className="max-w-5xl mx-auto">
+          <div className="prose prose-lg max-w-none">
+            <h2 className="text-4xl font-bold mb-6 text-center">
+              Complete Digital Restaurant Solution for Tripura
+            </h2>
+            
+            <div className="grid md:grid-cols-2 gap-8 mb-12">
+              <div>
+                <h3 className="text-2xl font-bold mb-4">
+                  Digital Menu QR Code System
+                </h3>
+                <p className="text-muted-foreground mb-4">
+                  <strong>AddMenu</strong> is the leading digital menu platform designed specifically for restaurants, cafes, and food businesses across <strong>Tripura</strong>. Whether you run a restaurant in <strong>Agartala</strong>, a cafe in <strong>Khowai</strong>, or a food joint in <strong>Belonia</strong>, AddMenu helps you create professional <strong>contactless QR code menus</strong> in minutes.
+                </p>
+                <p className="text-muted-foreground">
+                  Our <strong>Basic Plan</strong> includes digital menu creation, QR code generation, analytics dashboard, customer feedback collection, and unlimited menu updates - perfect for small to medium restaurants in Tripura.
+                </p>
+              </div>
+              
+              <div>
+                <h3 className="text-2xl font-bold mb-4">
+                  Online Ordering & Restaurant Management
+                </h3>
+                <p className="text-muted-foreground mb-4">
+                  Upgrade to <strong>AddMenu Premium</strong> for a complete restaurant management solution. Accept <strong>online food orders</strong>, integrate <strong>WhatsApp ordering</strong>, manage <strong>multiple locations</strong>, organize menu categories, and get advanced analytics - all in one platform.
+                </p>
+                <p className="text-muted-foreground">
+                  Premium features include online ordering system, WhatsApp integration, multi-location support, menu organization, custom branding, and dedicated support - ideal for growing restaurants in Agartala and across Tripura.
+                </p>
+              </div>
+            </div>
+
+            <h3 className="text-3xl font-bold mt-12 mb-6 text-center">
+              Serving Restaurants Across All Tripura Cities
+            </h3>
+            <p className="text-muted-foreground mb-6 text-center max-w-4xl mx-auto">
+              Our platform serves restaurants in all major cities and towns of Tripura including <strong>Agartala</strong>, <strong>Khowai</strong>, <strong>Belonia</strong>, <strong>Udaipur</strong>, <strong>Dharmanagar</strong>, <strong>Kailashahar</strong>, <strong>Ambassa</strong>, <strong>Teliamura</strong>, <strong>Sabroom</strong>, <strong>Sonamura</strong>, <strong>Bishalgarh</strong>, <strong>Kamalpur</strong>, <strong>Amarpur</strong>, <strong>Ranir Bazar</strong>, <strong>Santir Bazar</strong>, <strong>Melaghar</strong>, <strong>Jirania</strong>, <strong>Mohanpur</strong>, <strong>Kumarghat</strong>, <strong>Panisagar</strong>, <strong>Kanchanpur</strong>, <strong>Manu</strong>, <strong>Longtharai Valley</strong>, <strong>Dhalai</strong>, <strong>Gandacherra</strong>, <strong>Boxanagar</strong>, <strong>Dumburnagar</strong>, <strong>Fatikroy</strong>, <strong>Pecharthal</strong>, <strong>Kadamtala</strong>, <strong>Chailengta</strong>, <strong>Hrishyamukh</strong>, <strong>Radhakishorepur</strong>, and <strong>Takarjala</strong>.
+            </p>
+
+            <div className="bg-primary/5 rounded-lg p-8 mb-12">
+              <h3 className="text-2xl font-bold mt-0 mb-4">
+                How AddMenu Works for Tripura Restaurants
+              </h3>
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <h4 className="font-bold text-lg mb-2">📱 Basic Features</h4>
+                  <ul className="space-y-2 text-muted-foreground">
+                    <li>✓ Upload menu photos or images</li>
+                    <li>✓ Generate unique QR code instantly</li>
+                    <li>✓ Download & print for tables</li>
+                    <li>✓ Track daily menu views</li>
+                    <li>✓ Collect customer feedback</li>
+                    <li>✓ Update menu anytime</li>
+                  </ul>
+                </div>
+                <div>
+                  <h4 className="font-bold text-lg mb-2">🚀 Premium Features</h4>
+                  <ul className="space-y-2 text-muted-foreground">
+                    <li>✓ Accept online food orders</li>
+                    <li>✓ WhatsApp ordering integration</li>
+                    <li>✓ Multi-location support</li>
+                    <li>✓ Menu categories & organization</li>
+                    <li>✓ Restaurant logo & branding</li>
+                    <li>✓ Advanced analytics & reports</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <h3 className="text-2xl font-bold mt-12 mb-4">
+              Perfect for All Restaurant Types in Tripura
+            </h3>
+            <p className="text-muted-foreground mb-4">
+              AddMenu works great for <strong>fine dining restaurants</strong>, <strong>casual cafes</strong>, <strong>street food vendors</strong>, <strong>cloud kitchens</strong>, <strong>bakeries</strong>, <strong>sweet shops</strong>, <strong>fast food chains</strong>, <strong>food courts</strong>, <strong>dhaba</strong>, <strong>biryani centers</strong>, <strong>Chinese restaurants</strong>, <strong>pizza outlets</strong>, <strong>burger joints</strong>, <strong>ice cream parlors</strong>, and all food businesses across Tripura.
+            </p>
+
+            <h3 className="text-2xl font-bold mt-8 mb-4">
+              Why Choose AddMenu for Your Tripura Restaurant?
+            </h3>
+            <div className="grid md:grid-cols-3 gap-6 mb-8">
+              <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm">
+                <h4 className="font-bold mb-2">💰 Cost Effective</h4>
+                <p className="text-sm text-muted-foreground">Save money on printing menus. Update prices instantly without reprinting.</p>
+              </div>
+              <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm">
+                <h4 className="font-bold mb-2">🦠 Contactless & Safe</h4>
+                <p className="text-sm text-muted-foreground">Perfect for post-pandemic dining. Customers scan QR with their phone.</p>
+              </div>
+              <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm">
+                <h4 className="font-bold mb-2">📊 Data Insights</h4>
+                <p className="text-sm text-muted-foreground">Track menu views, popular items, and customer preferences.</p>
+              </div>
+            </div>
+
+            <p className="text-muted-foreground text-center text-lg">
+              Join 100+ restaurants in Agartala, Khowai, Belonia, and across Tripura using AddMenu. Start your digital transformation today with our <strong>Basic Plan at ₹499/month</strong> or explore <strong>Premium features with custom pricing</strong> for complete restaurant management.
+            </p>
+          </div>
         </div>
       </section>
 

@@ -216,16 +216,22 @@ const MenuView = () => {
     try {
       setLoading(true);
 
-      // Fetch profile first for splash screen
+      // Fetch profile first for splash screen (include is_disabled check)
       const profilePromise = supabase
         .from("profiles")
-        .select("restaurant_name, restaurant_description, logo_url")
+        .select("restaurant_name, restaurant_description, logo_url, is_disabled")
         .eq("id", restaurantId)
         .maybeSingle();
 
       // Start profile fetch and update UI immediately
       profilePromise.then(({ data }) => {
         if (data) {
+          // Check if restaurant is disabled
+          if (data.is_disabled) {
+            setProfile({ ...data, disabled: true });
+            setLoading(false);
+            return;
+          }
           setProfile(data);
         }
       });
@@ -381,6 +387,48 @@ const MenuView = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // Show disabled message if restaurant is disabled
+  if (profile?.disabled) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-gray-50 to-gray-100">
+        <Card className="max-w-md w-full shadow-lg text-center">
+          <CardContent className="p-8">
+            {profile?.logo_url && (
+              <img
+                src={profile.logo_url}
+                alt={profile.restaurant_name}
+                className="w-24 h-24 mx-auto mb-4 object-cover rounded-full border-4 border-gray-200"
+              />
+            )}
+            <h2 className="text-2xl font-bold mb-4">{profile.restaurant_name || "Restaurant"}</h2>
+            <div className="bg-orange-50 border border-orange-200 rounded-lg p-6 mb-4">
+              <svg className="w-12 h-12 text-orange-600 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <p className="text-lg font-semibold text-orange-900 mb-2">
+                Menu Temporarily Unavailable
+              </p>
+              <p className="text-sm text-orange-800">
+                This restaurant's digital menu is currently unavailable.
+              </p>
+            </div>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-left">
+              <p className="font-semibold text-blue-900 mb-2">What you can do:</p>
+              <ul className="text-sm text-blue-800 space-y-1">
+                <li>• Contact the restaurant directly for menu information</li>
+                <li>• Ask staff for a physical menu</li>
+                <li>• Check back later - the menu will be available soon</li>
+              </ul>
+            </div>
+            <p className="text-xs text-gray-500 mt-6">
+              If you're the restaurant owner, please contact support to reactivate your account.
+            </p>
+          </CardContent>
+        </Card>
       </div>
     );
   }

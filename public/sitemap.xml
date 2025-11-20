@@ -29,285 +29,287 @@
     <priority>0.8</priority>
   </url>
   
-  <!-- Location Pages - All Tripura Cities & Towns -->
+  <!-- Main Pages -->
   <url>
-    <loc>https://addmenu.in/agartala</loc>
-    <lastmod>2025-10-13</lastmod>
+    <loc>https://addmenu.in/pricing</loc>
+    <lastmod>2025-11-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.95</priority>
+  </url>
+  
+  <url>
+    <loc>https://addmenu.in/about</loc>
+    <lastmod>2025-11-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <url>
+    <loc>https://addmenu.in/contact</loc>
+    <lastmod>2025-11-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  
+  <!-- Service Pages -->
+  <url>
+    <loc>https://addmenu.in/digital-menu-qr-code</loc>
+    <lastmod>2025-11-21</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   
   <url>
-    <loc>https://addmenu.in/khowai</loc>
-    <lastmod>2025-10-13</lastmod>
+    <loc>https://addmenu.in/online-ordering-system</loc>
+    <lastmod>2025-11-21</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.9</priority>
+  </url>
+  
+  <!-- Major Tripura Cities -->
+  <url>
+    <loc>https://addmenu.in/agartala</loc>
+    <lastmod>2025-11-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.95</priority>
+  </url>
+  
+  <url>
+    <loc>https://addmenu.in/khowai</loc>
+    <lastmod>2025-11-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
   </url>
   
   <url>
     <loc>https://addmenu.in/belonia</loc>
-    <lastmod>2025-10-13</lastmod>
+    <lastmod>2025-11-21</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.85</priority>
   </url>
   
   <url>
     <loc>https://addmenu.in/udaipur</loc>
-    <lastmod>2025-10-13</lastmod>
+    <lastmod>2025-11-21</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.85</priority>
   </url>
   
   <url>
     <loc>https://addmenu.in/dharmanagar</loc>
-    <lastmod>2025-10-13</lastmod>
+    <lastmod>2025-11-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  
+  <url>
+    <loc>https://addmenu.in/kailashahar</loc>
+    <lastmod>2025-11-21</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   
   <url>
-    <loc>https://addmenu.in/kailashahar</loc>
-    <lastmod>2025-10-13</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  
-  <url>
     <loc>https://addmenu.in/ambassa</loc>
-    <lastmod>2025-10-13</lastmod>
+    <lastmod>2025-11-21</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.75</priority>
   </url>
   
   <url>
     <loc>https://addmenu.in/teliamura</loc>
-    <lastmod>2025-10-13</lastmod>
+    <lastmod>2025-11-21</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.75</priority>
   </url>
   
   <url>
     <loc>https://addmenu.in/sabroom</loc>
-    <lastmod>2025-10-13</lastmod>
+    <lastmod>2025-11-21</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.75</priority>
   </url>
   
   <url>
     <loc>https://addmenu.in/sonamura</loc>
-    <lastmod>2025-10-13</lastmod>
+    <lastmod>2025-11-21</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.75</priority>
   </url>
   
   <url>
     <loc>https://addmenu.in/bishalgarh</loc>
-    <lastmod>2025-10-13</lastmod>
+    <lastmod>2025-11-21</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.75</priority>
   </url>
   
   <url>
     <loc>https://addmenu.in/kamalpur</loc>
-    <lastmod>2025-10-13</lastmod>
+    <lastmod>2025-11-21</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   
   <url>
     <loc>https://addmenu.in/amarpur</loc>
-    <lastmod>2025-10-13</lastmod>
+    <lastmod>2025-11-21</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   
   <url>
     <loc>https://addmenu.in/ranirbazar</loc>
-    <lastmod>2025-10-13</lastmod>
+    <lastmod>2025-11-21</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
+    <priority>0.7</priority>
   </url>
   
   <url>
     <loc>https://addmenu.in/santirbazar</loc>
-    <lastmod>2025-10-13</lastmod>
+    <lastmod>2025-11-21</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
+    <priority>0.7</priority>
   </url>
   
   <url>
     <loc>https://addmenu.in/melaghar</loc>
-    <lastmod>2025-10-13</lastmod>
+    <lastmod>2025-11-21</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
+    <priority>0.7</priority>
   </url>
   
   <url>
     <loc>https://addmenu.in/jirania</loc>
-    <lastmod>2025-10-13</lastmod>
+    <lastmod>2025-11-21</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.75</priority>
   </url>
   
   <url>
     <loc>https://addmenu.in/mohanpur</loc>
-    <lastmod>2025-10-13</lastmod>
+    <lastmod>2025-11-21</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.75</priority>
   </url>
   
   <url>
     <loc>https://addmenu.in/kumarghat</loc>
-    <lastmod>2025-10-13</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://addmenu.in/kamalghat</loc>
-    <lastmod>2025-10-13</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://addmenu.in/panisagar</loc>
-    <lastmod>2025-10-13</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://addmenu.in/kanchanpur</loc>
-    <lastmod>2025-10-13</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://addmenu.in/manu</loc>
-    <lastmod>2025-10-13</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://addmenu.in/longtharaivalley</loc>
-    <lastmod>2025-10-13</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://addmenu.in/dhalai</loc>
-    <lastmod>2025-10-13</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://addmenu.in/gandacherra</loc>
-    <lastmod>2025-10-13</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://addmenu.in/boxanagar</loc>
-    <lastmod>2025-10-13</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://addmenu.in/dumburnagar</loc>
-    <lastmod>2025-10-13</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://addmenu.in/fatikroy</loc>
-    <lastmod>2025-10-13</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://addmenu.in/pecharthal</loc>
-    <lastmod>2025-10-13</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://addmenu.in/kailashahar</loc>
-    <lastmod>2025-10-13</lastmod>
+    <lastmod>2025-11-21</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   
   <url>
-    <loc>https://addmenu.in/kadamtala</loc>
-    <lastmod>2025-10-13</lastmod>
+    <loc>https://addmenu.in/kamalghat</loc>
+    <lastmod>2025-11-21</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
+    <priority>0.65</priority>
   </url>
   
   <url>
-    <loc>https://addmenu.in/kailashahar</loc>
-    <lastmod>2025-10-13</lastmod>
+    <loc>https://addmenu.in/panisagar</loc>
+    <lastmod>2025-11-21</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://addmenu.in/chailengta</loc>
-    <lastmod>2025-10-13</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
+    <priority>0.7</priority>
   </url>
   
   <url>
     <loc>https://addmenu.in/kanchanpur</loc>
-    <lastmod>2025-10-13</lastmod>
+    <lastmod>2025-11-21</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
+    <priority>0.7</priority>
+  </url>
+  
+  <url>
+    <loc>https://addmenu.in/manu</loc>
+    <lastmod>2025-11-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.65</priority>
+  </url>
+  
+  <url>
+    <loc>https://addmenu.in/longtharaivalley</loc>
+    <lastmod>2025-11-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.65</priority>
+  </url>
+  
+  <url>
+    <loc>https://addmenu.in/dhalai</loc>
+    <lastmod>2025-11-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  
+  <url>
+    <loc>https://addmenu.in/gandacherra</loc>
+    <lastmod>2025-11-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.65</priority>
+  </url>
+  
+  <url>
+    <loc>https://addmenu.in/boxanagar</loc>
+    <lastmod>2025-11-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.65</priority>
+  </url>
+  
+  <url>
+    <loc>https://addmenu.in/dumburnagar</loc>
+    <lastmod>2025-11-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.65</priority>
+  </url>
+  
+  <url>
+    <loc>https://addmenu.in/fatikroy</loc>
+    <lastmod>2025-11-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.65</priority>
+  </url>
+  
+  <url>
+    <loc>https://addmenu.in/pecharthal</loc>
+    <lastmod>2025-11-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.65</priority>
+  </url>
+  
+  <url>
+    <loc>https://addmenu.in/kadamtala</loc>
+    <lastmod>2025-11-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.65</priority>
+  </url>
+  
+  <url>
+    <loc>https://addmenu.in/chailengta</loc>
+    <lastmod>2025-11-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.65</priority>
   </url>
   
   <url>
     <loc>https://addmenu.in/hrishyamukh</loc>
-    <lastmod>2025-10-13</lastmod>
+    <lastmod>2025-11-21</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://addmenu.in/kailashahar</loc>
-    <lastmod>2025-10-13</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
+    <priority>0.65</priority>
   </url>
   
   <url>
     <loc>https://addmenu.in/radhakishorepur</loc>
-    <lastmod>2025-10-13</lastmod>
+    <lastmod>2025-11-21</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
+    <priority>0.65</priority>
   </url>
   
   <url>
     <loc>https://addmenu.in/takarjala</loc>
-    <lastmod>2025-10-13</lastmod>
+    <lastmod>2025-11-21</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://addmenu.in/kailashahar</loc>
-    <lastmod>2025-10-13</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
+    <priority>0.65</priority>
   </url>
   
 </urlset>
