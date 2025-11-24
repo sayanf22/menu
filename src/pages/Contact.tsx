@@ -29,7 +29,7 @@ const Contact = () => {
     <>
       <Helmet>
         <title>Contact AddMenu | Get in Touch for Digital Menu QR Code Solutions</title>
-        <meta name="description" content="Contact AddMenu for digital menu solutions. Email: addmenu.in@gmail.com | Phone: +91 700-583-2798 | WhatsApp: +91 700-583-2798 | Serving all Tripura." />
+        <meta name="description" content="Contact AddMenu for digital menu solutions. Email: support@addmenu.in | Phone: +91 700-583-2798 | WhatsApp: +91 700-583-2798 | Serving all Tripura." />
         <meta name="keywords" content="contact addmenu, add menu contact, addmenu support, contact add menu, digital menu support, QR menu help, addmenu phone number, addmenu email" />
         <link rel="canonical" href="https://addmenu.in/contact" />
         <meta property="og:title" content="Contact AddMenu | Digital Menu Solutions" />
@@ -109,8 +109,8 @@ const Contact = () => {
                       <Mail className="h-6 w-6 text-primary mt-1" />
                       <div>
                         <h3 className="font-semibold mb-2">Email</h3>
-                        <a href="mailto:addmenu.in@gmail.com" className="text-muted-foreground hover:text-primary">
-                          addmenu.in@gmail.com
+                        <a href="mailto:support@addmenu.in" className="text-muted-foreground hover:text-primary">
+                          support@addmenu.in
                         </a>
                       </div>
                     </div>

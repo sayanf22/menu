@@ -74,7 +74,7 @@ const Index = () => {
                   </svg>
                 </a>
                 <a 
-                  href="mailto:addmenu.in@gmail.com" 
+                  href="mailto:support@addmenu.in" 
                   className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary hover:bg-primary/90 transition-colors shadow-lg hover:shadow-xl"
                   aria-label="Email us"
                 >

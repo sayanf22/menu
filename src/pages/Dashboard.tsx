@@ -3,11 +3,35 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { toast } from "sonner";
-import { Loader2, LogOut } from "lucide-react";
+import {
+  Loader2,
+  LogOut,
+  Home,
+  Upload,
+  QrCode as QrCodeIcon,
+  BarChart3,
+  Share2,
+  MessageSquare,
+  User
+} from "lucide-react";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarRail,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
 
 // Lazy load dashboard components for better performance
 const MenuUpload = lazy(() => import("@/components/dashboard/MenuUpload"));
@@ -65,7 +89,7 @@ const Dashboard = () => {
         .single();
 
       if (error) throw error;
-      
+
       setProfile(data);
       checkNewFeedback(userId);
     } catch (error) {
@@ -158,11 +182,11 @@ const Dashboard = () => {
               <p className="text-sm text-gray-700">Phone: +91-XXXXXXXXXX</p>
               <p className="text-sm text-gray-700 mt-2">WhatsApp: +91-XXXXXXXXXX</p>
             </div>
-            <Button 
+            <Button
               onClick={async () => {
                 await supabase.auth.signOut();
                 navigate("/auth");
-              }} 
+              }}
               variant="outline"
               className="w-full mt-4"
             >
@@ -175,139 +199,158 @@ const Dashboard = () => {
     );
   }
 
+  const menuItems = [
+    { id: "profile", label: "Profile", icon: User },
+    { id: "menu", label: "Menu", icon: Upload },
+    { id: "qr", label: "QR Code", icon: QrCodeIcon },
+    { id: "analytics", label: "Analytics", icon: BarChart3 },
+    { id: "social", label: "Social", icon: Share2 },
+    { id: "feedback", label: "Feedback", icon: MessageSquare },
+  ];
+
   return (
-    <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-40 border-b glass-effect animate-slide-up backdrop-blur-lg">
-        <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
-          <div className="flex justify-between items-start gap-3">
-            <div className="flex-1 min-w-0 animate-slide-up" style={{ animationDelay: '0.1s' }}>
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold gradient-text truncate">
-                {profile?.restaurant_name || "MenuQR"}
-              </h1>
-              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 truncate">{user?.email}</p>
-              {profile?.restaurant_description && (
-                <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 line-clamp-1 animate-fade-in" style={{ animationDelay: '0.3s' }}>
-                  {profile.restaurant_description}
-                </p>
-              )}
+    <SidebarProvider defaultOpen={true}>
+      <div className="flex min-h-screen w-full">
+        <Sidebar collapsible="icon" className="border-r">
+          <SidebarHeader className="border-b p-4">
+            <div className="flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                <Home className="h-4 w-4" />
+              </div>
+              <div className="flex-1 overflow-hidden">
+                <p className="truncate text-sm font-semibold">{profile?.restaurant_name || "MenuQR"}</p>
+                <p className="truncate text-xs text-muted-foreground">{user?.email}</p>
+              </div>
             </div>
-            <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
-              <ThemeToggle />
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleSignOut}
-                className="transition-bounce hover:scale-105 animate-slide-up h-8 sm:h-9"
-                style={{ animationDelay: '0.2s' }}
-              >
-                <LogOut className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-2" />
-                <span className="hidden sm:inline">Sign Out</span>
-              </Button>
+          </SidebarHeader>
+          <SidebarContent>
+            <SidebarGroup>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {menuItems.map((item) => (
+                    <SidebarMenuItem key={item.id}>
+                      <SidebarMenuButton
+                        onClick={() => handleTabChange(item.id)}
+                        isActive={activeTab === item.id}
+                        tooltip={item.label}
+                      >
+                        <item.icon className="h-4 w-4" />
+                        <span className="flex-1">{item.label}</span>
+                        {item.id === "feedback" && newFeedbackCount > 0 && (
+                          <Badge variant="destructive" className="ml-auto h-5 min-w-5 rounded-full px-1 text-xs">
+                            {newFeedbackCount}
+                          </Badge>
+                        )}
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </SidebarContent>
+          <SidebarFooter className="border-t p-2">
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton onClick={handleSignOut} tooltip="Sign Out">
+                  <LogOut className="h-4 w-4" />
+                  <span>Sign Out</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarFooter>
+          <SidebarRail />
+        </Sidebar>
+
+        <SidebarInset className="flex flex-1 flex-col">
+          <header className="sticky top-0 z-40 flex h-14 items-center gap-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4">
+            <SidebarTrigger />
+            <div className="flex-1">
+              <h1 className="text-lg font-semibold">{menuItems.find(item => item.id === activeTab)?.label || "Dashboard"}</h1>
             </div>
-          </div>
-        </div>
-      </header>
+            <ThemeToggle />
+          </header>
 
-      <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 pb-20 sm:pb-8">
-        <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4 sm:space-y-6">
-          <div className="sticky top-[72px] sm:top-[80px] z-30 bg-background/95 backdrop-blur-sm pb-2 -mx-3 px-3 sm:-mx-4 sm:px-4">
-            <div className="overflow-x-auto scrollbar-hide -mx-3 px-3 sm:-mx-4 sm:px-4">
-              <TabsList className="inline-flex w-auto min-w-full sm:grid sm:w-full sm:grid-cols-6 animate-slide-up glass-effect h-auto p-1" style={{ animationDelay: '0.3s' }}>
-                <TabsTrigger value="profile" className="transition-smooth whitespace-nowrap text-xs sm:text-sm px-3 sm:px-4 py-2">Profile</TabsTrigger>
-                <TabsTrigger value="menu" className="transition-smooth whitespace-nowrap text-xs sm:text-sm px-3 sm:px-4 py-2">Menu</TabsTrigger>
-                <TabsTrigger value="qr" className="transition-smooth whitespace-nowrap text-xs sm:text-sm px-3 sm:px-4 py-2">QR Code</TabsTrigger>
-                <TabsTrigger value="analytics" className="transition-smooth whitespace-nowrap text-xs sm:text-sm px-3 sm:px-4 py-2">Analytics</TabsTrigger>
-                <TabsTrigger value="social" className="transition-smooth whitespace-nowrap text-xs sm:text-sm px-3 sm:px-4 py-2">Social</TabsTrigger>
-                <TabsTrigger value="feedback" className="relative transition-smooth whitespace-nowrap text-xs sm:text-sm px-3 sm:px-4 py-2">
-                  Feedback
-                  {newFeedbackCount > 0 && (
-                    <Badge
-                      variant="destructive"
-                      className="ml-1 sm:ml-2 h-4 sm:h-5 min-w-4 sm:min-w-5 rounded-full px-1 sm:px-1.5 text-[10px] sm:text-xs animate-bounce-gentle"
-                    >
-                      {newFeedbackCount}
-                    </Badge>
-                  )}
-                </TabsTrigger>
-              </TabsList>
-            </div>
-          </div>
-
-          <TabsContent value="profile" className="space-y-6 animate-fade-in">
-            <Suspense fallback={<div className="flex justify-center py-8"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
-              <RestaurantProfile
-                restaurantId={user?.id}
-                onProfileUpdate={(updatedProfile: any) => {
-                  setProfile((prev: any) => ({ ...prev, ...updatedProfile }));
-                }}
-              />
-            </Suspense>
-          </TabsContent>
-
-          <TabsContent value="menu" className="space-y-6 animate-fade-in">
-            <Card className="glass-effect transition-smooth hover:shadow-lg">
-              <CardHeader>
-                <CardTitle className="gradient-text">Menu Images</CardTitle>
-                <CardDescription>Upload and manage your restaurant menu images</CardDescription>
-              </CardHeader>
-              <CardContent>
+          <main className="flex-1 overflow-auto p-4 md:p-6">
+            {activeTab === "profile" && (
+              <div className="space-y-6 animate-fade-in">
                 <Suspense fallback={<div className="flex justify-center py-8"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
-                  <MenuUpload restaurantId={user?.id} />
+                  <RestaurantProfile
+                    restaurantId={user?.id}
+                    onProfileUpdate={(updatedProfile: any) => {
+                      setProfile((prev: any) => ({ ...prev, ...updatedProfile }));
+                    }}
+                  />
                 </Suspense>
-              </CardContent>
-            </Card>
-          </TabsContent>
+              </div>
+            )}
 
-          <TabsContent value="qr" className="space-y-6 animate-fade-in">
-            <Card className="glass-effect transition-smooth hover:shadow-lg">
-              <CardHeader>
-                <CardTitle className="gradient-text">Your QR Code</CardTitle>
-                <CardDescription>Download and print your menu QR code</CardDescription>
-              </CardHeader>
-              <CardContent>
+            {activeTab === "menu" && (
+              <Card className="animate-fade-in">
+                <CardHeader>
+                  <CardTitle>Menu Images</CardTitle>
+                  <CardDescription>Upload and manage your restaurant menu images</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Suspense fallback={<div className="flex justify-center py-8"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
+                    <MenuUpload restaurantId={user?.id} />
+                  </Suspense>
+                </CardContent>
+              </Card>
+            )}
+
+            {activeTab === "qr" && (
+              <Card className="animate-fade-in">
+                <CardHeader>
+                  <CardTitle>Your QR Code</CardTitle>
+                  <CardDescription>Download and print your menu QR code</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Suspense fallback={<div className="flex justify-center py-8"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
+                    <QRCodeDisplay restaurantId={user?.id} />
+                  </Suspense>
+                </CardContent>
+              </Card>
+            )}
+
+            {activeTab === "analytics" && (
+              <div className="animate-fade-in">
                 <Suspense fallback={<div className="flex justify-center py-8"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
-                  <QRCodeDisplay restaurantId={user?.id} />
+                  <Analytics restaurantId={user?.id} />
                 </Suspense>
-              </CardContent>
-            </Card>
-          </TabsContent>
+              </div>
+            )}
 
-          <TabsContent value="analytics" className="space-y-6 animate-fade-in">
-            <Suspense fallback={<div className="flex justify-center py-8"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
-              <Analytics restaurantId={user?.id} />
-            </Suspense>
-          </TabsContent>
+            {activeTab === "social" && (
+              <Card className="animate-fade-in">
+                <CardHeader>
+                  <CardTitle>Social Media Links</CardTitle>
+                  <CardDescription>Add your social media profiles to your menu</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Suspense fallback={<div className="flex justify-center py-8"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
+                    <SocialLinks restaurantId={user?.id} />
+                  </Suspense>
+                </CardContent>
+              </Card>
+            )}
 
-          <TabsContent value="social" className="space-y-6 animate-fade-in">
-            <Card className="glass-effect transition-smooth hover:shadow-lg">
-              <CardHeader>
-                <CardTitle className="gradient-text">Social Media Links</CardTitle>
-                <CardDescription>Add your social media profiles to your menu</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Suspense fallback={<div className="flex justify-center py-8"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
-                  <SocialLinks restaurantId={user?.id} />
-                </Suspense>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="feedback" className="space-y-6 animate-fade-in">
-            <Card className="glass-effect transition-smooth hover:shadow-lg">
-              <CardHeader>
-                <CardTitle className="gradient-text">Customer Feedback</CardTitle>
-                <CardDescription>See what your customers are saying</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Suspense fallback={<div className="flex justify-center py-8"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
-                  <FeedbackList restaurantId={user?.id} />
-                </Suspense>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </main>
-    </div>
+            {activeTab === "feedback" && (
+              <Card className="animate-fade-in">
+                <CardHeader>
+                  <CardTitle>Customer Feedback</CardTitle>
+                  <CardDescription>See what your customers are saying</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Suspense fallback={<div className="flex justify-center py-8"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
+                    <FeedbackList restaurantId={user?.id} />
+                  </Suspense>
+                </CardContent>
+              </Card>
+            )}
+          </main>
+        </SidebarInset>
+      </div>
+    </SidebarProvider>
   );
 };
 

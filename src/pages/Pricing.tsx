@@ -94,7 +94,7 @@ const Pricing = () => {
                   <Button size="lg" onClick={() => window.open('https://wa.me/917005832798?text=Hi%2C%20I%20want%20a%20pricing%20quote%20for%20AddMenu', '_blank')}>
                     WhatsApp Us
                   </Button>
-                  <Button size="lg" variant="outline" onClick={() => window.location.href = 'mailto:addmenu.in@gmail.com?subject=Pricing%20Inquiry'}>
+                  <Button size="lg" variant="outline" onClick={() => window.location.href = 'mailto:support@addmenu.in?subject=Pricing%20Inquiry'}>
                     Email Us
                   </Button>
                 </div>
@@ -146,7 +146,7 @@ const Pricing = () => {
                 <Button size="lg" onClick={() => window.open('https://wa.me/917005832798?text=Hi%2C%20I%20want%20a%20pricing%20quote%20for%20AddMenu', '_blank')}>
                   WhatsApp Us
                 </Button>
-                <Button size="lg" variant="outline" onClick={() => window.location.href = 'mailto:addmenu.in@gmail.com?subject=Pricing%20Inquiry'}>
+                <Button size="lg" variant="outline" onClick={() => window.location.href = 'mailto:support@addmenu.in?subject=Pricing%20Inquiry'}>
                   Email Us
                 </Button>
               </div>

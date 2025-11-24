@@ -86,7 +86,7 @@ const Refund = () => {
             <p>
               To request a refund or ask questions:
               <br />
-              Email: addmenu.in@gmail.com
+              Email: support@addmenu.in
               <br />
               Phone: +91 700-583-2798
               <br />

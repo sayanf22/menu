@@ -78,7 +78,7 @@ const Privacy = () => {
             <p>
               If you have questions about this Privacy Policy, please contact us at:
               <br />
-              Email: addmenu.in@gmail.com
+              Email: support@addmenu.in
               <br />
               Phone: +91 700-583-2798
             </p>

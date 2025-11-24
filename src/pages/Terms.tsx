@@ -93,7 +93,7 @@ const Terms = () => {
             <p>
               For questions about these Terms, contact us at:
               <br />
-              Email: addmenu.in@gmail.com
+              Email: support@addmenu.in
               <br />
               Phone: +91 700-583-2798
             </p>

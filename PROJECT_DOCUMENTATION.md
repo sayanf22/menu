@@ -193,7 +193,7 @@ Public functions:
 - Check Supabase logs for errors
 
 ## Support
-- Email: addmenu.in@gmail.com
+- Email: support@addmenu.in
 - WhatsApp: +91-7005832798
 
 ## License

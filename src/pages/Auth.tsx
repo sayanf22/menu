@@ -218,7 +218,7 @@ const Auth = () => {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => window.location.href = 'mailto:addmenu.in@gmail.com?subject=Account%20Creation%20Request'}
+                onClick={() => window.location.href = 'mailto:support@addmenu.in?subject=Account%20Creation%20Request'}
                 className="text-xs"
               >
                 Email Us
