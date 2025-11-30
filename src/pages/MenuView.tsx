@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { Star, Loader2, X, ChevronDown, Send, MessageSquare } from "lucide-react";
 import { generateDeviceFingerprint } from "@/lib/deviceFingerprint";
 import { motion, useInView, AnimatePresence, useScroll, useTransform } from "framer-motion";
+import { BellButton } from "@/components/BellButton";
 
 // Lazy loaded image component with blur placeholder
 const LazyImage = memo(({ src, alt, className, onClick }: { src: string; alt: string; className?: string; onClick?: () => void }) => {
@@ -397,6 +398,9 @@ const handleSubmitFeedback = async (e: React.FormEvent) => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Bell Button - Call Waiter */}
+      {restaurantId && <BellButton restaurantId={restaurantId} />}
     </div>
   );
 };

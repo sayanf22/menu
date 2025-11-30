@@ -38,6 +38,7 @@ const MenuUpload = lazy(() => import("@/components/dashboard/MenuUpload"));
 const QRCodeDisplay = lazy(() => import("@/components/dashboard/QRCodeDisplay"));
 const Analytics = lazy(() => import("@/components/dashboard/Analytics"));
 const SocialLinks = lazy(() => import("@/components/dashboard/SocialLinks"));
+const BellNotifications = lazy(() => import("@/components/dashboard/BellNotifications"));
 const FeedbackList = lazy(() => import("@/components/dashboard/FeedbackList"));
 const RestaurantProfile = lazy(() => import("@/components/dashboard/RestaurantProfile"));
 
@@ -267,6 +268,9 @@ const Dashboard = () => {
             <div className="flex-1">
               <h1 className="text-lg font-semibold">{menuItems.find(item => item.id === activeTab)?.label || "Dashboard"}</h1>
             </div>
+            <Suspense fallback={null}>
+              <BellNotifications restaurantId={user?.id} />
+            </Suspense>
             <ThemeToggle />
           </header>
 
