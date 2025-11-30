@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Upload, Loader2, Trash2, Eye } from "lucide-react";
+import { Upload, Loader2, Trash2, Eye, ImageIcon } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import {
   AlertDialog,
@@ -20,6 +20,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { uploadToR2 } from "@/lib/r2-upload";
+import { compressImage, COMPRESSION_PRESETS, formatFileSize, getCompressionStats } from "@/lib/image-compression";
 
 interface MenuUploadProps {
   restaurantId: string;
@@ -27,6 +29,9 @@ interface MenuUploadProps {
 
 const MenuUpload = ({ restaurantId }: MenuUploadProps) => {
   const [uploading, setUploading] = useState(false);
+  const [compressing, setCompressing] = useState(false);
+  const [compressionProgress, setCompressionProgress] = useState(0);
+  const [currentFileName, setCurrentFileName] = useState("");
   const [menuImages, setMenuImages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -101,11 +106,10 @@ const MenuUpload = ({ restaurantId }: MenuUploadProps) => {
       const files = event.target.files;
       if (!files || files.length === 0) return;
 
-      // Validate file sizes (must be less than 1MB)
-      const maxSize = 1 * 1024 * 1024; // 1MB in bytes
+      // Validate file types
       for (let i = 0; i < files.length; i++) {
-        if (files[i].size > maxSize) {
-          toast.error(`${files[i].name} is larger than 1MB. Please compress the image and try again.`);
+        if (!files[i].type.startsWith('image/')) {
+          toast.error(`${files[i].name} is not an image file.`);
           setUploading(false);
           event.target.value = "";
           return;
@@ -114,19 +118,41 @@ const MenuUpload = ({ restaurantId }: MenuUploadProps) => {
 
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        const fileExt = file.name.split(".").pop();
-        const fileName = `${restaurantId}-${Date.now()}-${i}.${fileExt}`;
-        const filePath = `${fileName}`;
+        setCurrentFileName(file.name);
+        
+        // Check if file is over 1MB - must compress
+        if (file.size > 1 * 1024 * 1024) {
+          setCompressing(true);
+          setCompressionProgress(0);
+        }
+        
+        // Compress image before upload (target: 400KB max)
+        const compressionResult = await compressImage(file, {
+          ...COMPRESSION_PRESETS.menuImage,
+          onProgress: (progress) => setCompressionProgress(Math.round(progress)),
+        });
+        
+        setCompressing(false);
+        setCompressionProgress(100);
+        
+        if (compressionResult.wasCompressed) {
+          toast.success(getCompressionStats(compressionResult), { duration: 3000 });
+        }
+        
+        const compressedFile = compressionResult.file;
+        
+        // Upload compressed file to Cloudflare R2
+        const uploadResult = await uploadToR2(compressedFile, {
+          folder: 'menu-images',
+          maxSizeMB: 10,
+        });
 
-        const { error: uploadError } = await supabase.storage
-          .from("menu-images")
-          .upload(filePath, file);
+        if (!uploadResult.success || !uploadResult.url) {
+          toast.error(uploadResult.error || 'Failed to upload image');
+          continue;
+        }
 
-        if (uploadError) throw uploadError;
-
-        const { data: { publicUrl } } = supabase.storage
-          .from("menu-images")
-          .getPublicUrl(filePath);
+        const publicUrl = uploadResult.url;
 
         // Ensure profile exists before inserting
         const { error: profileError } = await supabase.rpc('ensure_profile_exists' as any, {
@@ -175,16 +201,25 @@ const MenuUpload = ({ restaurantId }: MenuUploadProps) => {
     if (!imageToDelete) return;
 
     try {
-      // Extract file path from URL
-      const urlParts = imageToDelete.url.split("/");
-      const filePath = urlParts[urlParts.length - 1];
+      // Check if it's an R2 URL or Supabase Storage URL
+      const isR2Url = imageToDelete.url.includes('r2.dev') || imageToDelete.url.includes('r2.cloudflarestorage.com');
+      
+      if (!isR2Url) {
+        // Legacy: Delete from Supabase storage
+        const urlParts = imageToDelete.url.split("/");
+        const filePath = urlParts[urlParts.length - 1];
 
-      // Delete from storage
-      const { error: storageError } = await supabase.storage
-        .from("menu-images")
-        .remove([filePath]);
+        const { error: storageError } = await supabase.storage
+          .from("menu-images")
+          .remove([filePath]);
 
-      if (storageError) throw storageError;
+        if (storageError) {
+          console.warn('Storage delete warning:', storageError);
+          // Continue anyway - file might already be deleted
+        }
+      }
+      // Note: R2 files are not deleted automatically to save on API calls
+      // They can be cleaned up via Cloudflare dashboard or a scheduled job
 
       // Delete from database
       const { error: dbError } = await supabase
@@ -220,28 +255,50 @@ const MenuUpload = ({ restaurantId }: MenuUploadProps) => {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4 animate-fade-in">
-        <Button asChild disabled={uploading} className="transition-bounce hover:scale-105">
+        <Button asChild disabled={uploading || compressing} className="transition-bounce hover:scale-105">
           <label className="cursor-pointer">
-            {uploading ? (
+            {uploading || compressing ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
               <Upload className="mr-2 h-4 w-4" />
             )}
-            Upload Images
+            {compressing ? "Compressing..." : uploading ? "Uploading..." : "Upload Images"}
             <input
               type="file"
               multiple
               accept="image/*"
               className="hidden"
               onChange={handleFileUpload}
-              disabled={uploading}
+              disabled={uploading || compressing}
             />
           </label>
         </Button>
         <p className="text-sm text-muted-foreground animate-slide-in-right" style={{ animationDelay: '0.1s' }}>
-          {menuImages.length} image{menuImages.length !== 1 ? "s" : ""} uploaded (max 1MB each)
+          {menuImages.length} image{menuImages.length !== 1 ? "s" : ""} uploaded
         </p>
       </div>
+
+      {/* Compression Progress Bar */}
+      {compressing && (
+        <div className="space-y-2 p-4 bg-muted/50 rounded-lg border animate-fade-in">
+          <div className="flex items-center justify-between text-sm">
+            <span className="flex items-center gap-2">
+              <ImageIcon className="h-4 w-4 text-primary animate-pulse" />
+              <span className="font-medium">Compressing: {currentFileName}</span>
+            </span>
+            <span className="text-muted-foreground">{compressionProgress}%</span>
+          </div>
+          <div className="h-2 bg-muted rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-primary rounded-full transition-all duration-300 ease-out"
+              style={{ width: `${compressionProgress}%` }}
+            />
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Optimizing image quality while reducing file size...
+          </p>
+        </div>
+      )}
 
       {menuImages.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

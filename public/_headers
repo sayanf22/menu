@@ -1,24 +1,31 @@
-# AddMenu - Security and Performance Headers
+# AddMenu - Comprehensive Security and Performance Headers
 
 /*
-  # Security Headers
+  # Security Headers - Protection against common attacks
   X-Frame-Options: SAMEORIGIN
   X-Content-Type-Options: nosniff
   X-XSS-Protection: 1; mode=block
   Referrer-Policy: strict-origin-when-cross-origin
-  Permissions-Policy: geolocation=(), microphone=(), camera=()
+  Permissions-Policy: geolocation=(), microphone=(), camera=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()
+  
+  # Content Security Policy - Prevent XSS and injection attacks
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://owibhiiwghyznptfgfcr.supabase.co; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https: http:; connect-src 'self' https://owibhiiwghyznptfgfcr.supabase.co wss://owibhiiwghyznptfgfcr.supabase.co https://api.ipify.org; frame-ancestors 'self'; base-uri 'self'; form-action 'self';
+  
+  # Strict Transport Security - Force HTTPS
+  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+  
+  # Cross-Origin policies
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Embedder-Policy: credentialless
+  Cross-Origin-Resource-Policy: same-origin
   
   # Performance Headers
-  Cache-Control: public, max-age=31536000, immutable
-  
-  # CORS Headers
-  Access-Control-Allow-Origin: *
-  Access-Control-Allow-Methods: GET, POST, OPTIONS
-  Access-Control-Allow-Headers: Content-Type
+  Cache-Control: public, max-age=0, must-revalidate
 
-# Cache static assets
+# Cache static assets aggressively
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
+  X-Content-Type-Options: nosniff
 
 # Cache images
 /*.jpg
@@ -28,16 +35,46 @@
 /*.png
   Cache-Control: public, max-age=31536000, immutable
   Content-Type: image/png
+/*.svg
+  Cache-Control: public, max-age=31536000, immutable
+/*.webp
+  Cache-Control: public, max-age=31536000, immutable
+/*.ico
+  Cache-Control: public, max-age=31536000, immutable
 
 # Favicon specifically
 /favicon.png
   Cache-Control: public, max-age=31536000, immutable
   Content-Type: image/png
-/*.svg
-  Cache-Control: public, max-age=31536000, immutable
-/*.webp
+
+/favicon.ico
   Cache-Control: public, max-age=31536000, immutable
 
-# Don't cache HTML
+# Don't cache HTML - always get fresh content
 /*.html
   Cache-Control: public, max-age=0, must-revalidate
+  X-Frame-Options: DENY
+
+/index.html
+  Cache-Control: public, max-age=0, must-revalidate
+  X-Frame-Options: DENY
+
+# API routes - no caching, strict security
+/api/*
+  Cache-Control: no-store, no-cache, must-revalidate
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+
+# Sitemap and robots
+/sitemap*.xml
+  Cache-Control: public, max-age=86400
+  Content-Type: application/xml
+
+/robots.txt
+  Cache-Control: public, max-age=86400
+  Content-Type: text/plain
+
+# Web manifest
+/site.webmanifest
+  Cache-Control: public, max-age=86400
+  Content-Type: application/manifest+json

@@ -7,6 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Loader2, Save, Edit, Upload, X } from "lucide-react";
+import { compressImage, COMPRESSION_PRESETS, getCompressionStats } from "@/lib/image-compression";
+// Logo uploads go to Supabase Storage (not R2) for simplicity
 
 interface RestaurantProfileProps {
     restaurantId: string;
@@ -18,6 +20,8 @@ const RestaurantProfile = ({ restaurantId, onProfileUpdate }: RestaurantProfileP
     const [saving, setSaving] = useState(false);
     const [editing, setEditing] = useState(false);
     const [uploading, setUploading] = useState(false);
+    const [compressing, setCompressing] = useState(false);
+    const [compressionProgress, setCompressionProgress] = useState(0);
     const [logoFile, setLogoFile] = useState<File | null>(null);
     const [logoPreview, setLogoPreview] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -85,8 +89,8 @@ const RestaurantProfile = ({ restaurantId, onProfileUpdate }: RestaurantProfileP
     const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            if (file.size > 500 * 1024) {
-                toast.error("Logo must be less than 500KB");
+            if (file.size > 2 * 1024 * 1024) {
+                toast.error("Logo must be less than 2MB");
                 return;
             }
             if (!file.type.startsWith("image/")) {
@@ -115,6 +119,25 @@ const RestaurantProfile = ({ restaurantId, onProfileUpdate }: RestaurantProfileP
 
         setUploading(true);
         try {
+            // Compress logo before upload (target: 150KB max)
+            if (logoFile.size > 150 * 1024) {
+                setCompressing(true);
+                setCompressionProgress(0);
+            }
+            
+            const compressionResult = await compressImage(logoFile, {
+                ...COMPRESSION_PRESETS.logo,
+                onProgress: (progress) => setCompressionProgress(Math.round(progress)),
+            });
+            
+            setCompressing(false);
+            setCompressionProgress(100);
+            
+            if (compressionResult.wasCompressed) {
+                toast.success(getCompressionStats(compressionResult), { duration: 3000 });
+            }
+            
+            const compressedFile = compressionResult.file;
             const fileExt = logoFile.name.split(".").pop();
             const fileName = `${restaurantId}/logo-${Date.now()}.${fileExt}`;
 
@@ -128,17 +151,14 @@ const RestaurantProfile = ({ restaurantId, onProfileUpdate }: RestaurantProfileP
                 }
             }
 
+            // Upload compressed logo to Supabase Storage
             const { error: uploadError } = await supabase.storage
                 .from("restaurant-logos")
-                .upload(fileName, logoFile, { upsert: true });
+                .upload(fileName, compressedFile, { upsert: true });
 
             if (uploadError) {
                 console.error("Upload error:", uploadError);
-                if (uploadError.message?.includes("not found") || uploadError.message?.includes("bucket")) {
-                    toast.error("Storage bucket not configured. Please run the database migration first.");
-                } else {
-                    toast.error(`Upload failed: ${uploadError.message}`);
-                }
+                toast.error(`Upload failed: ${uploadError.message}`);
                 return null;
             }
 
@@ -315,10 +335,25 @@ const RestaurantProfile = ({ restaurantId, onProfileUpdate }: RestaurantProfileP
                                         {logoPreview ? "Change Logo" : "Upload Logo"}
                                     </Button>
                                     <p className="text-xs text-muted-foreground mt-2">
-                                        Max 500KB. Recommended: Square image (e.g., 512x512px)
+                                        Max 2MB. Will be compressed to ~150KB
                                     </p>
                                 </div>
                             </div>
+                            {/* Compression Progress Bar */}
+                            {compressing && (
+                                <div className="space-y-2 p-3 bg-muted/50 rounded-lg border animate-fade-in">
+                                    <div className="flex items-center justify-between text-sm">
+                                        <span className="font-medium">Compressing logo...</span>
+                                        <span className="text-muted-foreground">{compressionProgress}%</span>
+                                    </div>
+                                    <div className="h-2 bg-muted rounded-full overflow-hidden">
+                                        <div 
+                                            className="h-full bg-primary rounded-full transition-all duration-300 ease-out"
+                                            style={{ width: `${compressionProgress}%` }}
+                                        />
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         <div className="space-y-2">

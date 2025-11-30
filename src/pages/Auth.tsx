@@ -8,7 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Eye, EyeOff, Home } from "lucide-react";
+import { Loader2, Eye, EyeOff, Home, AlertTriangle } from "lucide-react";
+import { checkRateLimit, sanitizeInput, isValidEmail, getDeviceFingerprint, RATE_LIMITS } from "@/lib/security";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -51,14 +52,42 @@ const Auth = () => {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Rate limiting check
+    if (!checkRateLimit('signup', RATE_LIMITS.signup.maxRequests, RATE_LIMITS.signup.windowMs)) {
+      toast.error("Too many signup attempts. Please wait 10 minutes before trying again.", {
+        icon: <AlertTriangle className="h-4 w-4" />,
+      });
+      return;
+    }
+    
     if (!signUpData.email || !signUpData.password || !signUpData.restaurantName || !signUpData.signupCode) {
       toast.error("Please fill in all required fields");
+      return;
+    }
+
+    // Input validation
+    if (!isValidEmail(signUpData.email)) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+
+    if (signUpData.password.length < 8) {
+      toast.error("Password must be at least 8 characters long");
+      return;
+    }
+
+    if (signUpData.restaurantName.length > 200) {
+      toast.error("Restaurant name is too long (max 200 characters)");
       return;
     }
 
     setLoading(true);
 
     try {
+      // Sanitize inputs
+      const sanitizedRestaurantName = sanitizeInput(signUpData.restaurantName);
+      const sanitizedDescription = sanitizeInput(signUpData.restaurantDescription);
+      
       // Validate signup code first using RPC function directly
       const { data: validationData, error: validationError } = await supabase
         .rpc('use_signup_code', { code_value: signUpData.signupCode });
@@ -85,15 +114,15 @@ const Auth = () => {
         return;
       }
 
-      // Create the user account
+      // Create the user account with sanitized data
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: signUpData.email,
         password: signUpData.password,
         options: {
           emailRedirectTo: `${window.location.origin}/auth`,
           data: {
-            restaurant_name: signUpData.restaurantName,
-            restaurant_description: signUpData.restaurantDescription || ""
+            restaurant_name: sanitizedRestaurantName,
+            restaurant_description: sanitizedDescription
           }
         },
       });
@@ -102,11 +131,11 @@ const Auth = () => {
 
       if (!authData.user) throw new Error("Failed to create user");
 
-      // Create profile
+      // Create profile with sanitized data
       const { data: profileResult, error: profileError} = await supabase.rpc('create_user_profile' as any, {
         user_id: authData.user.id,
-        restaurant_name: signUpData.restaurantName,
-        restaurant_description: signUpData.restaurantDescription || ""
+        restaurant_name: sanitizedRestaurantName,
+        restaurant_description: sanitizedDescription
       }) as { data: any; error: any };
 
       if (profileError || !(profileResult as any)?.success) {
@@ -137,6 +166,21 @@ const Auth = () => {
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Rate limiting check for login
+    if (!checkRateLimit('login', RATE_LIMITS.login.maxRequests, RATE_LIMITS.login.windowMs)) {
+      toast.error("Too many login attempts. Please wait 5 minutes before trying again.", {
+        icon: <AlertTriangle className="h-4 w-4" />,
+      });
+      return;
+    }
+
+    // Input validation
+    if (!isValidEmail(signInData.email)) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+    
     setLoading(true);
 
     try {
@@ -150,7 +194,8 @@ const Auth = () => {
       toast.success("Welcome back!");
       navigate("/dashboard");
     } catch (error: any) {
-      toast.error(error.message || "Error signing in");
+      // Don't reveal if email exists or not
+      toast.error("Invalid email or password");
     } finally {
       setLoading(false);
     }
@@ -158,6 +203,20 @@ const Auth = () => {
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Rate limiting for password reset
+    if (!checkRateLimit('passwordReset', RATE_LIMITS.passwordReset.maxRequests, RATE_LIMITS.passwordReset.windowMs)) {
+      toast.error("Too many password reset attempts. Please wait 10 minutes.", {
+        icon: <AlertTriangle className="h-4 w-4" />,
+      });
+      return;
+    }
+
+    if (!isValidEmail(resetEmail)) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+    
     setLoading(true);
 
     try {
@@ -165,13 +224,15 @@ const Auth = () => {
         redirectTo: `${window.location.origin}/auth`,
       });
 
-      if (error) throw error;
-
-      toast.success("Password reset email sent! Check your inbox.");
+      // Always show success message to prevent email enumeration
+      toast.success("If an account exists with this email, you'll receive a password reset link.");
       setShowForgotPassword(false);
       setResetEmail("");
     } catch (error: any) {
-      toast.error(error.message || "Error sending reset email");
+      // Generic error message
+      toast.success("If an account exists with this email, you'll receive a password reset link.");
+      setShowForgotPassword(false);
+      setResetEmail("");
     } finally {
       setLoading(false);
     }
