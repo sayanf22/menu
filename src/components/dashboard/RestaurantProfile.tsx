@@ -5,8 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Loader2, Save, Edit, Upload, X } from "lucide-react";
+import { Loader2, Save, Edit, Upload, X, Bell, BellOff } from "lucide-react";
 import { compressImage, COMPRESSION_PRESETS, getCompressionStats } from "@/lib/image-compression";
 // Logo uploads go to Supabase Storage (not R2) for simplicity
 
@@ -29,7 +30,9 @@ const RestaurantProfile = ({ restaurantId, onProfileUpdate }: RestaurantProfileP
         restaurant_name: "",
         restaurant_description: "",
         logo_url: "",
+        bell_service_enabled: true,
     });
+    const [bellServiceSaving, setBellServiceSaving] = useState(false);
 
     useEffect(() => {
         fetchProfile();
@@ -39,7 +42,7 @@ const RestaurantProfile = ({ restaurantId, onProfileUpdate }: RestaurantProfileP
         try {
             const { data, error } = await supabase
                 .from("profiles")
-                .select("restaurant_name, restaurant_description, logo_url")
+                .select("restaurant_name, restaurant_description, logo_url, bell_service_enabled")
                 .eq("id", restaurantId)
                 .single();
 
@@ -61,6 +64,7 @@ const RestaurantProfile = ({ restaurantId, onProfileUpdate }: RestaurantProfileP
                             restaurant_name: (basicData as any).restaurant_name || "",
                             restaurant_description: (basicData as any).restaurant_description || "",
                             logo_url: "",
+                            bell_service_enabled: true,
                         });
                     }
                     return;
@@ -73,6 +77,7 @@ const RestaurantProfile = ({ restaurantId, onProfileUpdate }: RestaurantProfileP
                     restaurant_name: (data as any).restaurant_name || "",
                     restaurant_description: (data as any).restaurant_description || "",
                     logo_url: (data as any).logo_url || "",
+                    bell_service_enabled: (data as any).bell_service_enabled !== false, // Default to true
                 });
                 if ((data as any).logo_url) {
                     setLogoPreview((data as any).logo_url);
@@ -260,6 +265,30 @@ const RestaurantProfile = ({ restaurantId, onProfileUpdate }: RestaurantProfileP
         setLogoFile(null);
         setLogoPreview(profile.logo_url || null);
         fetchProfile(); // Reset to original values
+    };
+
+    const handleBellServiceToggle = async (enabled: boolean) => {
+        setBellServiceSaving(true);
+        try {
+            const { error } = await supabase
+                .from("profiles")
+                .update({ bell_service_enabled: enabled })
+                .eq("id", restaurantId);
+
+            if (error) throw error;
+
+            setProfile(prev => ({ ...prev, bell_service_enabled: enabled }));
+            toast.success(enabled ? "Bell service enabled" : "Bell service disabled");
+            
+            if (onProfileUpdate) {
+                onProfileUpdate({ ...profile, bell_service_enabled: enabled });
+            }
+        } catch (error: any) {
+            console.error("Error updating bell service:", error);
+            toast.error("Failed to update bell service setting");
+        } finally {
+            setBellServiceSaving(false);
+        }
     };
 
     if (loading) {
@@ -450,6 +479,37 @@ const RestaurantProfile = ({ restaurantId, onProfileUpdate }: RestaurantProfileP
                                     <p className="text-sm">
                                         {profile.restaurant_description || "No description provided"}
                                     </p>
+                                </div>
+
+                                {/* Bell Service Toggle */}
+                                <div className="pt-4 border-t">
+                                    <div className={`flex items-center justify-between p-4 rounded-xl transition-all ${
+                                        profile.bell_service_enabled 
+                                            ? "bg-primary/10 border border-primary/30" 
+                                            : "bg-muted/50 border border-muted"
+                                    }`}>
+                                        <div className="flex items-center gap-3">
+                                            {profile.bell_service_enabled ? (
+                                                <Bell className="h-6 w-6 text-primary" />
+                                            ) : (
+                                                <BellOff className="h-6 w-6 text-muted-foreground" />
+                                            )}
+                                            <div>
+                                                <Label className="font-semibold text-base">Bell Service</Label>
+                                                <p className="text-sm text-muted-foreground">
+                                                    {profile.bell_service_enabled 
+                                                        ? "Customers can call you from the menu" 
+                                                        : "Bell button hidden from customers"}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <Switch 
+                                            checked={profile.bell_service_enabled}
+                                            onCheckedChange={handleBellServiceToggle}
+                                            disabled={bellServiceSaving}
+                                            className="scale-125"
+                                        />
+                                    </div>
                                 </div>
                             </>
                         )}

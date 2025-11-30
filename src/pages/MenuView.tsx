@@ -158,7 +158,7 @@ const MenuView = () => {
     try {
       setLoading(true);
       const [profileResult, imagesResult, socialResult] = await Promise.all([
-        supabase.from("profiles").select("restaurant_name, restaurant_description, logo_url, is_disabled").eq("id", restaurantId).maybeSingle(),
+        supabase.from("profiles").select("restaurant_name, restaurant_description, logo_url, is_disabled, bell_service_enabled").eq("id", restaurantId).maybeSingle(),
         supabase.from("menu_images").select("*").eq("restaurant_id", restaurantId).order("display_order", { ascending: true }),
         supabase.from("social_links").select("*").eq("restaurant_id", restaurantId).maybeSingle()
       ]);
@@ -399,8 +399,8 @@ const handleSubmitFeedback = async (e: React.FormEvent) => {
         )}
       </AnimatePresence>
 
-      {/* Bell Button - Call Waiter */}
-      {restaurantId && <BellButton restaurantId={restaurantId} />}
+      {/* Bell Button - Call Waiter (only show if bell service is enabled) */}
+      {restaurantId && profile?.bell_service_enabled !== false && <BellButton restaurantId={restaurantId} />}
     </div>
   );
 };

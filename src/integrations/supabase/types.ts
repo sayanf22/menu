@@ -186,6 +186,7 @@ export type Database = {
           approval_status: string | null
           approved_at: string | null
           approved_by: string | null
+          bell_service_enabled: boolean | null
           created_at: string | null
           disabled_at: string | null
           disabled_by: string | null
@@ -200,6 +201,7 @@ export type Database = {
           approval_status?: string | null
           approved_at?: string | null
           approved_by?: string | null
+          bell_service_enabled?: boolean | null
           created_at?: string | null
           disabled_at?: string | null
           disabled_by?: string | null
@@ -214,6 +216,7 @@ export type Database = {
           approval_status?: string | null
           approved_at?: string | null
           approved_by?: string | null
+          bell_service_enabled?: boolean | null
           created_at?: string | null
           disabled_at?: string | null
           disabled_by?: string | null
