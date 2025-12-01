@@ -12,6 +12,9 @@ const QRCodeDisplay = ({ restaurantId }: QRCodeDisplayProps) => {
   const [qrCodeUrl, setQrCodeUrl] = useState("");
   const [qrColor, setQrColor] = useState("#000000");
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  // QR code now points to /qr/ endpoint which creates a session and redirects to menu
+  const qrUrl = `${window.location.origin}/qr/${restaurantId}`;
+  // Direct menu URL for preview (without session)
   const menuUrl = `${window.location.origin}/menu/${restaurantId}`;
 
   useEffect(() => {
@@ -21,7 +24,7 @@ const QRCodeDisplay = ({ restaurantId }: QRCodeDisplayProps) => {
   const generateQRCode = async () => {
     try {
       if (canvasRef.current) {
-        await QRCode.toCanvas(canvasRef.current, menuUrl, {
+        await QRCode.toCanvas(canvasRef.current, qrUrl, {
           width: 400,
           margin: 2,
           color: {
@@ -69,7 +72,10 @@ const QRCodeDisplay = ({ restaurantId }: QRCodeDisplayProps) => {
         <div className="text-center space-y-2">
           <p className="text-sm text-muted-foreground">Scan this QR code to view your menu</p>
           <p className="text-xs text-muted-foreground font-mono bg-muted px-3 py-1 rounded">
-            {menuUrl}
+            {qrUrl}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Sessions expire after 90 minutes or 20 minutes of inactivity
           </p>
         </div>
 

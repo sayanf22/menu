@@ -310,6 +310,39 @@ export type Database = {
         }
         Relationships: []
       }
+      menu_sessions: {
+        Row: {
+          id: string
+          restaurant_id: string
+          session_token: string
+          created_at: string | null
+          expires_at: string
+          last_activity_at: string | null
+          is_active: boolean | null
+          device_fingerprint: string | null
+        }
+        Insert: {
+          id?: string
+          restaurant_id: string
+          session_token: string
+          created_at?: string | null
+          expires_at: string
+          last_activity_at?: string | null
+          is_active?: boolean | null
+          device_fingerprint?: string | null
+        }
+        Update: {
+          id?: string
+          restaurant_id?: string
+          session_token?: string
+          created_at?: string | null
+          expires_at?: string
+          last_activity_at?: string | null
+          is_active?: boolean | null
+          device_fingerprint?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -365,6 +398,25 @@ export type Database = {
       }
       ensure_profile_exists: { Args: { user_id: string }; Returns: boolean }
       use_signup_code: { Args: { code_value: string }; Returns: Json }
+      create_menu_session: {
+        Args: {
+          p_restaurant_id: string
+          p_device_fingerprint?: string
+          p_session_duration_minutes?: number
+        }
+        Returns: Json
+      }
+      validate_menu_session: {
+        Args: {
+          p_session_token: string
+          p_idle_timeout_minutes?: number
+        }
+        Returns: Json
+      }
+      cleanup_expired_sessions: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
     }
     Enums: {
       [_ in never]: never

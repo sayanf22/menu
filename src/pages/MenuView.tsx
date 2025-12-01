@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, memo } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { Star, Loader2, X, ChevronDown, Send, MessageSquare } from "lucide-react
 import { generateDeviceFingerprint } from "@/lib/deviceFingerprint";
 import { motion, useInView, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import { BellButton } from "@/components/BellButton";
+import SessionExpired from "./SessionExpired";
 
 // Lazy loaded image component with blur placeholder
 const LazyImage = memo(({ src, alt, className, onClick }: { src: string; alt: string; className?: string; onClick?: () => void }) => {
@@ -96,6 +97,9 @@ SocialIcon.displayName = "SocialIcon";
 
 const MenuView = () => {
   const { restaurantId } = useParams();
+  const [searchParams] = useSearchParams();
+  const sessionToken = searchParams.get("session");
+  
   const [loading, setLoading] = useState(true);
   const [showSplash, setShowSplash] = useState(true);
   const [profile, setProfile] = useState<any>(null);
@@ -109,9 +113,14 @@ const MenuView = () => {
   const [clientIp, setClientIp] = useState<string>("");
   const [deviceFingerprint, setDeviceFingerprint] = useState<string>("");
   const [canSubmitFeedback, setCanSubmitFeedback] = useState(true);
+  const [sessionExpired, setSessionExpired] = useState<{ expired: boolean; reason?: string; message?: string }>({ expired: false });
+  const [sessionRestaurantId, setSessionRestaurantId] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll();
   const headerOpacity = useTransform(scrollYProgress, [0, 0.03], [0, 1]);
+  
+  // Activity tracking interval ref
+  const activityIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
 
   // Handle zoom modal keyboard navigation
@@ -134,7 +143,68 @@ const MenuView = () => {
     } else { document.body.style.overflow = "unset"; }
   }, [zoomedImage, zoomedIndex, menuImages]);
 
-  useEffect(() => { if (restaurantId) { fetchMenuData(); logView(); fetchClientInfo(); } }, [restaurantId]);
+  // Validate session and load data
+  useEffect(() => {
+    const initializeMenu = async () => {
+      // If session token is provided, validate it first
+      if (sessionToken) {
+        const { data, error } = await supabase.rpc("validate_menu_session", {
+          p_session_token: sessionToken,
+          p_idle_timeout_minutes: 20,
+        });
+        
+        const sessionData = data as { valid?: boolean; reason?: string; message?: string; restaurant_id?: string } | null;
+        
+        if (error || !sessionData?.valid) {
+          setSessionExpired({
+            expired: true,
+            reason: sessionData?.reason || "invalid",
+            message: sessionData?.message || "Session is invalid. Please scan the QR code again.",
+          });
+          setLoading(false);
+          return;
+        }
+        
+        // Use restaurant_id from session
+        setSessionRestaurantId(sessionData.restaurant_id!);
+        fetchMenuDataForRestaurant(sessionData.restaurant_id!);
+        logViewForRestaurant(sessionData.restaurant_id!);
+        fetchClientInfo();
+        
+        // Set up activity tracking - validate session every 5 minutes
+        activityIntervalRef.current = setInterval(async () => {
+          const { data: validationData } = await supabase.rpc("validate_menu_session", {
+            p_session_token: sessionToken,
+            p_idle_timeout_minutes: 20,
+          });
+          
+          const valData = validationData as { valid?: boolean; reason?: string; message?: string } | null;
+          
+          if (!valData?.valid) {
+            setSessionExpired({
+              expired: true,
+              reason: valData?.reason || "expired",
+              message: valData?.message,
+            });
+          }
+        }, 5 * 60 * 1000); // Check every 5 minutes
+      } else if (restaurantId) {
+        // Direct access without session (legacy support or direct link)
+        fetchMenuData();
+        logView();
+        fetchClientInfo();
+      }
+    };
+    
+    initializeMenu();
+    
+    return () => {
+      if (activityIntervalRef.current) {
+        clearInterval(activityIntervalRef.current);
+      }
+    };
+  }, [sessionToken, restaurantId]);
+  
   useEffect(() => { if (!loading && profile) { const timer = setTimeout(() => setShowSplash(false), 1200); return () => clearTimeout(timer); } }, [loading, profile]);
 
   const fetchClientInfo = useCallback(async () => {
@@ -153,6 +223,10 @@ const MenuView = () => {
   const logView = useCallback(async () => {
     try { await supabase.from("view_logs").insert({ restaurant_id: restaurantId }); } catch (error) { console.error("Error logging view:", error); }
   }, [restaurantId]);
+  
+  const logViewForRestaurant = useCallback(async (restId: string) => {
+    try { await supabase.from("view_logs").insert({ restaurant_id: restId }); } catch (error) { console.error("Error logging view:", error); }
+  }, []);
 
   const fetchMenuData = useCallback(async () => {
     try {
@@ -167,6 +241,20 @@ const MenuView = () => {
       if (socialResult.data) setSocialLinks(socialResult.data);
     } catch (error) { console.error("Error fetching menu data:", error); toast.error("Error loading menu"); } finally { setLoading(false); }
   }, [restaurantId]);
+  
+  const fetchMenuDataForRestaurant = useCallback(async (restId: string) => {
+    try {
+      setLoading(true);
+      const [profileResult, imagesResult, socialResult] = await Promise.all([
+        supabase.from("profiles").select("restaurant_name, restaurant_description, logo_url, is_disabled, bell_service_enabled").eq("id", restId).maybeSingle(),
+        supabase.from("menu_images").select("*").eq("restaurant_id", restId).order("display_order", { ascending: true }),
+        supabase.from("social_links").select("*").eq("restaurant_id", restId).maybeSingle()
+      ]);
+      if (profileResult.data) setProfile(profileResult.data.is_disabled ? { ...profileResult.data, disabled: true } : profileResult.data);
+      if (imagesResult.data) setMenuImages(imagesResult.data);
+      if (socialResult.data) setSocialLinks(socialResult.data);
+    } catch (error) { console.error("Error fetching menu data:", error); toast.error("Error loading menu"); } finally { setLoading(false); }
+  }, []);
 
   
 const handleSubmitFeedback = async (e: React.FormEvent) => {
@@ -185,6 +273,19 @@ const handleSubmitFeedback = async (e: React.FormEvent) => {
   };
 
   const openZoom = (url: string, index: number) => { setZoomedImage(url); setZoomedIndex(index); };
+
+  // Get effective restaurant ID (from session or URL)
+  const effectiveRestaurantId = sessionRestaurantId || restaurantId;
+
+  // Session Expired Screen
+  if (sessionExpired.expired) {
+    return (
+      <SessionExpired
+        reason={sessionExpired.reason as any}
+        message={sessionExpired.message}
+      />
+    );
+  }
 
   // Splash Screen
   if (showSplash) {
@@ -400,7 +501,7 @@ const handleSubmitFeedback = async (e: React.FormEvent) => {
       </AnimatePresence>
 
       {/* Bell Button - Call Waiter (only show if bell service is enabled) */}
-      {restaurantId && profile?.bell_service_enabled !== false && <BellButton restaurantId={restaurantId} />}
+      {effectiveRestaurantId && profile?.bell_service_enabled !== false && <BellButton restaurantId={effectiveRestaurantId} />}
     </div>
   );
 };
