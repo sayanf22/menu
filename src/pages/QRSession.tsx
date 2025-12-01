@@ -56,15 +56,30 @@ const QRSession = () => {
         p_session_duration_minutes: 90,
       });
 
-      if (sessionError || !data?.success) {
+      const sessionData = data as { success?: boolean; error?: string; message?: string; session_token?: string } | null;
+
+      if (sessionError) {
         console.error("Session creation error:", sessionError);
         setError("Failed to start menu session. Please try again.");
         setCreating(false);
         return;
       }
 
+      // Handle rate limiting
+      if (sessionData?.error === "rate_limited") {
+        setError(sessionData.message || "Too many requests. Please wait a moment and try again.");
+        setCreating(false);
+        return;
+      }
+
+      if (!sessionData?.success) {
+        setError("Failed to start menu session. Please try again.");
+        setCreating(false);
+        return;
+      }
+
       // Redirect to menu with session token
-      navigate(`/menu?session=${data.session_token}`, { replace: true });
+      navigate(`/menu?session=${sessionData.session_token}`, { replace: true });
     } catch (err) {
       console.error("Error creating session:", err);
       setError("Something went wrong. Please scan the QR code again.");
