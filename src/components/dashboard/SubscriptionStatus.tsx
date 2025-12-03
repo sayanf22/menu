@@ -35,22 +35,28 @@ export const SubscriptionStatus = ({ userId }: SubscriptionStatusProps) => {
 
   const fetchSubscription = async () => {
     try {
-      const { data, error } = await supabase
+      // First get the subscription
+      const { data: subData, error: subError } = await supabase
         .from('user_subscriptions')
-        .select(`
-          *,
-          subscription_plans(name, price_monthly, price_yearly)
-        `)
+        .select('*')
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
         .limit(1)
         .single();
 
-      if (error && error.code !== 'PGRST116') throw error;
-      if (data) {
+      if (subError && subError.code !== 'PGRST116') throw subError;
+      
+      if (subData) {
+        // Then get the plan details
+        const { data: planData } = await supabase
+          .from('subscription_plans')
+          .select('name, price_monthly, price_yearly')
+          .eq('id', subData.plan_id)
+          .single();
+
         setSubscription({
-          ...data,
-          plan: data.subscription_plans as any
+          ...subData,
+          plan: planData || null
         });
       }
     } catch (err) {

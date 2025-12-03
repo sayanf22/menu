@@ -19,7 +19,7 @@ interface Plan {
   description: string | null;
   price_monthly: number;
   price_yearly: number | null;
-  features: any;
+  features: unknown;
 }
 
 const Auth = () => {
@@ -200,7 +200,7 @@ const Auth = () => {
 
       toast.success("Welcome back!");
       navigate("/dashboard");
-    } catch (error: any) {
+    } catch {
       toast.error("Invalid email or password");
     } finally {
       setLoading(false);
@@ -224,7 +224,7 @@ const Auth = () => {
       toast.success("If an account exists, you'll receive a password reset link.");
       setShowForgotPassword(false);
       setResetEmail("");
-    } catch (error: any) {
+    } catch {
       toast.success("If an account exists, you'll receive a password reset link.");
     } finally {
       setLoading(false);

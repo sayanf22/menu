@@ -4,9 +4,32 @@ import { toast } from "sonner";
 
 // Force module reload
 
+interface RazorpayOptions {
+  key: string;
+  subscription_id: string;
+  name: string;
+  description: string;
+  prefill: { name: string; email: string };
+  theme: { color: string };
+  handler: (response: RazorpayResponse) => void;
+  modal: { ondismiss: () => void };
+}
+
+interface RazorpayInstance {
+  on: (event: string, callback: (response: RazorpayErrorResponse) => void) => void;
+  open: () => void;
+}
+
+interface RazorpayErrorResponse {
+  error: {
+    description: string;
+    code?: string;
+  };
+}
+
 declare global {
   interface Window {
-    Razorpay: any;
+    Razorpay: new (options: RazorpayOptions) => RazorpayInstance;
   }
 }
 
@@ -14,6 +37,13 @@ interface RazorpayResponse {
   razorpay_payment_id: string;
   razorpay_subscription_id: string;
   razorpay_signature: string;
+}
+
+interface VerifyData {
+  success?: boolean;
+  session?: { access_token: string; refresh_token: string };
+  error?: string;
+  user_id?: string;
 }
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://owibhiiwghyznptfgfcr.supabase.co";
@@ -48,8 +78,8 @@ export function useRazorpay() {
       planId: string;
       billingCycle: "monthly" | "yearly";
     },
-    onSuccess?: (data: any) => void,
-    onFailure?: (error: any) => void
+    onSuccess?: (data: VerifyData) => void,
+    onFailure?: (error: Error | RazorpayErrorResponse['error']) => void
   ) => {
     setLoading(true);
     setError(null);
@@ -112,22 +142,24 @@ export function useRazorpay() {
             if (!verifyResponse.ok || verifyData.error) throw new Error(verifyData.error || "Verification failed");
             if (verifyData.session) await supabase.auth.setSession(verifyData.session);
             toast.success("Account created!");
-            onSuccess?.(verifyData);
-          } catch (err: any) {
-            toast.error(err.message);
-            onFailure?.(err);
+            onSuccess?.(verifyData as VerifyData);
+          } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : "Payment verification failed";
+            toast.error(errorMessage);
+            onFailure?.(err instanceof Error ? err : { description: errorMessage });
           } finally {
             setLoading(false);
           }
         },
         modal: { ondismiss: () => { setLoading(false); toast.info("Payment cancelled"); } },
       });
-      rzp.on("payment.failed", (res: any) => { setLoading(false); toast.error(res.error.description); onFailure?.(res.error); });
+      rzp.on("payment.failed", (res: RazorpayErrorResponse) => { setLoading(false); toast.error(res.error.description); onFailure?.(res.error); });
       rzp.open();
-    } catch (err: any) {
-      setError(err.message);
-      toast.error(err.message);
-      onFailure?.(err);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to initiate payment";
+      setError(errorMessage);
+      toast.error(errorMessage);
+      onFailure?.(err instanceof Error ? err : { description: errorMessage });
       setLoading(false);
     }
   }, []);
@@ -136,8 +168,8 @@ export function useRazorpay() {
   // FOR EXISTING USERS - subscription payment
   const initiatePayment = useCallback(async (
     params: { planId: string; billingCycle: "monthly" | "yearly" },
-    onSuccess?: (data: any) => void,
-    onFailure?: (error: any) => void
+    onSuccess?: (data: VerifyData) => void,
+    onFailure?: (error: Error | RazorpayErrorResponse['error']) => void
   ) => {
     setLoading(true);
     setError(null);
@@ -174,22 +206,24 @@ export function useRazorpay() {
             });
             if (verifyRes.error) throw new Error(verifyRes.error.message);
             toast.success("Subscription activated!");
-            onSuccess?.(verifyRes.data);
-          } catch (err: any) {
-            toast.error(err.message);
-            onFailure?.(err);
+            onSuccess?.(verifyRes.data as VerifyData);
+          } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : "Subscription verification failed";
+            toast.error(errorMessage);
+            onFailure?.(err instanceof Error ? err : { description: errorMessage });
           } finally {
             setLoading(false);
           }
         },
         modal: { ondismiss: () => setLoading(false) },
       });
-      rzp.on("payment.failed", (res: any) => { setLoading(false); toast.error(res.error.description); onFailure?.(res.error); });
+      rzp.on("payment.failed", (res: RazorpayErrorResponse) => { setLoading(false); toast.error(res.error.description); onFailure?.(res.error); });
       rzp.open();
-    } catch (err: any) {
-      setError(err.message);
-      toast.error(err.message);
-      onFailure?.(err);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to initiate payment";
+      setError(errorMessage);
+      toast.error(errorMessage);
+      onFailure?.(err instanceof Error ? err : { description: errorMessage });
       setLoading(false);
     }
   }, []);

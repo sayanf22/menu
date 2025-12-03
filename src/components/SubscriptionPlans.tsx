@@ -13,7 +13,7 @@ interface Plan {
   description: string | null;
   price_monthly: number;
   price_yearly: number | null;
-  features: any;
+  features: unknown;
   is_active: boolean | null;
 }
 
