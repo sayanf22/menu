@@ -65,12 +65,22 @@ export const Footer = () => {
               </li>
               <li>
                 <Link to="/terms" className="hover:text-primary transition-colors duration-300 inline-block hover:translate-x-1 transform">
-                  Terms of Service
+                  Terms & Conditions
                 </Link>
               </li>
               <li>
                 <Link to="/refund" className="hover:text-primary transition-colors duration-300 inline-block hover:translate-x-1 transform">
-                  Refund Policy
+                  Cancellation & Refund
+                </Link>
+              </li>
+              <li>
+                <Link to="/shipping" className="hover:text-primary transition-colors duration-300 inline-block hover:translate-x-1 transform">
+                  Shipping & Delivery
+                </Link>
+              </li>
+              <li>
+                <Link to="/contact" className="hover:text-primary transition-colors duration-300 inline-block hover:translate-x-1 transform">
+                  Contact Us
                 </Link>
               </li>
             </ul>
