@@ -53,8 +53,7 @@ export type Database = {
         }
         Update: {
           admin_id?: string | null
-    
-      created_at?: string | null
+          created_at?: string | null
           expires_at?: string
           id?: string
           session_token?: string
@@ -340,6 +339,228 @@ export type Database = {
           last_activity_at?: string | null
           is_active?: boolean | null
           device_fingerprint?: string | null
+        }
+        Relationships: []
+      }
+      subscription_plans: {
+        Row: {
+          id: string
+          name: string
+          description: string | null
+          price_monthly: number
+          price_yearly: number | null
+          razorpay_plan_id_monthly: string | null
+          razorpay_plan_id_yearly: string | null
+          features: Json | null
+          is_active: boolean | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          name: string
+          description?: string | null
+          price_monthly: number
+          price_yearly?: number | null
+          razorpay_plan_id_monthly?: string | null
+          razorpay_plan_id_yearly?: string | null
+          features?: Json | null
+          is_active?: boolean | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          name?: string
+          description?: string | null
+          price_monthly?: number
+          price_yearly?: number | null
+          razorpay_plan_id_monthly?: string | null
+          razorpay_plan_id_yearly?: string | null
+          features?: Json | null
+          is_active?: boolean | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      user_subscriptions: {
+        Row: {
+          id: string
+          user_id: string
+          plan_id: string | null
+          razorpay_subscription_id: string | null
+          razorpay_customer_id: string | null
+          status: string
+          billing_cycle: string | null
+          current_period_start: string | null
+          current_period_end: string | null
+          trial_end: string | null
+          cancelled_at: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          plan_id?: string | null
+          razorpay_subscription_id?: string | null
+          razorpay_customer_id?: string | null
+          status?: string
+          billing_cycle?: string | null
+          current_period_start?: string | null
+          current_period_end?: string | null
+          trial_end?: string | null
+          cancelled_at?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          plan_id?: string | null
+          razorpay_subscription_id?: string | null
+          razorpay_customer_id?: string | null
+          status?: string
+          billing_cycle?: string | null
+          current_period_start?: string | null
+          current_period_end?: string | null
+          trial_end?: string | null
+          cancelled_at?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      payment_transactions: {
+        Row: {
+          id: string
+          user_id: string
+          subscription_id: string | null
+          razorpay_order_id: string | null
+          razorpay_payment_id: string | null
+          razorpay_signature: string | null
+          amount: number
+          currency: string | null
+          status: string
+          payment_method: string | null
+          error_code: string | null
+          error_description: string | null
+          metadata: Json | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          subscription_id?: string | null
+          razorpay_order_id?: string | null
+          razorpay_payment_id?: string | null
+          razorpay_signature?: string | null
+          amount: number
+          currency?: string | null
+          status?: string
+          payment_method?: string | null
+          error_code?: string | null
+          error_description?: string | null
+          metadata?: Json | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          subscription_id?: string | null
+          razorpay_order_id?: string | null
+          razorpay_payment_id?: string | null
+          razorpay_signature?: string | null
+          amount?: number
+          currency?: string | null
+          status?: string
+          payment_method?: string | null
+          error_code?: string | null
+          error_description?: string | null
+          metadata?: Json | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      razorpay_webhook_events: {
+        Row: {
+          id: string
+          event_id: string
+          event_type: string
+          payload: Json
+          processed: boolean | null
+          processed_at: string | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          event_id: string
+          event_type: string
+          payload: Json
+          processed?: boolean | null
+          processed_at?: string | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          event_id?: string
+          event_type?: string
+          payload?: Json
+          processed?: boolean | null
+          processed_at?: string | null
+          created_at?: string | null
+        }
+        Relationships: []
+      }
+      pending_registrations: {
+        Row: {
+          id: string
+          email: string
+          password_hash: string
+          restaurant_name: string
+          restaurant_description: string | null
+          plan_id: string
+          billing_cycle: string
+          razorpay_subscription_id: string | null
+          status: string
+          created_at: string | null
+          expires_at: string | null
+          completed_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          id?: string
+          email: string
+          password_hash: string
+          restaurant_name: string
+          restaurant_description?: string | null
+          plan_id: string
+          billing_cycle?: string
+          razorpay_subscription_id?: string | null
+          status?: string
+          created_at?: string | null
+          expires_at?: string | null
+          completed_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          id?: string
+          email?: string
+          password_hash?: string
+          restaurant_name?: string
+          restaurant_description?: string | null
+          plan_id?: string
+          billing_cycle?: string
+          razorpay_subscription_id?: string | null
+          status?: string
+          created_at?: string | null
+          expires_at?: string | null
+          completed_at?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }

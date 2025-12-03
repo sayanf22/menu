@@ -228,33 +228,70 @@ const MenuView = () => {
     try { await supabase.from("view_logs").insert({ restaurant_id: restId }); } catch (error) { console.error("Error logging view:", error); }
   }, []);
 
+  const checkSubscriptionStatus = useCallback(async (userId: string): Promise<boolean> => {
+    try {
+      const { data: subscription } = await supabase
+        .from("user_subscriptions")
+        .select("status, current_period_end")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+      
+      if (!subscription) return false;
+      if (subscription.status !== 'active') return false;
+      if (subscription.current_period_end && new Date(subscription.current_period_end) < new Date()) return false;
+      return true;
+    } catch {
+      return false;
+    }
+  }, []);
+
   const fetchMenuData = useCallback(async () => {
     try {
       setLoading(true);
+      
+      // Check subscription status first
+      const hasActiveSubscription = await checkSubscriptionStatus(restaurantId!);
+      
       const [profileResult, imagesResult, socialResult] = await Promise.all([
         supabase.from("profiles").select("restaurant_name, restaurant_description, logo_url, is_disabled, bell_service_enabled").eq("id", restaurantId).maybeSingle(),
         supabase.from("menu_images").select("*").eq("restaurant_id", restaurantId).order("display_order", { ascending: true }),
         supabase.from("social_links").select("*").eq("restaurant_id", restaurantId).maybeSingle()
       ]);
-      if (profileResult.data) setProfile(profileResult.data.is_disabled ? { ...profileResult.data, disabled: true } : profileResult.data);
+      
+      if (profileResult.data) {
+        // Mark as disabled if no active subscription or already disabled
+        const isDisabled = profileResult.data.is_disabled || !hasActiveSubscription;
+        setProfile(isDisabled ? { ...profileResult.data, disabled: true, subscriptionExpired: !hasActiveSubscription } : profileResult.data);
+      }
       if (imagesResult.data) setMenuImages(imagesResult.data);
       if (socialResult.data) setSocialLinks(socialResult.data);
     } catch (error) { console.error("Error fetching menu data:", error); toast.error("Error loading menu"); } finally { setLoading(false); }
-  }, [restaurantId]);
+  }, [restaurantId, checkSubscriptionStatus]);
   
   const fetchMenuDataForRestaurant = useCallback(async (restId: string) => {
     try {
       setLoading(true);
+      
+      // Check subscription status first
+      const hasActiveSubscription = await checkSubscriptionStatus(restId);
+      
       const [profileResult, imagesResult, socialResult] = await Promise.all([
         supabase.from("profiles").select("restaurant_name, restaurant_description, logo_url, is_disabled, bell_service_enabled").eq("id", restId).maybeSingle(),
         supabase.from("menu_images").select("*").eq("restaurant_id", restId).order("display_order", { ascending: true }),
         supabase.from("social_links").select("*").eq("restaurant_id", restId).maybeSingle()
       ]);
-      if (profileResult.data) setProfile(profileResult.data.is_disabled ? { ...profileResult.data, disabled: true } : profileResult.data);
+      
+      if (profileResult.data) {
+        // Mark as disabled if no active subscription or already disabled
+        const isDisabled = profileResult.data.is_disabled || !hasActiveSubscription;
+        setProfile(isDisabled ? { ...profileResult.data, disabled: true, subscriptionExpired: !hasActiveSubscription } : profileResult.data);
+      }
       if (imagesResult.data) setMenuImages(imagesResult.data);
       if (socialResult.data) setSocialLinks(socialResult.data);
     } catch (error) { console.error("Error fetching menu data:", error); toast.error("Error loading menu"); } finally { setLoading(false); }
-  }, []);
+  }, [checkSubscriptionStatus]);
 
   
 const handleSubmitFeedback = async (e: React.FormEvent) => {
@@ -326,9 +363,32 @@ const handleSubmitFeedback = async (e: React.FormEvent) => {
 
   if (profile?.disabled) {
     return (
-      <div className="min-h-screen min-h-[100dvh] flex items-center justify-center p-4 bg-background">
+      <div className="min-h-screen min-h-[100dvh] flex items-center justify-center p-4 bg-gradient-to-b from-background to-muted/20">
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ type: "spring", stiffness: 100, damping: 18 }}>
-          <Card className="max-w-sm w-full text-center p-6 sm:p-8 border-border/40"><h2 className="text-lg sm:text-xl font-semibold mb-2">Menu Unavailable</h2><p className="text-muted-foreground text-sm">This restaurant's menu is currently unavailable.</p></Card>
+          <Card className="max-w-sm w-full text-center p-6 sm:p-8 border-border/40 shadow-lg">
+            {profile?.logo_url && (
+              <img src={profile.logo_url} alt={profile.restaurant_name} className="w-16 h-16 mx-auto mb-4 object-cover rounded-full border border-border/40" />
+            )}
+            <h2 className="text-lg sm:text-xl font-semibold mb-2">{profile?.restaurant_name || 'Menu Unavailable'}</h2>
+            <div className="w-12 h-1 bg-primary/20 mx-auto mb-4 rounded-full" />
+            <p className="text-muted-foreground text-sm mb-4">
+              {profile?.subscriptionExpired 
+                ? "This restaurant's subscription has expired. Please contact the restaurant directly."
+                : "This restaurant's menu is currently unavailable."}
+            </p>
+            {socialLinks?.whatsapp && (
+              <a 
+                href={`https://wa.me/${socialLinks.whatsapp.replace(/[^0-9]/g, "")}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-full text-sm font-medium transition-colors"
+              >
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                Contact Restaurant
+              </a>
+            )}
+            <p className="text-xs text-muted-foreground/60 mt-4">Powered by AddMenu</p>
+          </Card>
         </motion.div>
       </div>
     );

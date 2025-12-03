@@ -203,18 +203,25 @@ export function getCSPNonce(): string {
 
 
 /**
+ * Reset rate limit for a specific key
+ */
+export function resetRateLimit(key: string): void {
+  rateLimitStore.delete(key);
+}
+
+/**
  * Predefined rate limits for common actions
  */
 export const RATE_LIMITS = {
-  // Auth actions - strict limits
-  login: { maxRequests: 5, windowMs: 300000 }, // 5 per 5 minutes
-  signup: { maxRequests: 3, windowMs: 600000 }, // 3 per 10 minutes
-  passwordReset: { maxRequests: 3, windowMs: 600000 }, // 3 per 10 minutes
+  // Auth actions - relaxed for better UX
+  login: { maxRequests: 10, windowMs: 300000 }, // 10 per 5 minutes
+  signup: { maxRequests: 10, windowMs: 300000 }, // 10 per 5 minutes
+  passwordReset: { maxRequests: 5, windowMs: 600000 }, // 5 per 10 minutes
   
   // User actions - moderate limits
-  feedback: { maxRequests: 5, windowMs: 60000 }, // 5 per minute
-  menuUpload: { maxRequests: 10, windowMs: 60000 }, // 10 per minute
-  profileUpdate: { maxRequests: 10, windowMs: 60000 }, // 10 per minute
+  feedback: { maxRequests: 10, windowMs: 60000 }, // 10 per minute
+  menuUpload: { maxRequests: 20, windowMs: 60000 }, // 20 per minute
+  profileUpdate: { maxRequests: 20, windowMs: 60000 }, // 20 per minute
   
   // Public actions - relaxed limits
   viewMenu: { maxRequests: 100, windowMs: 60000 }, // 100 per minute

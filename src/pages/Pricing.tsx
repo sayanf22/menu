@@ -1,26 +1,134 @@
+import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Check, Crown, ArrowRight, MessageCircle, Mail, Sparkles, Star, Zap, Shield, Users } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Check, Crown, ArrowRight, MessageCircle, Sparkles, Star, Zap, Shield, Users, Loader2 } from "lucide-react";
 import { Helmet } from "react-helmet";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useRazorpay } from "@/hooks/useRazorpay";
+import { toast } from "sonner";
 
-// Unused imports kept for potential future use
+interface Plan {
+  id: string;
+  name: string;
+  description: string | null;
+  price_monthly: number;
+  price_yearly: number | null;
+  features: any;
+}
 
 const Pricing = () => {
+  const navigate = useNavigate();
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
+  const [loadingPlans, setLoadingPlans] = useState(true);
+  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+  const [user, setUser] = useState<any>(null);
+  const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
+  const { initiatePayment, loading } = useRazorpay();
+
+  useEffect(() => {
+    fetchPlans();
+    checkUser();
+  }, []);
+
+  const checkUser = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    setUser(session?.user || null);
+    
+    if (session?.user) {
+      // Check if user has active subscription
+      const { data: subscription } = await supabase
+        .from('user_subscriptions')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .eq('status', 'active')
+        .single();
+      
+      setHasActiveSubscription(!!subscription);
+    }
+  };
+
+  const fetchPlans = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('subscription_plans')
+        .select('*')
+        .eq('is_active', true)
+        .order('name', { ascending: true }); // Basic comes before Premium alphabetically
+
+      if (error) throw error;
+      setPlans(data || []);
+    } catch (err) {
+      console.error('Error fetching plans:', err);
+      setPlans([
+        {
+          id: 'basic',
+          name: 'Basic',
+          description: 'Perfect for small restaurants',
+          price_monthly: 200,
+          price_yearly: 2000,
+          features: ["Digital Menu with QR Code", "Upload Menu Images", "Basic Analytics Dashboard", "Customer Feedback Collection", "Social Media Links", "Unlimited Menu Updates", "Email Support"]
+        },
+        {
+          id: 'premium',
+          name: 'Premium',
+          description: 'For growing businesses',
+          price_monthly: 200,
+          price_yearly: 2000,
+          features: ["Everything in Basic", "Online Food Ordering System", "WhatsApp Order Integration", "Multi-Location Support", "Advanced Analytics & Reports", "Menu Categories & Organization", "Restaurant Logo & Branding", "Custom Branding & White Label", "Priority 24/7 Support"]
+        }
+      ]);
+    } finally {
+      setLoadingPlans(false);
+    }
+  };
+
+  const handleSubscribe = async (planId: string) => {
+    // If not logged in, redirect to auth with plan info
+    if (!user) {
+      navigate(`/auth?plan=${planId}&cycle=${billingCycle}`);
+      return;
+    }
+
+    // If already has active subscription
+    if (hasActiveSubscription) {
+      toast.info('You already have an active subscription');
+      navigate('/dashboard');
+      return;
+    }
+
+    // Existing user without subscription - initiate payment
+    setSelectedPlan(planId);
+    await initiatePayment(
+      { planId, billingCycle },
+      () => {
+        setSelectedPlan(null);
+        toast.success('Subscription activated!');
+        setTimeout(() => navigate('/dashboard'), 1500);
+      },
+      () => setSelectedPlan(null)
+    );
+  };
+
+  const formatPrice = (paise: number) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      minimumFractionDigits: 0,
+    }).format(paise / 100);
+  };
+
   return (
     <>
       <Helmet>
-        <title>AddMenu Pricing | Custom Digital Menu QR Code Pricing for Restaurants</title>
-        <meta name="description" content="Get custom pricing for AddMenu digital menu solutions. Affordable QR code menus for restaurants in Tripura. Contact us for a personalized quote today!" />
-        <meta name="keywords" content="addmenu pricing, add menu pricing, digital menu pricing, QR menu cost, restaurant menu pricing, addmenu cost, menu QR code pricing, digital menu Tripura pricing, contactless menu pricing" />
+        <title>AddMenu Pricing | Digital Menu QR Code Subscription Plans</title>
+        <meta name="description" content="Choose the perfect AddMenu subscription plan. Affordable pricing for restaurants. 7-day money-back guarantee. Start your digital menu today!" />
+        <meta name="keywords" content="addmenu pricing, digital menu pricing, QR menu cost, restaurant menu pricing, addmenu subscription" />
         <link rel="canonical" href="https://addmenu.in/pricing" />
-        <meta property="og:title" content="AddMenu Pricing | Custom Digital Menu Solutions" />
-        <meta property="og:description" content="Get custom pricing for AddMenu digital menu solutions. Contact us for a personalized quote." />
-        <meta property="og:url" content="https://addmenu.in/pricing" />
-        <meta name="twitter:title" content="AddMenu Pricing | Custom Digital Menu Solutions" />
-        <meta name="twitter:description" content="Get custom pricing for AddMenu digital menu solutions. Contact us for a personalized quote." />
       </Helmet>
       
       <div className="min-h-screen flex flex-col bg-background">
@@ -28,163 +136,167 @@ const Pricing = () => {
         
         <main className="flex-1">
           {/* Hero Section */}
-          <section className="py-20 px-4 relative overflow-hidden">
-            {/* Background decorations */}
+          <section className="py-16 px-4 relative overflow-hidden">
             <div className="absolute inset-0">
-              <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-br from-primary/10 to-accent/5 rounded-full blur-3xl -translate-y-1/3 translate-x-1/4 dark:from-primary/5 dark:to-accent/3" />
-              <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tr from-accent/10 to-primary/5 rounded-full blur-3xl translate-y-1/3 -translate-x-1/4 dark:from-accent/5 dark:to-primary/3" />
+              <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-br from-primary/10 to-accent/5 rounded-full blur-3xl -translate-y-1/3 translate-x-1/4" />
+              <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-accent/10 to-primary/5 rounded-full blur-3xl translate-y-1/3 -translate-x-1/4" />
             </div>
             
-            {/* Decorative shapes */}
-            <div className="absolute top-20 left-[10%] w-16 h-16 border-2 border-primary/15 rounded-full dark:border-primary/10" />
-            <div className="absolute top-40 right-[15%] w-24 h-24 border-2 border-accent/10 rounded-full dark:border-accent/5" />
-            <div className="absolute bottom-20 left-[20%] w-12 h-12 bg-primary/5 rounded-full dark:bg-primary/3" />
-            
             <div className="container mx-auto max-w-4xl text-center relative z-10">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6 dark:bg-primary/15">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
                 <Sparkles className="w-4 h-4" />
-                Simple & Transparent
+                Simple & Transparent Pricing
               </div>
-              <h1 className="text-4xl md:text-5xl font-bold mb-6">
-                Choose the Perfect <span className="text-primary">Plan</span>
+              <h1 className="text-3xl md:text-4xl font-bold mb-4">
+                Choose Your <span className="text-primary">Plan</span>
               </h1>
-              <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-                Start with our Basic plan or go Premium for advanced features. No hidden fees, cancel anytime.
+              <p className="text-lg text-muted-foreground mb-8 max-w-xl mx-auto">
+                Start with any plan. 7-day money-back guarantee. Cancel anytime.
               </p>
+
+              {/* Billing Toggle */}
+              <div className="inline-flex items-center bg-muted rounded-full p-1">
+                <button
+                  onClick={() => setBillingCycle('monthly')}
+                  className={`px-5 py-2 rounded-full text-sm font-medium transition-all ${
+                    billingCycle === 'monthly'
+                      ? 'bg-primary text-primary-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  Monthly
+                </button>
+                <button
+                  onClick={() => setBillingCycle('yearly')}
+                  className={`px-5 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2 ${
+                    billingCycle === 'yearly'
+                      ? 'bg-primary text-primary-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  Yearly
+                  <Badge variant="secondary" className="text-xs bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-100">Save 17%</Badge>
+                </button>
+              </div>
             </div>
           </section>
 
           {/* Pricing Cards */}
-          <section className="py-16 px-4 relative">
-            <div className="container mx-auto max-w-5xl">
-              <div className="grid md:grid-cols-2 gap-8">
-                {/* Basic Plan */}
-                <Card className="p-8 border-2 border-border hover:border-primary/30 transition-all duration-300 relative overflow-hidden dark:border-border/50 dark:hover:border-primary/40 rounded-3xl hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]">
-                  <div className="absolute top-0 right-0 w-40 h-40 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 dark:bg-primary/3" />
-                  
-                  <div className="relative">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center dark:bg-primary/15">
-                        <Star className="w-6 h-6 text-primary" />
-                      </div>
-                      <div>
-                        <h3 className="text-2xl font-bold">Basic</h3>
-                        <p className="text-sm text-muted-foreground">For small restaurants</p>
-                      </div>
-                    </div>
-                    
-                    <div className="mb-8">
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-5xl font-bold">₹499</span>
-                        <span className="text-muted-foreground">/month</span>
-                      </div>
-                      <p className="text-sm text-muted-foreground mt-2">Billed monthly</p>
-                    </div>
+          <section className="py-12 px-4 relative">
+            <div className="container mx-auto max-w-4xl">
+              {loadingPlans ? (
+                <div className="flex justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+              ) : (
+                <div className="grid md:grid-cols-2 gap-6">
+                  {plans.map((plan, index) => {
+                    const isPremium = plan.name.toLowerCase() === 'premium' || index === 1;
+                    const price = billingCycle === 'yearly' ? plan.price_yearly : plan.price_monthly;
+                    const isSelected = selectedPlan === plan.id;
+                    const features = (plan.features as string[]) || [];
 
-                    <div className="space-y-4 mb-8">
-                      {[
-                        "Digital Menu with QR Code",
-                        "Upload Menu Images",
-                        "Basic Analytics Dashboard",
-                        "Customer Feedback Collection",
-                        "Social Media Links",
-                        "Unlimited Menu Updates",
-                        "Email Support",
-                      ].map((feature, i) => (
-                        <div key={i} className="flex items-center gap-3">
-                          <div className="w-5 h-5 rounded-full bg-green-500/10 flex items-center justify-center flex-shrink-0 dark:bg-green-500/20">
-                            <Check className="w-3 h-3 text-green-500" />
+                    return (
+                      <Card
+                        key={plan.id}
+                        className={`p-6 border-2 relative overflow-hidden rounded-2xl transition-all duration-300 hover:shadow-lg ${
+                          isPremium
+                            ? 'border-primary bg-gradient-to-br from-primary/5 via-background to-accent/5'
+                            : 'border-border hover:border-primary/30'
+                        }`}
+                      >
+                        {isPremium && (
+                          <div className="absolute top-3 right-3">
+                            <Badge className="bg-gradient-to-r from-primary to-accent text-white text-xs">
+                              <Crown className="w-3 h-3 mr-1" />
+                              Popular
+                            </Badge>
                           </div>
-                          <span className="text-sm">{feature}</span>
-                        </div>
-                      ))}
-                    </div>
+                        )}
 
-                    <Link to="/auth" className="block">
-                      <Button className="w-full rounded-full h-12 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] hover:shadow-xl">
-                        Get Started
-                        <ArrowRight className="w-4 h-4 ml-2" />
-                      </Button>
-                    </Link>
-                  </div>
-                </Card>
-
-                {/* Premium Plan */}
-                <Card className="p-8 border-2 border-primary bg-gradient-to-br from-primary/5 via-background to-accent/5 relative overflow-hidden dark:from-primary/10 dark:to-accent/10 rounded-3xl hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-300">
-                  {/* Popular badge */}
-                  <div className="absolute top-4 right-4">
-                    <div className="px-3 py-1 bg-gradient-to-r from-primary to-accent text-white text-xs font-medium rounded-full flex items-center gap-1 shadow-lg">
-                      <Crown className="w-3 h-3" />
-                      Most Popular
-                    </div>
-                  </div>
-                  
-                  <div className="absolute top-0 left-0 w-48 h-48 bg-primary/10 rounded-full blur-3xl -translate-y-1/2 -translate-x-1/2 dark:bg-primary/5" />
-                  
-                  <div className="relative">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-12 h-12 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center">
-                        <Crown className="w-6 h-6 text-white" />
-                      </div>
-                      <div>
-                        <h3 className="text-2xl font-bold">Premium</h3>
-                        <p className="text-sm text-muted-foreground">For growing businesses</p>
-                      </div>
-                    </div>
-                    
-                    <div className="mb-8">
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-5xl font-bold">Custom</span>
-                      </div>
-                      <p className="text-sm text-muted-foreground mt-2">Contact us for pricing</p>
-                    </div>
-
-                    <div className="space-y-4 mb-8">
-                      {[
-                        "Everything in Basic",
-                        "Online Food Ordering System",
-                        "WhatsApp Order Integration",
-                        "Multi-Location Support",
-                        "Advanced Analytics & Reports",
-                        "Menu Categories & Organization",
-                        "Restaurant Logo & Branding",
-                        "Custom Branding & White Label",
-                        "Priority 24/7 Support",
-                      ].map((feature, i) => (
-                        <div key={i} className="flex items-center gap-3">
-                          <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 dark:bg-primary/20">
-                            <Check className="w-3 h-3 text-primary" />
+                        <div className="relative">
+                          <div className="flex items-center gap-3 mb-4">
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                              isPremium ? 'bg-gradient-to-br from-primary to-accent' : 'bg-primary/10'
+                            }`}>
+                              {isPremium ? (
+                                <Crown className="w-5 h-5 text-white" />
+                              ) : (
+                                <Star className="w-5 h-5 text-primary" />
+                              )}
+                            </div>
+                            <div>
+                              <h3 className="text-xl font-bold">{plan.name}</h3>
+                              <p className="text-sm text-muted-foreground">{plan.description}</p>
+                            </div>
                           </div>
-                          <span className="text-sm">{feature}</span>
-                        </div>
-                      ))}
-                    </div>
 
-                    <a href="https://www.addmenu.site" target="_blank" rel="noopener noreferrer" className="block">
-                      <Button className="w-full rounded-full h-12 bg-gradient-to-r from-primary to-accent hover:opacity-90 shadow-lg shadow-primary/20 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] hover:shadow-xl">
-                        Explore Premium
-                        <ArrowRight className="w-4 h-4 ml-2" />
-                      </Button>
-                    </a>
-                  </div>
-                </Card>
-              </div>
+                          <div className="mb-6">
+                            <div className="flex items-baseline gap-1">
+                              <span className="text-4xl font-bold">{formatPrice(price || 0)}</span>
+                              <span className="text-muted-foreground">
+                                /{billingCycle === 'yearly' ? 'year' : 'month'}
+                              </span>
+                            </div>
+                            {billingCycle === 'yearly' && plan.price_yearly && plan.price_monthly && (
+                              <p className="text-sm text-green-600 mt-1">
+                                Save {formatPrice((plan.price_monthly * 12) - plan.price_yearly)} per year
+                              </p>
+                            )}
+                          </div>
+
+                          <div className="space-y-3 mb-6">
+                            {features.map((feature, i) => (
+                              <div key={i} className="flex items-center gap-2">
+                                <div className={`w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 ${
+                                  isPremium ? 'bg-primary/10' : 'bg-green-500/10'
+                                }`}>
+                                  <Check className={`w-2.5 h-2.5 ${isPremium ? 'text-primary' : 'text-green-500'}`} />
+                                </div>
+                                <span className="text-sm">{feature}</span>
+                              </div>
+                            ))}
+                          </div>
+
+                          <Button
+                            onClick={() => handleSubscribe(plan.id)}
+                            disabled={loading}
+                            className={`w-full rounded-full h-11 shadow-md transition-all duration-300 ${
+                              isPremium
+                                ? 'bg-gradient-to-r from-primary to-accent hover:opacity-90'
+                                : 'bg-primary hover:bg-primary/90'
+                            }`}
+                          >
+                            {isSelected && loading ? (
+                              <>
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                Processing...
+                              </>
+                            ) : (
+                              <>
+                                Get Started
+                                <ArrowRight className="w-4 h-4 ml-2" />
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </section>
 
-          {/* Feature Comparison */}
-          <section className="py-16 px-4 bg-muted/30 relative overflow-hidden dark:bg-muted/10">
-            {/* Background shapes */}
-            <div className="absolute top-10 right-[5%] w-24 h-24 border-2 border-primary/10 rounded-full dark:border-primary/5" />
-            <div className="absolute bottom-10 left-[8%] w-16 h-16 bg-accent/5 rounded-full dark:bg-accent/3" />
-            
-            <div className="container mx-auto max-w-4xl relative z-10">
-              <h2 className="text-3xl font-bold text-center mb-12">
+          {/* Features Comparison */}
+          <section className="py-12 px-4 bg-muted/30">
+            <div className="container mx-auto max-w-3xl">
+              <h2 className="text-2xl font-bold text-center mb-8">
                 Compare <span className="text-primary">Features</span>
               </h2>
               
-              <div className="bg-card rounded-3xl border overflow-hidden dark:bg-card/50">
-                <div className="grid grid-cols-3 gap-4 p-4 bg-muted/50 font-semibold dark:bg-muted/30">
+              <div className="bg-card rounded-2xl border overflow-hidden">
+                <div className="grid grid-cols-3 gap-4 p-3 bg-muted/50 font-semibold text-sm">
                   <div>Feature</div>
                   <div className="text-center">Basic</div>
                   <div className="text-center text-primary">Premium</div>
@@ -204,21 +316,13 @@ const Pricing = () => {
                   { feature: "Custom Branding", basic: false, premium: true },
                   { feature: "Priority Support", basic: false, premium: true },
                 ].map((row, i) => (
-                  <div key={i} className={`grid grid-cols-3 gap-4 p-4 ${i % 2 === 0 ? 'bg-background' : 'bg-muted/20'} dark:${i % 2 === 0 ? 'bg-background/50' : 'bg-muted/10'}`}>
-                    <div className="text-sm">{row.feature}</div>
+                  <div key={i} className={`grid grid-cols-3 gap-4 p-3 text-sm ${i % 2 === 0 ? 'bg-background' : 'bg-muted/20'}`}>
+                    <div>{row.feature}</div>
                     <div className="text-center">
-                      {row.basic ? (
-                        <Check className="w-5 h-5 text-green-500 mx-auto" />
-                      ) : (
-                        <span className="text-muted-foreground">—</span>
-                      )}
+                      {row.basic ? <Check className="w-4 h-4 text-green-500 mx-auto" /> : <span className="text-muted-foreground">—</span>}
                     </div>
                     <div className="text-center">
-                      {row.premium ? (
-                        <Check className="w-5 h-5 text-primary mx-auto" />
-                      ) : (
-                        <span className="text-muted-foreground">—</span>
-                      )}
+                      {row.premium ? <Check className="w-4 h-4 text-primary mx-auto" /> : <span className="text-muted-foreground">—</span>}
                     </div>
                   </div>
                 ))}
@@ -227,29 +331,25 @@ const Pricing = () => {
           </section>
 
           {/* Why Choose Us */}
-          <section className="py-16 px-4 relative overflow-hidden">
-            {/* Background decorations */}
-            <div className="absolute top-20 left-[5%] w-20 h-20 border-2 border-primary/10 rounded-full dark:border-primary/5" />
-            <div className="absolute bottom-20 right-[10%] w-16 h-16 bg-accent/5 rounded-full dark:bg-accent/3" />
-            
-            <div className="container mx-auto max-w-5xl relative z-10">
-              <h2 className="text-3xl font-bold text-center mb-12">
+          <section className="py-12 px-4">
+            <div className="container mx-auto max-w-4xl">
+              <h2 className="text-2xl font-bold text-center mb-8">
                 Why Choose <span className="text-primary">AddMenu</span>?
               </h2>
               
-              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {[
-                  { icon: Zap, title: "Quick Setup", desc: "Get started in under 5 minutes" },
-                  { icon: Shield, title: "Secure & Reliable", desc: "99.9% uptime guaranteed" },
-                  { icon: Users, title: "Local Support", desc: "Dedicated support in Tripura" },
-                  { icon: Star, title: "No Hidden Fees", desc: "Transparent pricing always" },
+                  { icon: Zap, title: "Quick Setup", desc: "Under 5 minutes" },
+                  { icon: Shield, title: "Secure", desc: "Razorpay powered" },
+                  { icon: Users, title: "Support", desc: "Local assistance" },
+                  { icon: Star, title: "Guarantee", desc: "7-day refund" },
                 ].map((item, i) => (
-                  <Card key={i} className="p-6 text-center hover:shadow-xl transition-all duration-300 border-primary/10 hover:border-primary/30 dark:border-primary/20 dark:hover:border-primary/40 rounded-2xl hover:scale-[1.02] active:scale-[0.98] cursor-pointer group">
-                    <div className="w-14 h-14 bg-primary/10 rounded-2xl mx-auto mb-4 flex items-center justify-center dark:bg-primary/15 transition-all duration-300 group-hover:scale-110 group-hover:bg-primary/20">
-                      <item.icon className="w-7 h-7 text-primary" />
+                  <Card key={i} className="p-4 text-center hover:shadow-lg transition-all duration-300 rounded-xl">
+                    <div className="w-10 h-10 bg-primary/10 rounded-xl mx-auto mb-3 flex items-center justify-center">
+                      <item.icon className="w-5 h-5 text-primary" />
                     </div>
-                    <h3 className="font-semibold text-lg mb-2">{item.title}</h3>
-                    <p className="text-sm text-muted-foreground">{item.desc}</p>
+                    <h3 className="font-semibold text-sm mb-1">{item.title}</h3>
+                    <p className="text-xs text-muted-foreground">{item.desc}</p>
                   </Card>
                 ))}
               </div>
@@ -257,36 +357,27 @@ const Pricing = () => {
           </section>
 
           {/* CTA */}
-          <section className="py-16 px-4 mx-4 bg-gradient-to-r from-primary to-accent relative overflow-hidden rounded-3xl my-8">
-            {/* Decorative elements */}
-            <div className="absolute inset-0 opacity-10">
-              <div className="absolute top-10 left-[10%] w-20 h-20 border-2 border-white rounded-full" />
-              <div className="absolute bottom-10 right-[15%] w-16 h-16 border-2 border-white rounded-full" />
-            </div>
-            
-            <div className="container mx-auto max-w-2xl text-center relative z-10">
-              <h2 className="text-3xl font-bold mb-6 text-white">Ready to Get Started?</h2>
-              <p className="text-xl text-white/80 mb-8">
-                Contact us today for a personalized quote for your restaurant
+          <section className="py-12 px-4 mx-4 bg-gradient-to-r from-primary to-accent rounded-2xl my-6">
+            <div className="container mx-auto max-w-xl text-center">
+              <h2 className="text-2xl font-bold mb-4 text-white">Ready to Get Started?</h2>
+              <p className="text-white/80 mb-6">
+                Join restaurants using AddMenu
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <Button 
                   size="lg" 
-                  className="h-14 px-8 rounded-full bg-white text-primary hover:bg-white/90 shadow-lg transition-all duration-300 hover:scale-105 active:scale-95 hover:shadow-xl"
-                  onClick={() => window.open('https://wa.me/917005832798?text=Hi%2C%20I%20want%20a%20pricing%20quote%20for%20AddMenu', '_blank')}
+                  className="h-12 px-6 rounded-full bg-white text-primary hover:bg-white/90"
+                  onClick={() => window.open('https://wa.me/917005832798', '_blank')}
                 >
-                  <MessageCircle className="w-5 h-5 mr-2" />
+                  <MessageCircle className="w-4 h-4 mr-2" />
                   WhatsApp Us
                 </Button>
-                <Button 
-                  size="lg" 
-                  variant="outline" 
-                  className="h-14 px-8 rounded-full border-2 border-white text-white hover:bg-white/10 transition-all duration-300 hover:scale-105 active:scale-95"
-                  onClick={() => window.location.href = 'mailto:support@addmenu.in?subject=Pricing%20Inquiry'}
-                >
-                  <Mail className="w-5 h-5 mr-2" />
-                  Email Us
-                </Button>
+                <Link to="/auth">
+                  <Button size="lg" variant="outline" className="h-12 px-6 rounded-full border-2 border-white text-white hover:bg-white/10">
+                    Get Started
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </Link>
               </div>
             </div>
           </section>

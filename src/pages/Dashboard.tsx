@@ -15,8 +15,11 @@ import {
   BarChart3,
   Share2,
   MessageSquare,
-  User
+  User,
+  CreditCard,
+  AlertTriangle
 } from "lucide-react";
+import { useRazorpay } from "@/hooks/useRazorpay";
 import {
   Sidebar,
   SidebarContent,
@@ -41,14 +44,17 @@ const SocialLinks = lazy(() => import("@/components/dashboard/SocialLinks"));
 const BellNotifications = lazy(() => import("@/components/dashboard/BellNotifications"));
 const FeedbackList = lazy(() => import("@/components/dashboard/FeedbackList"));
 const RestaurantProfile = lazy(() => import("@/components/dashboard/RestaurantProfile"));
+const SubscriptionStatus = lazy(() => import("@/components/dashboard/SubscriptionStatus"));
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
+  const [subscription, setSubscription] = useState<any>(null);
   const [newFeedbackCount, setNewFeedbackCount] = useState(0);
   const [activeTab, setActiveTab] = useState("profile");
+  const { initiatePayment, loading: paymentLoading } = useRazorpay();
 
   useEffect(() => {
     checkUser();
@@ -93,9 +99,63 @@ const Dashboard = () => {
 
       setProfile(data);
       checkNewFeedback(userId);
+      fetchSubscription(userId);
     } catch (error) {
       console.error("Error fetching profile:", error);
     }
+  };
+
+  const fetchSubscription = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("user_subscriptions")
+        .select("*, subscription_plans(*)")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      if (!error && data) {
+        setSubscription(data);
+      }
+    } catch (error) {
+      console.error("Error fetching subscription:", error);
+    }
+  };
+
+  const handleRenewSubscription = async () => {
+    if (!subscription?.plan_id) {
+      toast.error("No subscription plan found");
+      return;
+    }
+
+    await initiatePayment(
+      { 
+        planId: subscription.plan_id, 
+        billingCycle: subscription.billing_cycle || 'monthly' 
+      },
+      () => {
+        toast.success("Subscription renewed successfully!");
+        if (user?.id) fetchSubscription(user.id);
+      },
+      () => {
+        toast.error("Payment failed. Please try again.");
+      }
+    );
+  };
+
+  const isSubscriptionActive = () => {
+    if (!subscription) return false;
+    return subscription.status === 'active';
+  };
+
+  const isSubscriptionExpired = () => {
+    if (!subscription) return true;
+    if (subscription.status === 'cancelled' || subscription.status === 'halted') return true;
+    if (subscription.current_period_end) {
+      return new Date(subscription.current_period_end) < new Date();
+    }
+    return false;
   };
 
   const checkNewFeedback = async (userId: string) => {
@@ -202,6 +262,7 @@ const Dashboard = () => {
 
   const menuItems = [
     { id: "profile", label: "Profile", icon: User },
+    { id: "subscription", label: "Subscription", icon: CreditCard },
     { id: "menu", label: "Menu", icon: Upload },
     { id: "qr", label: "QR Code", icon: QrCodeIcon },
     { id: "analytics", label: "Analytics", icon: BarChart3 },
@@ -275,6 +336,71 @@ const Dashboard = () => {
           </header>
 
           <main className="flex-1 overflow-auto p-4 md:p-6">
+            {/* Payment Required Banner */}
+            {(isSubscriptionExpired() || !isSubscriptionActive()) && subscription && (
+              <Card className="mb-6 border-orange-200 bg-orange-50 dark:bg-orange-950/20 dark:border-orange-800">
+                <CardContent className="p-4">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900 flex items-center justify-center">
+                        <AlertTriangle className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-orange-900 dark:text-orange-100">
+                          {subscription.status === 'cancelled' ? 'Subscription Cancelled' : 'Payment Required'}
+                        </h3>
+                        <p className="text-sm text-orange-700 dark:text-orange-300">
+                          {subscription.status === 'cancelled' 
+                            ? 'Your subscription has been cancelled. Renew to continue using all features.'
+                            : 'Your subscription payment is due. Please renew to continue using all features.'}
+                        </p>
+                      </div>
+                    </div>
+                    <Button 
+                      onClick={handleRenewSubscription}
+                      disabled={paymentLoading}
+                      className="bg-orange-600 hover:bg-orange-700 text-white"
+                    >
+                      {paymentLoading ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <CreditCard className="w-4 h-4 mr-2" />
+                      )}
+                      Renew Now
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* No Subscription Banner */}
+            {!subscription && (
+              <Card className="mb-6 border-blue-200 bg-blue-50 dark:bg-blue-950/20 dark:border-blue-800">
+                <CardContent className="p-4">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                        <CreditCard className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-blue-900 dark:text-blue-100">No Active Subscription</h3>
+                        <p className="text-sm text-blue-700 dark:text-blue-300">
+                          Subscribe to a plan to unlock all features and make your menu visible to customers.
+                        </p>
+                      </div>
+                    </div>
+                    <Button 
+                      onClick={() => navigate('/pricing')}
+                      className="bg-blue-600 hover:bg-blue-700 text-white"
+                    >
+                      <CreditCard className="w-4 h-4 mr-2" />
+                      View Plans
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {activeTab === "profile" && (
               <div className="space-y-6 animate-fade-in">
                 <Suspense fallback={<div className="flex justify-center py-8"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
@@ -284,6 +410,14 @@ const Dashboard = () => {
                       setProfile((prev: any) => ({ ...prev, ...updatedProfile }));
                     }}
                   />
+                </Suspense>
+              </div>
+            )}
+
+            {activeTab === "subscription" && (
+              <div className="animate-fade-in">
+                <Suspense fallback={<div className="flex justify-center py-8"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
+                  <SubscriptionStatus userId={user?.id} />
                 </Suspense>
               </div>
             )}
