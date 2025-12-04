@@ -28,14 +28,9 @@
 - Usage tracking
 
 ### 3. Landing Page Improvements ✅
-- Professional pricing section (Basic & Premium)
-- Premium shows "Custom Pricing"
-- Removed features we don't offer
-- Added features we actually provide:
-  - Multi-Location Support
-  - WhatsApp Integration
-  - Menu Categories & Organization
-  - Restaurant Logo & Branding
+- Professional pricing section (Basic & Basic Plus)
+- Clear feature comparison between plans
+- Bell calling feature for Basic Plus
 - Enhanced SEO content
 - Feature comparison table
 
@@ -120,25 +115,22 @@ VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_nfYhrfdFukJoyGhOtz0xcg_p3t1Kkfd
 
 ## Known Working Features
 
-### Basic Plan (₹499/month)
+### Basic Plan (₹249/month)
 - ✅ Digital Menu with QR Code
-- ✅ Upload Menu Images
+- ✅ 5 Menu Image Uploads
 - ✅ Basic Analytics Dashboard
 - ✅ Customer Feedback
 - ✅ Social Media Links
 - ✅ Unlimited Menu Updates
+- ✅ Email Support
 
-### Premium Plan (Custom Pricing)
+### Basic Plus Plan (₹369/month)
 - ✅ Everything in Basic
-- ✅ Online Food Ordering System
-- ✅ Multi-Location Support
-- ✅ WhatsApp Integration
-- ✅ Advanced Analytics & Reports
-- ✅ Menu Categories & Organization
-- ✅ Restaurant Logo & Branding
-- ✅ Custom Branding & White Label
-- ✅ Dedicated Account Manager
-- ✅ 24/7 Priority Support
+- ✅ 10 Menu Image Uploads
+- ✅ Bell Calling Feature
+- ✅ Priority Customer Support
+- ✅ Advanced Analytics
+- ✅ Custom Branding Options
 
 ### Admin Features
 - ✅ Secure admin login

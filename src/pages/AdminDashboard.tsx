@@ -8,8 +8,12 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Loader2, LogOut, Ban, CheckCircle, Plus, Trash2, Copy } from "lucide-react";
+import { 
+  Loader2, LogOut, Ban, CheckCircle, Shield, Users, CreditCard, 
+  Calendar, Search, RefreshCw, Gift, XCircle
+} from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,31 +31,38 @@ interface Profile {
   restaurant_name: string;
   restaurant_description: string | null;
   created_at: string;
-  is_disabled: boolean | null;
+  is_disabled: boolean;
   disabled_at: string | null;
   approval_status: string | null;
+  subscription_status: string | null;
+  subscription_plan: string | null;
+  subscription_end: string | null;
+  billing_cycle: string | null;
 }
 
-interface SignupCode {
+interface SubscriptionPlan {
   id: string;
-  code: string;
-  max_uses: number | null;
-  current_uses: number | null;
-  created_at: string | null;
+  name: string;
+  price_monthly: number;
+  max_images: number;
+  bell_feature_enabled: boolean;
 }
+
+type ActionType = "disable" | "enable" | "grant" | "revoke" | null;
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
-  const [actionType, setActionType] = useState<"disable" | "enable" | null>(null);
-  const [signupCodes, setSignupCodes] = useState<SignupCode[]>([]);
-  const [newCodeMaxUses, setNewCodeMaxUses] = useState(1);
-  const [customCode, setCustomCode] = useState("");
-  const [generatingCode, setGeneratingCode] = useState(false);
-  const [deleteCodeId, setDeleteCodeId] = useState<string | null>(null);
+  const [actionType, setActionType] = useState<ActionType>(null);
+  const [selectedPlanId, setSelectedPlanId] = useState<string>("");
+  const [grantMonths, setGrantMonths] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
     checkAdminSession();
@@ -62,6 +73,14 @@ const AdminDashboard = () => {
       const sessionToken = localStorage.getItem("admin_session_token");
       
       if (!sessionToken) {
+        navigate("/adminlogin");
+        return;
+      }
+
+      // Validate session token format (basic security check)
+      if (sessionToken.length < 32) {
+        localStorage.removeItem("admin_session_token");
+        localStorage.removeItem("admin_email");
         navigate("/adminlogin");
         return;
       }
@@ -82,8 +101,7 @@ const AdminDashboard = () => {
       }
 
       setIsAdmin(true);
-      loadProfiles();
-      loadSignupCodes();
+      await Promise.all([loadProfiles(), loadPlans()]);
     } catch (error) {
       navigate("/adminlogin");
     }
@@ -92,9 +110,7 @@ const AdminDashboard = () => {
   const loadProfiles = async () => {
     try {
       const { data, error } = await supabase.rpc("admin_get_profiles");
-
       if (error) throw error;
-      
       setProfiles(data || []);
     } catch (error) {
       toast.error("Failed to load user profiles");
@@ -103,387 +119,428 @@ const AdminDashboard = () => {
     }
   };
 
-  const loadSignupCodes = async () => {
+  const loadPlans = async () => {
     try {
-      const { data, error } = await supabase.rpc("admin_get_signup_codes");
-
+      const { data, error } = await supabase.rpc("admin_get_subscription_plans");
       if (error) throw error;
-      
-      setSignupCodes(data || []);
+      setPlans(data || []);
+      if (data && data.length > 0) {
+        setSelectedPlanId(data[0].id);
+      }
     } catch (error) {
-      toast.error("Failed to load signup codes");
+      console.error("Failed to load plans:", error);
     }
-  };
-
-  const generateSignupCode = async () => {
-    setGeneratingCode(true);
-    try {
-      // Use custom code if provided, otherwise generate random
-      const code = customCode.trim() || Math.random().toString(36).substring(2, 14).toUpperCase();
-      
-      // Validate code length
-      if (code.length < 6) {
-        toast.error("Code must be at least 6 characters long");
-        setGeneratingCode(false);
-        return;
-      }
-
-      const { data, error } = await supabase.rpc("admin_create_signup_code", {
-        code_value: code,
-        max_uses_value: newCodeMaxUses,
-      });
-
-      if (error) throw error;
-
-      // Check if the RPC returned an error in the data
-      if (data && typeof data === 'object' && 'success' in data && !data.success) {
-        toast.error((data as any).error || "Failed to generate signup code");
-        setGeneratingCode(false);
-        return;
-      }
-
-      toast.success(`Signup code generated: ${code}`);
-      
-      // Reset form
-      setNewCodeMaxUses(1);
-      setCustomCode("");
-      await loadSignupCodes();
-    } catch (error: any) {
-      toast.error(`Failed to generate signup code: ${error.message}`);
-    } finally {
-      setGeneratingCode(false);
-    }
-  };
-
-  const deleteSignupCode = async () => {
-    if (!deleteCodeId) return;
-
-    try {
-      const { data, error } = await supabase.rpc("admin_delete_signup_code", {
-        code_id: deleteCodeId,
-      });
-
-      if (error) throw error;
-
-      toast.success("Signup code deleted");
-      
-      await loadSignupCodes();
-    } catch (error: any) {
-      toast.error(`Failed to delete signup code: ${error.message}`);
-    } finally {
-      setDeleteCodeId(null);
-    }
-  };
-
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    toast.success("Code copied to clipboard");
   };
 
   const handleAccountAction = async () => {
     if (!selectedProfile || !actionType) return;
+    setActionLoading(true);
 
     try {
-      const isDisabling = actionType === "disable";
       const adminEmail = localStorage.getItem("admin_email") || "admin";
 
-      const { data, error } = await supabase.rpc("admin_update_profile_status", {
-        profile_id: selectedProfile.id,
-        is_disabled_value: isDisabling,
-        disabled_by_email: isDisabling ? adminEmail : null,
-      });
-
-      if (error) throw error;
-
-      toast.success(`Account ${isDisabling ? "disabled" : "enabled"} successfully`);
+      if (actionType === "disable" || actionType === "enable") {
+        const isDisabling = actionType === "disable";
+        const { error } = await supabase.rpc("admin_update_profile_status", {
+          profile_id: selectedProfile.id,
+          is_disabled_value: isDisabling,
+          disabled_by_email: isDisabling ? adminEmail : null,
+        });
+        if (error) throw error;
+        toast.success(`Account ${isDisabling ? "disabled" : "enabled"} successfully`);
+      } else if (actionType === "grant") {
+        if (!selectedPlanId) {
+          toast.error("Please select a plan");
+          return;
+        }
+        const { data, error } = await supabase.rpc("admin_grant_subscription", {
+          p_user_id: selectedProfile.id,
+          p_plan_id: selectedPlanId,
+          p_months: grantMonths,
+          p_admin_email: adminEmail,
+        });
+        if (error) throw error;
+        if (data && !data.success) {
+          toast.error(data.error || "Failed to grant subscription");
+          return;
+        }
+        toast.success(`Subscription granted for ${grantMonths} month(s)`);
+      } else if (actionType === "revoke") {
+        const { data, error } = await supabase.rpc("admin_revoke_subscription", {
+          p_user_id: selectedProfile.id,
+          p_admin_email: adminEmail,
+        });
+        if (error) throw error;
+        toast.success("Subscription revoked successfully");
+      }
 
       await loadProfiles();
     } catch (error: any) {
-      toast.error(`Failed to update account status: ${error.message}`);
+      toast.error(`Action failed: ${error.message}`);
     } finally {
+      setActionLoading(false);
       setSelectedProfile(null);
       setActionType(null);
+      setGrantMonths(1);
     }
   };
 
   const handleLogout = async () => {
     const sessionToken = localStorage.getItem("admin_session_token");
-    
     if (sessionToken) {
-      await supabase
-        .from("admin_sessions")
-        .delete()
-        .eq("session_token", sessionToken);
+      await supabase.from("admin_sessions").delete().eq("session_token", sessionToken);
     }
-    
     localStorage.removeItem("admin_session_token");
     localStorage.removeItem("admin_email");
-    
-    toast.success("You have been logged out successfully");
-    
+    toast.success("Logged out successfully");
     navigate("/adminlogin");
+  };
+
+  const getSubscriptionBadge = (profile: Profile) => {
+    const status = profile.subscription_status || "none";
+    switch (status) {
+      case "active":
+        return <Badge className="bg-green-500">Active</Badge>;
+      case "pending":
+        return <Badge variant="secondary">Pending</Badge>;
+      case "cancelled":
+      case "halted":
+        return <Badge variant="destructive">Cancelled</Badge>;
+      case "expired":
+        return <Badge variant="outline" className="text-orange-500 border-orange-500">Expired</Badge>;
+      default:
+        return <Badge variant="outline">No Subscription</Badge>;
+    }
+  };
+
+  const getAccountBadge = (profile: Profile) => {
+    if (profile.is_disabled) {
+      return <Badge variant="destructive">Disabled</Badge>;
+    }
+    return <Badge className="bg-green-500">Active</Badge>;
+  };
+
+  const formatDate = (dateStr: string | null) => {
+    if (!dateStr) return "N/A";
+    return new Date(dateStr).toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
+  const formatPrice = (paise: number) => `₹${(paise / 100).toFixed(0)}`;
+
+  // Filter profiles
+  const filteredProfiles = profiles.filter((profile) => {
+    const matchesSearch =
+      profile.restaurant_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      profile.email?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    if (filterStatus === "all") return matchesSearch;
+    if (filterStatus === "active") return matchesSearch && !profile.is_disabled && profile.subscription_status === "active";
+    if (filterStatus === "disabled") return matchesSearch && profile.is_disabled;
+    if (filterStatus === "no_subscription") return matchesSearch && (!profile.subscription_status || profile.subscription_status === "none");
+    if (filterStatus === "expired") return matchesSearch && (profile.subscription_status === "expired" || profile.subscription_status === "cancelled");
+    return matchesSearch;
+  });
+
+  // Stats
+  const stats = {
+    total: profiles.length,
+    active: profiles.filter(p => !p.is_disabled && p.subscription_status === "active").length,
+    disabled: profiles.filter(p => p.is_disabled).length,
+    noSubscription: profiles.filter(p => !p.subscription_status || p.subscription_status === "none").length,
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
-  if (!isAdmin) {
-    return null;
-  }
+  if (!isAdmin) return null;
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 sm:p-8">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold">Admin Dashboard</h1>
-            <p className="text-gray-600 mt-2">Manage user accounts and signup codes</p>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 sm:p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-primary/10 rounded-lg">
+              <Shield className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold">Admin Dashboard</h1>
+              <p className="text-sm text-muted-foreground">Manage users & subscriptions</p>
+            </div>
           </div>
-          <Button onClick={handleLogout} variant="outline">
+          <Button onClick={handleLogout} variant="outline" size="sm">
             <LogOut className="mr-2 h-4 w-4" />
             Logout
           </Button>
         </div>
 
-        <Tabs defaultValue="accounts" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="accounts">User Accounts</TabsTrigger>
-            <TabsTrigger value="codes">Signup Codes</TabsTrigger>
-          </TabsList>
+        {/* Stats Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <Users className="h-8 w-8 text-blue-500" />
+                <div>
+                  <p className="text-2xl font-bold">{stats.total}</p>
+                  <p className="text-xs text-muted-foreground">Total Users</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <CheckCircle className="h-8 w-8 text-green-500" />
+                <div>
+                  <p className="text-2xl font-bold">{stats.active}</p>
+                  <p className="text-xs text-muted-foreground">Active Subscriptions</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <Ban className="h-8 w-8 text-red-500" />
+                <div>
+                  <p className="text-2xl font-bold">{stats.disabled}</p>
+                  <p className="text-xs text-muted-foreground">Disabled</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <CreditCard className="h-8 w-8 text-orange-500" />
+                <div>
+                  <p className="text-2xl font-bold">{stats.noSubscription}</p>
+                  <p className="text-xs text-muted-foreground">No Subscription</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
-          <TabsContent value="accounts">
-            <Card>
-              <CardHeader>
-                <CardTitle>User Accounts</CardTitle>
-                <CardDescription>
-                  Manage user accounts - disable accounts for non-payment or enable after payment
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Restaurant Name</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead className="hidden lg:table-cell">Description</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="hidden sm:table-cell">Created</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {profiles.map((profile) => (
-                        <TableRow key={profile.id}>
-                          <TableCell className="font-medium">{profile.restaurant_name}</TableCell>
-                          <TableCell className="text-sm text-muted-foreground">{profile.email}</TableCell>
-                          <TableCell className="hidden lg:table-cell max-w-xs truncate">
-                            {profile.restaurant_description || "No description"}
-                          </TableCell>
-                          <TableCell>
-                            {profile.is_disabled ? (
-                              <Badge variant="destructive">Disabled</Badge>
-                            ) : (
-                              <Badge variant="default" className="bg-green-500">Active</Badge>
+        {/* Main Content */}
+        <Card>
+          <CardHeader>
+            <div className="flex flex-col sm:flex-row justify-between gap-4">
+              <div>
+                <CardTitle>User Management</CardTitle>
+                <CardDescription>View and manage all user accounts and subscriptions</CardDescription>
+              </div>
+              <Button onClick={loadProfiles} variant="outline" size="sm">
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Refresh
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {/* Filters */}
+            <div className="flex flex-col sm:flex-row gap-4 mb-6">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by name or email..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+              <Select value={filterStatus} onValueChange={setFilterStatus}>
+                <SelectTrigger className="w-full sm:w-[180px]">
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Users</SelectItem>
+                  <SelectItem value="active">Active Subscription</SelectItem>
+                  <SelectItem value="disabled">Disabled</SelectItem>
+                  <SelectItem value="no_subscription">No Subscription</SelectItem>
+                  <SelectItem value="expired">Expired/Cancelled</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Table */}
+            <div className="overflow-x-auto rounded-lg border">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/50">
+                    <TableHead>Restaurant</TableHead>
+                    <TableHead className="hidden md:table-cell">Email</TableHead>
+                    <TableHead>Account</TableHead>
+                    <TableHead>Subscription</TableHead>
+                    <TableHead className="hidden lg:table-cell">Plan</TableHead>
+                    <TableHead className="hidden lg:table-cell">Expires</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredProfiles.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                        No users found
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredProfiles.map((profile) => (
+                      <TableRow key={profile.id}>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium">{profile.restaurant_name}</p>
+                            <p className="text-xs text-muted-foreground md:hidden">{profile.email}</p>
+                          </div>
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
+                          {profile.email}
+                        </TableCell>
+                        <TableCell>{getAccountBadge(profile)}</TableCell>
+                        <TableCell>{getSubscriptionBadge(profile)}</TableCell>
+                        <TableCell className="hidden lg:table-cell">
+                          {profile.subscription_plan || "-"}
+                        </TableCell>
+                        <TableCell className="hidden lg:table-cell text-sm">
+                          {formatDate(profile.subscription_end)}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-1">
+                            {/* Grant Subscription */}
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-8 px-2"
+                              onClick={() => {
+                                setSelectedProfile(profile);
+                                setActionType("grant");
+                              }}
+                              title="Grant Subscription"
+                            >
+                              <Gift className="h-4 w-4 text-green-600" />
+                            </Button>
+                            
+                            {/* Revoke Subscription */}
+                            {profile.subscription_status === "active" && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-8 px-2"
+                                onClick={() => {
+                                  setSelectedProfile(profile);
+                                  setActionType("revoke");
+                                }}
+                                title="Revoke Subscription"
+                              >
+                                <XCircle className="h-4 w-4 text-orange-600" />
+                              </Button>
                             )}
-                          </TableCell>
-                          <TableCell className="hidden sm:table-cell">
-                            {new Date(profile.created_at).toLocaleDateString()}
-                          </TableCell>
-                          <TableCell>
+                            
+                            {/* Enable/Disable Account */}
                             {profile.is_disabled ? (
                               <Button
                                 size="sm"
                                 variant="outline"
+                                className="h-8 px-2"
                                 onClick={() => {
                                   setSelectedProfile(profile);
                                   setActionType("enable");
                                 }}
+                                title="Enable Account"
                               >
-                                <CheckCircle className="mr-2 h-4 w-4" />
-                                Enable
+                                <CheckCircle className="h-4 w-4 text-green-600" />
                               </Button>
                             ) : (
                               <Button
                                 size="sm"
-                                variant="destructive"
+                                variant="outline"
+                                className="h-8 px-2"
                                 onClick={() => {
                                   setSelectedProfile(profile);
                                   setActionType("disable");
                                 }}
+                                title="Disable Account"
                               >
-                                <Ban className="mr-2 h-4 w-4" />
-                                Disable
+                                <Ban className="h-4 w-4 text-red-600" />
                               </Button>
                             )}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="codes">
-            <Card>
-              <CardHeader>
-                <CardTitle>Signup Codes</CardTitle>
-                <CardDescription>
-                  Generate and manage signup codes for new restaurant registrations
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="customCode">Custom Code (Optional)</Label>
-                      <Input
-                        id="customCode"
-                        type="text"
-                        value={customCode}
-                        onChange={(e) => setCustomCode(e.target.value)}
-                        placeholder="Leave empty for random code"
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        Min 6 characters. Leave empty to auto-generate.
-                      </p>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="maxUses">Number of Uses</Label>
-                      <Input
-                        id="maxUses"
-                        type="number"
-                        min="1"
-                        value={newCodeMaxUses}
-                        onChange={(e) => setNewCodeMaxUses(parseInt(e.target.value) || 1)}
-                        placeholder="How many people can use this code?"
-                      />
-                    </div>
-                  </div>
-                  <Button 
-                    onClick={generateSignupCode} 
-                    disabled={generatingCode}
-                    className="w-full"
-                  >
-                    {generatingCode ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Generating...
-                      </>
-                    ) : (
-                      <>
-                        <Plus className="mr-2 h-4 w-4" />
-                        {customCode.trim() ? "Create Custom Code" : "Generate Random Code"}
-                      </>
-                    )}
-                  </Button>
-                </div>
-
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Code</TableHead>
-                        <TableHead>Uses</TableHead>
-                        <TableHead className="hidden sm:table-cell">Created</TableHead>
-                        <TableHead>Actions</TableHead>
+                          </div>
+                        </TableCell>
                       </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {signupCodes.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={4} className="text-center text-muted-foreground">
-                            No signup codes yet. Generate one to get started.
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        signupCodes.map((code) => (
-                          <TableRow key={code.id}>
-                            <TableCell className="font-mono font-medium">
-                              {code.code}
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant={
-                                (code.current_uses || 0) >= (code.max_uses || 1) 
-                                  ? "destructive" 
-                                  : "default"
-                              }>
-                                {code.current_uses || 0} / {code.max_uses || 1}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="hidden sm:table-cell">
-                              {code.created_at ? new Date(code.created_at).toLocaleDateString() : "N/A"}
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex gap-2">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => copyToClipboard(code.code)}
-                                >
-                                  <Copy className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="destructive"
-                                  onClick={() => setDeleteCodeId(code.id)}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      <AlertDialog open={!!selectedProfile} onOpenChange={() => setSelectedProfile(null)}>
+      {/* Action Dialog */}
+      <AlertDialog open={!!selectedProfile && !!actionType} onOpenChange={() => { setSelectedProfile(null); setActionType(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {actionType === "disable" ? "Disable Account" : "Enable Account"}
+              {actionType === "disable" && "Disable Account"}
+              {actionType === "enable" && "Enable Account"}
+              {actionType === "grant" && "Grant Subscription"}
+              {actionType === "revoke" && "Revoke Subscription"}
             </AlertDialogTitle>
-            <AlertDialogDescription>
-              {actionType === "disable"
-                ? `Are you sure you want to disable ${selectedProfile?.restaurant_name}? They won't be able to access their account until you enable it again.`
-                : `Are you sure you want to enable ${selectedProfile?.restaurant_name}? They will regain full access to their account.`}
+            <AlertDialogDescription asChild>
+              <div className="space-y-4">
+                <p>
+                  {actionType === "disable" && `Disable ${selectedProfile?.restaurant_name}? They won't be able to access their account.`}
+                  {actionType === "enable" && `Enable ${selectedProfile?.restaurant_name}? They will regain access to their account.`}
+                  {actionType === "grant" && `Grant a subscription to ${selectedProfile?.restaurant_name}.`}
+                  {actionType === "revoke" && `Revoke subscription from ${selectedProfile?.restaurant_name}? This will also disable their account.`}
+                </p>
+                
+                {actionType === "grant" && (
+                  <div className="space-y-4 pt-2">
+                    <div className="space-y-2">
+                      <Label>Select Plan</Label>
+                      <Select value={selectedPlanId} onValueChange={setSelectedPlanId}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a plan" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {plans.map((plan) => (
+                            <SelectItem key={plan.id} value={plan.id}>
+                              {plan.name} - {formatPrice(plan.price_monthly)}/mo
+                              {plan.bell_feature_enabled && " (Bell)"}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Duration (months)</Label>
+                      <Input
+                        type="number"
+                        min={1}
+                        max={24}
+                        value={grantMonths}
+                        onChange={(e) => setGrantMonths(Math.max(1, parseInt(e.target.value) || 1))}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleAccountAction}>
+            <AlertDialogCancel disabled={actionLoading}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleAccountAction} disabled={actionLoading}>
+              {actionLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
               Confirm
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <AlertDialog open={!!deleteCodeId} onOpenChange={() => setDeleteCodeId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Signup Code</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete this signup code? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={deleteSignupCode}>
-              Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
