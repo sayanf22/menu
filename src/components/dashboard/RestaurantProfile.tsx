@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,16 +7,30 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Loader2, Save, Edit, Upload, X, Bell, BellOff, Crown, Lock, Sparkles } from "lucide-react";
+import { Loader2, Save, Edit, Upload, X, Bell, BellOff, Crown, Lock, Sparkles, Check } from "lucide-react";
 import { compressImage, COMPRESSION_PRESETS, getCompressionStats } from "@/lib/image-compression";
+import { useRazorpay } from "@/hooks/useRazorpay";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
 
 interface RestaurantProfileProps {
     restaurantId: string;
     onProfileUpdate?: (profile: Record<string, unknown>) => void;
 }
 
+interface BasicPlusPlan {
+    id: string;
+    name: string;
+    price_monthly: number;
+    price_yearly: number;
+}
+
 const RestaurantProfile = ({ restaurantId, onProfileUpdate }: RestaurantProfileProps) => {
-    const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [editing, setEditing] = useState(false);
@@ -27,6 +40,9 @@ const RestaurantProfile = ({ restaurantId, onProfileUpdate }: RestaurantProfileP
     const [logoFile, setLogoFile] = useState<File | null>(null);
     const [logoPreview, setLogoPreview] = useState<string | null>(null);
     const [hasBellAccess, setHasBellAccess] = useState<boolean | null>(null);
+    const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
+    const [basicPlusPlan, setBasicPlusPlan] = useState<BasicPlusPlan | null>(null);
+    const { initiatePayment, loading: paymentLoading } = useRazorpay();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [profile, setProfile] = useState({
         restaurant_name: "",
@@ -39,6 +55,7 @@ const RestaurantProfile = ({ restaurantId, onProfileUpdate }: RestaurantProfileP
     useEffect(() => {
         fetchProfile();
         checkBellAccess();
+        fetchBasicPlusPlan();
     }, [restaurantId]);
 
     const checkBellAccess = async () => {
@@ -51,6 +68,45 @@ const RestaurantProfile = ({ restaurantId, onProfileUpdate }: RestaurantProfileP
             setHasBellAccess(false);
         }
     };
+
+    const fetchBasicPlusPlan = async () => {
+        try {
+            const { data } = await supabase
+                .from("subscription_plans")
+                .select("id, name, price_monthly, price_yearly")
+                .eq("bell_feature_enabled", true)
+                .eq("is_active", true)
+                .single();
+            if (data) {
+                setBasicPlusPlan(data as BasicPlusPlan);
+            }
+        } catch (error) {
+            console.error("Error fetching Basic Plus plan:", error);
+        }
+    };
+
+    const handleUpgrade = async (billingCycle: 'monthly' | 'yearly') => {
+        if (!basicPlusPlan) {
+            toast.error("Plan not found. Please try again.");
+            return;
+        }
+        
+        await initiatePayment(
+            { planId: basicPlusPlan.id, billingCycle },
+            () => {
+                setShowUpgradeDialog(false);
+                setHasBellAccess(true);
+                toast.success("Upgraded to Basic Plus! Bell feature is now available.");
+                // Refresh the page to update all components
+                window.location.reload();
+            },
+            () => {
+                toast.error("Payment failed. Please try again.");
+            }
+        );
+    };
+
+    const formatPrice = (paise: number) => `₹${(paise / 100).toFixed(0)}`;
 
     const fetchProfile = async () => {
         try {
@@ -481,7 +537,7 @@ const RestaurantProfile = ({ restaurantId, onProfileUpdate }: RestaurantProfileP
                                         Bell Service is available with Basic Plus plan. Let customers call for service directly from their table.
                                     </p>
                                     <Button 
-                                        onClick={() => navigate('/pricing')}
+                                        onClick={() => setShowUpgradeDialog(true)}
                                         className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white"
                                     >
                                         <Sparkles className="h-4 w-4 mr-2" />
@@ -493,6 +549,89 @@ const RestaurantProfile = ({ restaurantId, onProfileUpdate }: RestaurantProfileP
                     )}
                 </CardContent>
             </Card>
+
+            {/* Upgrade Dialog */}
+            <Dialog open={showUpgradeDialog} onOpenChange={setShowUpgradeDialog}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <Crown className="h-5 w-5 text-amber-500" />
+                            Upgrade to Basic Plus
+                        </DialogTitle>
+                        <DialogDescription>
+                            Unlock the Bell Calling feature and more benefits.
+                        </DialogDescription>
+                    </DialogHeader>
+                    
+                    <div className="space-y-4 py-4">
+                        {/* Features */}
+                        <div className="p-4 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 rounded-xl border border-amber-200 dark:border-amber-800">
+                            <div className="flex items-center gap-3 mb-3">
+                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
+                                    <Bell className="h-5 w-5 text-white" />
+                                </div>
+                                <div>
+                                    <h4 className="font-semibold">Basic Plus Features</h4>
+                                    <p className="text-sm text-muted-foreground">Everything you need</p>
+                                </div>
+                            </div>
+                            <ul className="space-y-2 text-sm">
+                                <li className="flex items-center gap-2">
+                                    <Check className="h-4 w-4 text-green-600" />
+                                    Bell Calling Feature
+                                </li>
+                                <li className="flex items-center gap-2">
+                                    <Check className="h-4 w-4 text-green-600" />
+                                    10 Menu Images (vs 5)
+                                </li>
+                                <li className="flex items-center gap-2">
+                                    <Check className="h-4 w-4 text-green-600" />
+                                    Priority Support
+                                </li>
+                            </ul>
+                        </div>
+
+                        {/* Pricing Options */}
+                        {basicPlusPlan && (
+                            <div className="grid grid-cols-2 gap-3">
+                                <Button
+                                    onClick={() => handleUpgrade('monthly')}
+                                    disabled={paymentLoading}
+                                    variant="outline"
+                                    className="h-auto py-4 flex-col"
+                                >
+                                    {paymentLoading ? (
+                                        <Loader2 className="h-5 w-5 animate-spin" />
+                                    ) : (
+                                        <>
+                                            <span className="text-xl font-bold">{formatPrice(basicPlusPlan.price_monthly)}</span>
+                                            <span className="text-xs text-muted-foreground">/month</span>
+                                        </>
+                                    )}
+                                </Button>
+                                <Button
+                                    onClick={() => handleUpgrade('yearly')}
+                                    disabled={paymentLoading}
+                                    className="h-auto py-4 flex-col bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
+                                >
+                                    {paymentLoading ? (
+                                        <Loader2 className="h-5 w-5 animate-spin" />
+                                    ) : (
+                                        <>
+                                            <span className="text-xl font-bold">{formatPrice(basicPlusPlan.price_yearly)}</span>
+                                            <span className="text-xs opacity-90">/year (Save 17%)</span>
+                                        </>
+                                    )}
+                                </Button>
+                            </div>
+                        )}
+
+                        <p className="text-xs text-center text-muted-foreground">
+                            Secure payment powered by Razorpay
+                        </p>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 };
