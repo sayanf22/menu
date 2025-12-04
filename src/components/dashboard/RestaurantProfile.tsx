@@ -61,6 +61,7 @@ const RestaurantProfile = ({ restaurantId, onProfileUpdate }: RestaurantProfileP
     const [showNewPassword, setShowNewPassword] = useState(false);
     const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false);
     const [changingPassword, setChangingPassword] = useState(false);
+    const [sendingResetEmail, setSendingResetEmail] = useState(false);
 
     useEffect(() => {
         fetchProfile();
@@ -416,6 +417,29 @@ const RestaurantProfile = ({ restaurantId, onProfileUpdate }: RestaurantProfileP
         setConfirmNewPassword("");
     };
 
+    const handleSendResetEmail = async () => {
+        setSendingResetEmail(true);
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user?.email) {
+                toast.error("Unable to get user email. Please try again.");
+                return;
+            }
+
+            await supabase.auth.resetPasswordForEmail(user.email, {
+                redirectTo: `${window.location.origin}/auth`,
+            });
+
+            toast.success("Password reset link sent to your email!");
+            setShowPasswordChange(false);
+        } catch (error) {
+            console.error("Error sending reset email:", error);
+            toast.error("Failed to send reset email. Please try again.");
+        } finally {
+            setSendingResetEmail(false);
+        }
+    };
+
     if (loading) {
         return (
             <Card>
@@ -639,7 +663,25 @@ const RestaurantProfile = ({ restaurantId, onProfileUpdate }: RestaurantProfileP
                     {showPasswordChange ? (
                         <form onSubmit={handleChangePassword} className="space-y-4">
                             <div className="space-y-2">
-                                <Label htmlFor="current-password">Current Password</Label>
+                                <div className="flex items-center justify-between">
+                                    <Label htmlFor="current-password">Current Password</Label>
+                                    <Button
+                                        type="button"
+                                        variant="link"
+                                        className="px-0 text-xs h-auto text-primary"
+                                        onClick={handleSendResetEmail}
+                                        disabled={sendingResetEmail}
+                                    >
+                                        {sendingResetEmail ? (
+                                            <>
+                                                <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                                                Sending...
+                                            </>
+                                        ) : (
+                                            "Forgot password?"
+                                        )}
+                                    </Button>
+                                </div>
                                 <div className="relative">
                                     <Input
                                         id="current-password"
