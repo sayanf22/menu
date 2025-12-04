@@ -241,7 +241,12 @@ const MenuView = () => {
         return { active: false, reason: "error" };
       }
       
-      return data as { active: boolean; reason?: string };
+      // The function returns { has_subscription: boolean, status: string, ... }
+      const result = data as { has_subscription?: boolean; status?: string } | null;
+      return { 
+        active: result?.has_subscription === true && result?.status === "active",
+        reason: result?.status || "none"
+      };
     } catch {
       return { active: false, reason: "error" };
     }

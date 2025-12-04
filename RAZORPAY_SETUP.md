@@ -70,7 +70,7 @@ The following Edge Functions have been deployed:
 The registration flow now works as follows:
 
 1. **User enters details**: Restaurant name, email, password
-2. **User selects plan**: Basic or Premium (monthly/yearly)
+2. **User selects plan**: Basic or Basic Plus (monthly/yearly)
 3. **Payment**: Razorpay checkout opens for subscription payment
 4. **Account creation**: After successful payment, account is automatically created
 5. **Auto-login**: User is automatically signed in and redirected to dashboard
@@ -89,12 +89,12 @@ The registration flow now works as follows:
 4. **razorpay_webhook_events** - Webhook event log (idempotency)
 5. **pending_registrations** - Temporary storage for registration data before payment
 
-## Current Plans (Test Pricing)
+## Current Plans (Production Pricing)
 
-- **Basic**: ₹2/month (₹20/year)
-- **Premium**: ₹2/month (₹20/year)
+- **Basic**: ₹249/month (₹2,490/year) - 5 images, no bell feature
+- **Basic Plus**: ₹369/month (₹3,690/year) - 10 images, bell feature enabled
 
-*Note: Update prices in `subscription_plans` table for production*
+*Prices stored in paise in database (₹249 = 24900 paise)*
 
 ## Testing with Live Keys
 
@@ -121,7 +121,7 @@ To get Test Mode keys:
 https://owibhiiwghyznptfgfcr.supabase.co/functions/v1/razorpay-webhook
 ```
 
-## IMPORTANT: Disable JWT Verification for Webhook
+## IMPORTANT: Webhook JWT Verification for Webhook
 
 The webhook function needs JWT verification disabled because Razorpay sends webhooks without JWT tokens.
 

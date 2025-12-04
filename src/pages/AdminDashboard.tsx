@@ -160,8 +160,9 @@ const AdminDashboard = () => {
           p_admin_email: adminEmail,
         });
         if (error) throw error;
-        if (data && !data.success) {
-          toast.error(data.error || "Failed to grant subscription");
+        const result = data as { success?: boolean; error?: string } | null;
+        if (result && !result.success) {
+          toast.error(result.error || "Failed to grant subscription");
           return;
         }
         toast.success(`Subscription granted for ${grantMonths} month(s)`);
