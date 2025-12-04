@@ -9,8 +9,8 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Eye, EyeOff, Check, Crown, Star, ArrowRight, ArrowLeft, CreditCard } from "lucide-react";
-import { sanitizeInput, isValidEmail, resetRateLimit } from "@/lib/security";
+import { Loader2, Eye, EyeOff, Check, Crown, Star, ArrowRight, ArrowLeft, CreditCard, KeyRound } from "lucide-react";
+import { sanitizeInput, isValidEmail, resetRateLimit, checkRateLimit, RATE_LIMITS } from "@/lib/security";
 import { useRazorpay } from "@/hooks/useRazorpay";
 
 interface Plan {
@@ -51,6 +51,58 @@ const Auth = () => {
   });
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
+  const [showPasswordReset, setShowPasswordReset] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [updatingPassword, setUpdatingPassword] = useState(false);
+
+  // Check for password recovery token in URL hash (from email link)
+  useEffect(() => {
+    const handlePasswordRecovery = async () => {
+      // Check URL hash for recovery token
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const accessToken = hashParams.get('access_token');
+      const type = hashParams.get('type');
+      
+      if (type === 'recovery' && accessToken) {
+        // User clicked password reset link - show password reset form
+        setShowPasswordReset(true);
+        setLoading(false);
+        
+        // Set the session with the recovery token
+        try {
+          const { error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: hashParams.get('refresh_token') || '',
+          });
+          if (error) {
+            console.error('Error setting recovery session:', error);
+            toast.error('Invalid or expired reset link. Please request a new one.');
+            setShowPasswordReset(false);
+          }
+        } catch (err) {
+          console.error('Recovery session error:', err);
+        }
+        
+        // Clear the hash from URL
+        window.history.replaceState(null, '', window.location.pathname);
+      }
+    };
+    
+    handlePasswordRecovery();
+    
+    // Also listen for auth state changes (for recovery)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setShowPasswordReset(true);
+        setLoading(false);
+      }
+    });
+    
+    return () => subscription.unsubscribe();
+  }, []);
 
   // Check for plan parameter from pricing page
   useEffect(() => {
@@ -194,6 +246,12 @@ const Auth = () => {
       toast.error("Please enter a valid email address");
       return;
     }
+
+    // Rate limit check
+    if (!checkRateLimit('login', RATE_LIMITS.login.maxRequests, RATE_LIMITS.login.windowMs)) {
+      toast.error("Too many login attempts. Please wait a few minutes.");
+      return;
+    }
     
     setLoading(true);
 
@@ -221,6 +279,12 @@ const Auth = () => {
       toast.error("Please enter a valid email address");
       return;
     }
+
+    // Rate limit check for password reset
+    if (!checkRateLimit('passwordReset', RATE_LIMITS.passwordReset.maxRequests, RATE_LIMITS.passwordReset.windowMs)) {
+      toast.error("Too many reset attempts. Please wait 10 minutes.");
+      return;
+    }
     
     setLoading(true);
 
@@ -235,6 +299,43 @@ const Auth = () => {
       toast.success("If an account exists, you'll receive a password reset link.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleUpdatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (newPassword.length < 8) {
+      toast.error("Password must be at least 8 characters long");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+
+    setUpdatingPassword(true);
+
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+
+      if (error) throw error;
+
+      toast.success("Password updated successfully! You can now sign in.");
+      setShowPasswordReset(false);
+      setNewPassword("");
+      setConfirmPassword("");
+      
+      // Sign out to clear the recovery session
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.error('Password update error:', err);
+      toast.error("Failed to update password. Please try again or request a new reset link.");
+    } finally {
+      setUpdatingPassword(false);
     }
   };
 
@@ -267,12 +368,106 @@ const Auth = () => {
           </div>
           <CardTitle className="text-2xl font-bold">AddMenu</CardTitle>
           <CardDescription>
-            {signUpStep === 'plan' ? 'Select a plan to continue' : 'Create your digital menu'}
+            {showPasswordReset 
+              ? 'Reset your password' 
+              : signUpStep === 'plan' 
+                ? 'Select a plan to continue' 
+                : 'Create your digital menu'}
           </CardDescription>
         </CardHeader>
         
         <CardContent>
-          {signUpStep === 'plan' ? (
+          {showPasswordReset ? (
+            <div className="space-y-4">
+              <div className="flex items-center justify-center mb-4">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  <KeyRound className="w-6 h-6 text-primary" />
+                </div>
+              </div>
+              <h3 className="text-lg font-semibold text-center">Set New Password</h3>
+              <p className="text-sm text-muted-foreground text-center">
+                Enter your new password below
+              </p>
+              
+              <form onSubmit={handleUpdatePassword} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="new-password">New Password</Label>
+                  <div className="relative">
+                    <Input
+                      id="new-password"
+                      type={showNewPassword ? "text" : "password"}
+                      placeholder="Min 8 characters"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      required
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                    >
+                      {showNewPassword ? (
+                        <EyeOff className="h-4 w-4 text-muted-foreground" />
+                      ) : (
+                        <Eye className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="confirm-password">Confirm Password</Label>
+                  <div className="relative">
+                    <Input
+                      id="confirm-password"
+                      type={showConfirmPassword ? "text" : "password"}
+                      placeholder="Confirm your password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    >
+                      {showConfirmPassword ? (
+                        <EyeOff className="h-4 w-4 text-muted-foreground" />
+                      ) : (
+                        <Eye className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+                
+                <Button type="submit" className="w-full" disabled={updatingPassword}>
+                  {updatingPassword ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Updating...
+                    </>
+                  ) : (
+                    "Update Password"
+                  )}
+                </Button>
+              </form>
+              
+              <Button
+                variant="link"
+                className="w-full text-sm"
+                onClick={() => {
+                  setShowPasswordReset(false);
+                  supabase.auth.signOut();
+                }}
+              >
+                Cancel and go back to sign in
+              </Button>
+            </div>
+          ) : signUpStep === 'plan' ? (
             <div className="space-y-4">
               <Button
                 variant="ghost"
