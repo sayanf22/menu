@@ -58,72 +58,75 @@ const Auth = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [updatingPassword, setUpdatingPassword] = useState(false);
 
+  // Track if we're in recovery mode to prevent redirect
+  const [isRecoveryMode, setIsRecoveryMode] = useState(false);
+
   // Main initialization effect - handles recovery tokens and session check
   useEffect(() => {
-    let isRecoveryMode = false;
+    // Listen for auth state changes FIRST (for recovery event)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth event:', event);
+      
+      if (event === 'PASSWORD_RECOVERY') {
+        // User clicked password reset link - Supabase detected recovery
+        console.log('PASSWORD_RECOVERY event detected');
+        setIsRecoveryMode(true);
+        setShowPasswordReset(true);
+        setLoading(false);
+      } else if (event === 'SIGNED_IN' && !isRecoveryMode && !showPasswordReset) {
+        // Only redirect if NOT in recovery mode
+        navigate("/dashboard");
+      }
+    });
     
     const initialize = async () => {
-      // First, check URL hash for recovery token (from email link)
-      const hashParams = new URLSearchParams(window.location.hash.substring(1));
-      const accessToken = hashParams.get('access_token');
-      const type = hashParams.get('type');
+      // Check URL hash for recovery token (from email link)
+      // Supabase uses hash format: #access_token=...&type=recovery&...
+      const hash = window.location.hash;
       
-      if (type === 'recovery' && accessToken) {
-        // User clicked password reset link - show password reset form
-        isRecoveryMode = true;
+      if (hash && hash.includes('type=recovery')) {
+        console.log('Recovery token found in URL hash');
+        // Don't do anything here - let Supabase handle it via onAuthStateChange
+        // The PASSWORD_RECOVERY event will fire
+        setIsRecoveryMode(true);
         setShowPasswordReset(true);
         setLoading(false);
         
-        // Set the session with the recovery token
-        try {
-          const { error } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: hashParams.get('refresh_token') || '',
-          });
-          if (error) {
-            console.error('Error setting recovery session:', error);
-            toast.error('Invalid or expired reset link. Please request a new one.');
-            setShowPasswordReset(false);
-            isRecoveryMode = false;
-          }
-        } catch (err) {
-          console.error('Recovery session error:', err);
-          isRecoveryMode = false;
-        }
-        
-        // Clear the hash from URL
-        window.history.replaceState(null, '', window.location.pathname);
-        return; // Don't check session if in recovery mode
+        // Clear the hash from URL after a short delay
+        setTimeout(() => {
+          window.history.replaceState(null, '', window.location.pathname);
+        }, 100);
+        return;
+      }
+      
+      // Also check query params (some Supabase versions use this)
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('type') === 'recovery') {
+        console.log('Recovery token found in URL params');
+        setIsRecoveryMode(true);
+        setShowPasswordReset(true);
+        setLoading(false);
+        return;
       }
       
       // Only check session and redirect if NOT in recovery mode
-      if (!isRecoveryMode) {
-        try {
-          const { data: { session } } = await supabase.auth.getSession();
-          if (session) {
-            navigate("/dashboard");
-          } else {
-            setLoading(false);
-          }
-        } catch (error) {
-          console.error("Error checking session:", error);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session && !isRecoveryMode && !showPasswordReset) {
+          navigate("/dashboard");
+        } else {
           setLoading(false);
         }
+      } catch (error) {
+        console.error("Error checking session:", error);
+        setLoading(false);
       }
     };
     
     initialize();
     
-    // Listen for auth state changes (for recovery)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY') {
-        setShowPasswordReset(true);
-        setLoading(false);
-      }
-    });
-    
     return () => subscription.unsubscribe();
-  }, [navigate]);
+  }, [navigate, isRecoveryMode, showPasswordReset]);
 
   // Check for plan parameter from pricing page
   useEffect(() => {
@@ -330,6 +333,7 @@ const Auth = () => {
 
       toast.success("Password updated successfully! You can now sign in.");
       setShowPasswordReset(false);
+      setIsRecoveryMode(false);
       setNewPassword("");
       setConfirmPassword("");
       
@@ -465,6 +469,7 @@ const Auth = () => {
                 className="w-full text-sm"
                 onClick={() => {
                   setShowPasswordReset(false);
+                  setIsRecoveryMode(false);
                   supabase.auth.signOut();
                 }}
               >
