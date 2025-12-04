@@ -110,13 +110,11 @@ const Dashboard = () => {
   const fetchSubscription = async (userId: string) => {
     setSubscriptionLoading(true);
     try {
-      const { data, error } = await supabase
-        .from("user_subscriptions")
-        .select("*, subscription_plans(*)")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      // Use secure backend function to get subscription status
+      // This bypasses RLS and ensures accurate data
+      const { data, error } = await supabase.rpc('get_user_subscription_status', {
+        p_user_id: userId
+      });
 
       if (error) {
         console.error("Error fetching subscription:", error);
@@ -124,9 +122,20 @@ const Dashboard = () => {
         return;
       }
       
-      // Set subscription data (could be null if no subscription exists)
-      setSubscription(data);
-      console.log("Subscription fetched:", data?.status, data?.subscription_plans?.name);
+      // Transform the response to match expected format
+      if (data && data.has_subscription && data.subscription) {
+        const subscriptionData = {
+          ...data.subscription,
+          subscription_plans: data.plan,
+          // Add computed is_active from backend
+          _is_active: data.is_active
+        };
+        setSubscription(subscriptionData);
+        console.log("Subscription fetched from backend:", data.is_active, data.plan?.name);
+      } else {
+        setSubscription(null);
+        console.log("No subscription found");
+      }
     } catch (error) {
       console.error("Error fetching subscription:", error);
       setSubscription(null);
@@ -161,13 +170,17 @@ const Dashboard = () => {
       console.log("No subscription found");
       return false;
     }
-    const isActive = subscription.status === 'active';
-    console.log("Subscription status check:", subscription.status, "isActive:", isActive);
+    // Use backend-computed is_active value for accuracy
+    // Falls back to status check if _is_active not available
+    const isActive = subscription._is_active ?? (subscription.status === 'active');
+    console.log("Subscription status check:", subscription.status, "_is_active:", subscription._is_active, "final:", isActive);
     return isActive;
   };
 
   const isSubscriptionExpired = () => {
     if (!subscription) return true;
+    // If backend says active, it's not expired
+    if (subscription._is_active) return false;
     if (subscription.status === 'cancelled' || subscription.status === 'halted') return true;
     if (subscription.current_period_end) {
       const expired = new Date(subscription.current_period_end) < new Date();

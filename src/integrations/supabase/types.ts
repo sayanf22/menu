@@ -773,6 +773,7 @@ export type Database = {
         }[]
       }
       get_user_plan_details: { Args: { p_user_id: string }; Returns: Json }
+      get_user_subscription_status: { Args: { p_user_id: string }; Returns: Json }
       has_active_subscription: { Args: { user_uuid: string }; Returns: boolean }
       is_login_blocked: { Args: { p_identifier: string }; Returns: boolean }
       is_subscription_active: { Args: { p_user_id: string }; Returns: boolean }
