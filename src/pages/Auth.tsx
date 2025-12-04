@@ -37,9 +37,7 @@ const Auth = () => {
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [loadingPlans, setLoadingPlans] = useState(false);
   
-  const razorpayHook = useRazorpay();
-  console.log("useRazorpay returned:", razorpayHook);
-  const { initiateRegistrationPayment, loading: paymentLoading } = razorpayHook;
+  const { initiateRegistrationPayment, loading: paymentLoading } = useRazorpay();
 
   const [signUpData, setSignUpData] = useState({
     email: "",

@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { Loader2, LogOut, Ban, CheckCircle, Plus, Trash2, Copy } from "lucide-react";
 import {
   AlertDialog,
@@ -42,7 +42,6 @@ interface SignupCode {
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [profiles, setProfiles] = useState<Profile[]>([]);
@@ -77,11 +76,7 @@ const AdminDashboard = () => {
       if (error || !sessionData) {
         localStorage.removeItem("admin_session_token");
         localStorage.removeItem("admin_email");
-        toast({
-          title: "Session Expired",
-          description: "Please login again",
-          variant: "destructive",
-        });
+        toast.error("Session expired. Please login again");
         navigate("/adminlogin");
         return;
       }
@@ -102,11 +97,7 @@ const AdminDashboard = () => {
       
       setProfiles(data || []);
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to load user profiles",
-        variant: "destructive",
-      });
+      toast.error("Failed to load user profiles");
     } finally {
       setLoading(false);
     }
@@ -120,11 +111,7 @@ const AdminDashboard = () => {
       
       setSignupCodes(data || []);
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to load signup codes",
-        variant: "destructive",
-      });
+      toast.error("Failed to load signup codes");
     }
   };
 
@@ -136,11 +123,7 @@ const AdminDashboard = () => {
       
       // Validate code length
       if (code.length < 6) {
-        toast({
-          title: "Error",
-          description: "Code must be at least 6 characters long",
-          variant: "destructive",
-        });
+        toast.error("Code must be at least 6 characters long");
         setGeneratingCode(false);
         return;
       }
@@ -154,30 +137,19 @@ const AdminDashboard = () => {
 
       // Check if the RPC returned an error in the data
       if (data && typeof data === 'object' && 'success' in data && !data.success) {
-        toast({
-          title: "Error",
-          description: (data as any).error || "Failed to generate signup code",
-          variant: "destructive",
-        });
+        toast.error((data as any).error || "Failed to generate signup code");
         setGeneratingCode(false);
         return;
       }
 
-      toast({
-        title: "Success",
-        description: `Signup code generated: ${code}`,
-      });
+      toast.success(`Signup code generated: ${code}`);
       
       // Reset form
       setNewCodeMaxUses(1);
       setCustomCode("");
       await loadSignupCodes();
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: `Failed to generate signup code: ${error.message}`,
-        variant: "destructive",
-      });
+      toast.error(`Failed to generate signup code: ${error.message}`);
     } finally {
       setGeneratingCode(false);
     }
@@ -193,18 +165,11 @@ const AdminDashboard = () => {
 
       if (error) throw error;
 
-      toast({
-        title: "Success",
-        description: "Signup code deleted",
-      });
+      toast.success("Signup code deleted");
       
       await loadSignupCodes();
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: `Failed to delete signup code: ${error.message}`,
-        variant: "destructive",
-      });
+      toast.error(`Failed to delete signup code: ${error.message}`);
     } finally {
       setDeleteCodeId(null);
     }
@@ -212,10 +177,7 @@ const AdminDashboard = () => {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    toast({
-      title: "Copied!",
-      description: "Code copied to clipboard",
-    });
+    toast.success("Code copied to clipboard");
   };
 
   const handleAccountAction = async () => {
@@ -233,18 +195,11 @@ const AdminDashboard = () => {
 
       if (error) throw error;
 
-      toast({
-        title: "Success",
-        description: `Account ${isDisabling ? "disabled" : "enabled"} successfully`,
-      });
+      toast.success(`Account ${isDisabling ? "disabled" : "enabled"} successfully`);
 
       await loadProfiles();
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: `Failed to update account status: ${error.message}`,
-        variant: "destructive",
-      });
+      toast.error(`Failed to update account status: ${error.message}`);
     } finally {
       setSelectedProfile(null);
       setActionType(null);
@@ -264,10 +219,7 @@ const AdminDashboard = () => {
     localStorage.removeItem("admin_session_token");
     localStorage.removeItem("admin_email");
     
-    toast({
-      title: "Logged Out",
-      description: "You have been logged out successfully",
-    });
+    toast.success("You have been logged out successfully");
     
     navigate("/adminlogin");
   };

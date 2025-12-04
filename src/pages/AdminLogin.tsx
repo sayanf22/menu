@@ -5,12 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { Loader2, Lock } from "lucide-react";
 
 const AdminLogin = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -28,11 +27,7 @@ const AdminLogin = () => {
         .single();
 
       if (error || !adminData) {
-        toast({
-          title: "Login Failed",
-          description: "Invalid email or password",
-          variant: "destructive",
-        });
+        toast.error("Invalid email or password");
         setLoading(false);
         return;
       }
@@ -50,11 +45,7 @@ const AdminLogin = () => {
         });
 
       if (sessionError) {
-        toast({
-          title: "Error",
-          description: "Failed to create session",
-          variant: "destructive",
-        });
+        toast.error("Failed to create session");
         setLoading(false);
         return;
       }
@@ -67,19 +58,12 @@ const AdminLogin = () => {
       localStorage.setItem("admin_session_token", sessionToken);
       localStorage.setItem("admin_email", adminData.email);
 
-      toast({
-        title: "Success",
-        description: "Logged in successfully",
-      });
+      toast.success("Logged in successfully");
 
       navigate("/admindashboard");
     } catch (error) {
       console.error("Login error:", error);
-      toast({
-        title: "Error",
-        description: "An error occurred during login",
-        variant: "destructive",
-      });
+      toast.error("An error occurred during login");
     } finally {
       setLoading(false);
     }

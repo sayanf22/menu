@@ -28,7 +28,7 @@ import { Footer } from "@/components/Footer";
 import { SEO } from "@/components/SEO";
 
 const Index = () => {
-  const [activeTab, setActiveTab] = useState<"basic" | "premium">("basic");
+  const [activeTab, setActiveTab] = useState<"basic" | "basicPlus">("basic");
   const [deviceView, setDeviceView] = useState<"phone" | "tablet">("phone");
 
   return (
@@ -223,7 +223,7 @@ const Index = () => {
               See the <span className="text-primary">Difference</span>
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Compare Basic and Premium features on different devices
+              Compare Basic and Basic Plus features on different devices
             </p>
           </div>
 
@@ -267,9 +267,9 @@ const Index = () => {
                 Basic - ₹249/mo
               </button>
               <button
-                onClick={() => setActiveTab("premium")}
+                onClick={() => setActiveTab("basicPlus")}
                 className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300 ${
-                  activeTab === "premium"
+                  activeTab === "basicPlus"
                     ? "bg-gradient-to-r from-primary to-accent text-white shadow-lg shadow-primary/25"
                     : "text-muted-foreground hover:text-foreground"
                 } hover:scale-105 active:scale-95`}
