@@ -20,6 +20,9 @@ interface Plan {
   price_monthly: number;
   price_yearly: number | null;
   features: unknown;
+  max_images: number | null;
+  bell_feature_enabled: boolean | null;
+  plan_tier: number | null;
 }
 
 const Auth = () => {
@@ -88,7 +91,7 @@ const Auth = () => {
         .from('subscription_plans')
         .select('*')
         .eq('is_active', true)
-        .order('name', { ascending: true }); // Basic comes before Premium alphabetically
+        .order('plan_tier', { ascending: true });
 
       if (error) throw error;
       setPlans(data || []);
@@ -99,17 +102,23 @@ const Auth = () => {
           id: 'basic',
           name: 'Basic',
           description: 'Perfect for small restaurants',
-          price_monthly: 200,
-          price_yearly: 2000,
-          features: ["Digital Menu with QR Code", "Upload Menu Images", "Basic Analytics", "Email Support"]
+          price_monthly: 24900,
+          price_yearly: 249000,
+          features: ["Digital Menu with QR Code", "5 Menu Image Uploads", "Basic Analytics", "Email Support"],
+          max_images: 5,
+          bell_feature_enabled: false,
+          plan_tier: 1
         },
         {
-          id: 'premium',
-          name: 'Premium',
-          description: 'For growing businesses',
-          price_monthly: 200,
-          price_yearly: 2000,
-          features: ["Everything in Basic", "Online Ordering", "WhatsApp Integration", "Priority Support"]
+          id: 'basic-plus',
+          name: 'Basic Plus',
+          description: 'For growing restaurants with bell service',
+          price_monthly: 36900,
+          price_yearly: 369000,
+          features: ["Everything in Basic", "10 Menu Image Uploads", "Bell Calling Feature", "Priority Support"],
+          max_images: 10,
+          bell_feature_enabled: true,
+          plan_tier: 2
         }
       ]);
     } finally {
@@ -317,8 +326,8 @@ const Auth = () => {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {plans.map((plan, index) => {
-                    const isPremium = plan.name.toLowerCase() === 'premium' || index === 1;
+                  {plans.map((plan) => {
+                    const isBasicPlus = plan.name.toLowerCase().includes('plus') || plan.plan_tier === 2;
                     const price = billingCycle === 'yearly' ? plan.price_yearly : plan.price_monthly;
                     const isSelected = selectedPlan === plan.id;
                     const features = (plan.features as string[]) || [];
@@ -327,24 +336,24 @@ const Auth = () => {
                       <div
                         key={plan.id}
                         className={`relative p-4 rounded-xl border-2 cursor-pointer transition-all hover:shadow-md ${
-                          isPremium 
+                          isBasicPlus 
                             ? 'border-primary bg-primary/5' 
                             : 'border-border hover:border-primary/50'
                         } ${isSelected && paymentLoading ? 'opacity-75' : ''}`}
                         onClick={() => !paymentLoading && handleSelectPlan(plan.id)}
                       >
-                        {isPremium && (
+                        {isBasicPlus && (
                           <Badge className="absolute -top-2 right-3 bg-primary text-[10px]">
-                            Popular
+                            Bell Feature
                           </Badge>
                         )}
                         
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-2">
                             <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                              isPremium ? 'bg-primary' : 'bg-primary/10'
+                              isBasicPlus ? 'bg-primary' : 'bg-primary/10'
                             }`}>
-                              {isPremium ? (
+                              {isBasicPlus ? (
                                 <Crown className="w-4 h-4 text-white" />
                               ) : (
                                 <Star className="w-4 h-4 text-primary" />
@@ -352,7 +361,7 @@ const Auth = () => {
                             </div>
                             <div>
                               <h3 className="font-semibold text-sm">{plan.name}</h3>
-                              <p className="text-xs text-muted-foreground">{plan.description}</p>
+                              <p className="text-xs text-muted-foreground">{plan.max_images} images{plan.bell_feature_enabled ? ' + Bell' : ''}</p>
                             </div>
                           </div>
                           <div className="text-right">
@@ -373,7 +382,7 @@ const Auth = () => {
                         </div>
 
                         <Button
-                          className={`w-full ${isPremium ? '' : 'bg-primary/90'}`}
+                          className={`w-full ${isBasicPlus ? '' : 'bg-primary/90'}`}
                           size="sm"
                           disabled={paymentLoading}
                         >

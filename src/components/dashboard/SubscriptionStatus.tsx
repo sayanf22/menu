@@ -17,6 +17,8 @@ interface Subscription {
     name: string;
     price_monthly: number;
     price_yearly: number | null;
+    max_images: number | null;
+    bell_feature_enabled: boolean | null;
   } | null;
 }
 
@@ -50,7 +52,7 @@ export const SubscriptionStatus = ({ userId }: SubscriptionStatusProps) => {
         // Then get the plan details
         const { data: planData } = await supabase
           .from('subscription_plans')
-          .select('name, price_monthly, price_yearly')
+          .select('name, price_monthly, price_yearly, max_images, bell_feature_enabled')
           .eq('id', subData.plan_id)
           .single();
 
@@ -175,7 +177,7 @@ export const SubscriptionStatus = ({ userId }: SubscriptionStatusProps) => {
             <span className="text-sm text-muted-foreground">Billing Cycle</span>
             <span className="capitalize">{subscription.billing_cycle}</span>
           </div>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-2">
             <span className="text-sm text-muted-foreground">Price</span>
             <span className="font-semibold">
               {subscription.plan && formatPrice(
@@ -184,6 +186,16 @@ export const SubscriptionStatus = ({ userId }: SubscriptionStatusProps) => {
                   : subscription.plan.price_monthly
               )}
               /{subscription.billing_cycle === 'yearly' ? 'year' : 'month'}
+            </span>
+          </div>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm text-muted-foreground">Image Uploads</span>
+            <span className="font-medium">{subscription.plan?.max_images || 5} max</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">Bell Feature</span>
+            <span className={`font-medium ${subscription.plan?.bell_feature_enabled ? 'text-green-600' : 'text-muted-foreground'}`}>
+              {subscription.plan?.bell_feature_enabled ? 'Enabled' : 'Not included'}
             </span>
           </div>
         </div>

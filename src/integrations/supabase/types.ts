@@ -7,6 +7,8 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "13.0.5"
   }
@@ -58,37 +60,15 @@ export type Database = {
           id?: string
           session_token?: string
         }
-        Relationships: []
-      }
-      approval_tokens: {
-        Row: {
-          action: string
-          created_at: string | null
-          expires_at: string
-          id: string
-          token: string
-          used: boolean | null
-          user_id: string
-        }
-        Insert: {
-          action: string
-          created_at?: string | null
-          expires_at?: string
-          id?: string
-          token: string
-          used?: boolean | null
-          user_id: string
-        }
-        Update: {
-          action?: string
-          created_at?: string | null
-          expires_at?: string
-          id?: string
-          token?: string
-          used?: boolean | null
-          user_id?: string
-        }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "admin_sessions_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "admin_credentials"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       bell_notifications: {
         Row: {
@@ -117,6 +97,38 @@ export type Database = {
           restaurant_id?: string
           status?: string | null
           table_number?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bell_notifications_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      failed_login_attempts: {
+        Row: {
+          attempt_type: string
+          attempted_at: string | null
+          blocked_until: string | null
+          id: string
+          identifier: string
+        }
+        Insert: {
+          attempt_type?: string
+          attempted_at?: string | null
+          blocked_until?: string | null
+          id?: string
+          identifier: string
+        }
+        Update: {
+          attempt_type?: string
+          attempted_at?: string | null
+          blocked_until?: string | null
+          id?: string
+          identifier?: string
         }
         Relationships: []
       }
@@ -178,6 +190,165 @@ export type Database = {
           image_url?: string
           restaurant_id?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: "menu_images_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      menu_sessions: {
+        Row: {
+          created_at: string | null
+          device_fingerprint: string | null
+          expires_at: string
+          id: string
+          is_active: boolean | null
+          last_activity_at: string | null
+          restaurant_id: string
+          session_token: string
+        }
+        Insert: {
+          created_at?: string | null
+          device_fingerprint?: string | null
+          expires_at: string
+          id?: string
+          is_active?: boolean | null
+          last_activity_at?: string | null
+          restaurant_id: string
+          session_token: string
+        }
+        Update: {
+          created_at?: string | null
+          device_fingerprint?: string | null
+          expires_at?: string
+          id?: string
+          is_active?: boolean | null
+          last_activity_at?: string | null
+          restaurant_id?: string
+          session_token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "menu_sessions_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_transactions: {
+        Row: {
+          amount: number
+          created_at: string | null
+          currency: string | null
+          error_code: string | null
+          error_description: string | null
+          id: string
+          metadata: Json | null
+          payment_method: string | null
+          razorpay_order_id: string | null
+          razorpay_payment_id: string | null
+          razorpay_signature: string | null
+          status: string
+          subscription_id: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          currency?: string | null
+          error_code?: string | null
+          error_description?: string | null
+          id?: string
+          metadata?: Json | null
+          payment_method?: string | null
+          razorpay_order_id?: string | null
+          razorpay_payment_id?: string | null
+          razorpay_signature?: string | null
+          status?: string
+          subscription_id?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          currency?: string | null
+          error_code?: string | null
+          error_description?: string | null
+          id?: string
+          metadata?: Json | null
+          payment_method?: string | null
+          razorpay_order_id?: string | null
+          razorpay_payment_id?: string | null
+          razorpay_signature?: string | null
+          status?: string
+          subscription_id?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_transactions_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "user_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pending_registrations: {
+        Row: {
+          billing_cycle: string
+          completed_at: string | null
+          created_at: string | null
+          email: string
+          expires_at: string | null
+          id: string
+          password_hash: string
+          plan_id: string
+          razorpay_subscription_id: string | null
+          restaurant_description: string | null
+          restaurant_name: string
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          billing_cycle?: string
+          completed_at?: string | null
+          created_at?: string | null
+          email: string
+          expires_at?: string | null
+          id?: string
+          password_hash: string
+          plan_id: string
+          razorpay_subscription_id?: string | null
+          restaurant_description?: string | null
+          restaurant_name: string
+          status?: string
+          user_id?: string | null
+        }
+        Update: {
+          billing_cycle?: string
+          completed_at?: string | null
+          created_at?: string | null
+          email?: string
+          expires_at?: string | null
+          id?: string
+          password_hash?: string
+          plan_id?: string
+          razorpay_subscription_id?: string | null
+          restaurant_description?: string | null
+          restaurant_name?: string
+          status?: string
+          user_id?: string | null
+        }
         Relationships: []
       }
       profiles: {
@@ -228,27 +399,60 @@ export type Database = {
         }
         Relationships: []
       }
-      signup_codes: {
+      rate_limits: {
         Row: {
-          code: string
           created_at: string | null
-          current_uses: number | null
+          endpoint: string
           id: string
-          max_uses: number | null
+          identifier: string
+          request_count: number | null
+          window_start: string | null
         }
         Insert: {
-          code: string
           created_at?: string | null
-          current_uses?: number | null
+          endpoint: string
           id?: string
-          max_uses?: number | null
+          identifier: string
+          request_count?: number | null
+          window_start?: string | null
         }
         Update: {
-          code?: string
           created_at?: string | null
-          current_uses?: number | null
+          endpoint?: string
           id?: string
-          max_uses?: number | null
+          identifier?: string
+          request_count?: number | null
+          window_start?: string | null
+        }
+        Relationships: []
+      }
+      razorpay_webhook_events: {
+        Row: {
+          created_at: string | null
+          event_id: string
+          event_type: string
+          id: string
+          payload: Json
+          processed: boolean | null
+          processed_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          event_id: string
+          event_type: string
+          id?: string
+          payload: Json
+          processed?: boolean | null
+          processed_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          event_id?: string
+          event_type?: string
+          id?: string
+          payload?: Json
+          processed?: boolean | null
+          processed_at?: string | null
         }
         Relationships: []
       }
@@ -289,7 +493,122 @@ export type Database = {
           whatsapp?: string | null
           youtube?: string | null
         }
+        Relationships: [
+          {
+            foreignKeyName: "social_links_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscription_plans: {
+        Row: {
+          bell_feature_enabled: boolean | null
+          created_at: string | null
+          description: string | null
+          features: Json | null
+          id: string
+          is_active: boolean | null
+          max_images: number | null
+          name: string
+          plan_tier: number | null
+          price_monthly: number
+          price_yearly: number | null
+          razorpay_plan_id_monthly: string | null
+          razorpay_plan_id_yearly: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          bell_feature_enabled?: boolean | null
+          created_at?: string | null
+          description?: string | null
+          features?: Json | null
+          id?: string
+          is_active?: boolean | null
+          max_images?: number | null
+          name: string
+          plan_tier?: number | null
+          price_monthly: number
+          price_yearly?: number | null
+          razorpay_plan_id_monthly?: string | null
+          razorpay_plan_id_yearly?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          bell_feature_enabled?: boolean | null
+          created_at?: string | null
+          description?: string | null
+          features?: Json | null
+          id?: string
+          is_active?: boolean | null
+          max_images?: number | null
+          name?: string
+          plan_tier?: number | null
+          price_monthly?: number
+          price_yearly?: number | null
+          razorpay_plan_id_monthly?: string | null
+          razorpay_plan_id_yearly?: string | null
+          updated_at?: string | null
+        }
         Relationships: []
+      }
+      user_subscriptions: {
+        Row: {
+          billing_cycle: string | null
+          cancelled_at: string | null
+          created_at: string | null
+          current_period_end: string | null
+          current_period_start: string | null
+          id: string
+          plan_id: string | null
+          razorpay_customer_id: string | null
+          razorpay_subscription_id: string | null
+          status: string
+          trial_end: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          billing_cycle?: string | null
+          cancelled_at?: string | null
+          created_at?: string | null
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          plan_id?: string | null
+          razorpay_customer_id?: string | null
+          razorpay_subscription_id?: string | null
+          status?: string
+          trial_end?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          billing_cycle?: string | null
+          cancelled_at?: string | null
+          created_at?: string | null
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          plan_id?: string | null
+          razorpay_customer_id?: string | null
+          razorpay_subscription_id?: string | null
+          status?: string
+          trial_end?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       view_logs: {
         Row: {
@@ -306,261 +625,6 @@ export type Database = {
           id?: string
           restaurant_id?: string
           viewed_at?: string | null
-        }
-        Relationships: []
-      }
-      menu_sessions: {
-        Row: {
-          id: string
-          restaurant_id: string
-          session_token: string
-          created_at: string | null
-          expires_at: string
-          last_activity_at: string | null
-          is_active: boolean | null
-          device_fingerprint: string | null
-        }
-        Insert: {
-          id?: string
-          restaurant_id: string
-          session_token: string
-          created_at?: string | null
-          expires_at: string
-          last_activity_at?: string | null
-          is_active?: boolean | null
-          device_fingerprint?: string | null
-        }
-        Update: {
-          id?: string
-          restaurant_id?: string
-          session_token?: string
-          created_at?: string | null
-          expires_at?: string
-          last_activity_at?: string | null
-          is_active?: boolean | null
-          device_fingerprint?: string | null
-        }
-        Relationships: []
-      }
-      subscription_plans: {
-        Row: {
-          id: string
-          name: string
-          description: string | null
-          price_monthly: number
-          price_yearly: number | null
-          razorpay_plan_id_monthly: string | null
-          razorpay_plan_id_yearly: string | null
-          features: Json | null
-          is_active: boolean | null
-          created_at: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          id?: string
-          name: string
-          description?: string | null
-          price_monthly: number
-          price_yearly?: number | null
-          razorpay_plan_id_monthly?: string | null
-          razorpay_plan_id_yearly?: string | null
-          features?: Json | null
-          is_active?: boolean | null
-          created_at?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          id?: string
-          name?: string
-          description?: string | null
-          price_monthly?: number
-          price_yearly?: number | null
-          razorpay_plan_id_monthly?: string | null
-          razorpay_plan_id_yearly?: string | null
-          features?: Json | null
-          is_active?: boolean | null
-          created_at?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      user_subscriptions: {
-        Row: {
-          id: string
-          user_id: string
-          plan_id: string | null
-          razorpay_subscription_id: string | null
-          razorpay_customer_id: string | null
-          status: string
-          billing_cycle: string | null
-          current_period_start: string | null
-          current_period_end: string | null
-          trial_end: string | null
-          cancelled_at: string | null
-          created_at: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          plan_id?: string | null
-          razorpay_subscription_id?: string | null
-          razorpay_customer_id?: string | null
-          status?: string
-          billing_cycle?: string | null
-          current_period_start?: string | null
-          current_period_end?: string | null
-          trial_end?: string | null
-          cancelled_at?: string | null
-          created_at?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          plan_id?: string | null
-          razorpay_subscription_id?: string | null
-          razorpay_customer_id?: string | null
-          status?: string
-          billing_cycle?: string | null
-          current_period_start?: string | null
-          current_period_end?: string | null
-          trial_end?: string | null
-          cancelled_at?: string | null
-          created_at?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      payment_transactions: {
-        Row: {
-          id: string
-          user_id: string
-          subscription_id: string | null
-          razorpay_order_id: string | null
-          razorpay_payment_id: string | null
-          razorpay_signature: string | null
-          amount: number
-          currency: string | null
-          status: string
-          payment_method: string | null
-          error_code: string | null
-          error_description: string | null
-          metadata: Json | null
-          created_at: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          subscription_id?: string | null
-          razorpay_order_id?: string | null
-          razorpay_payment_id?: string | null
-          razorpay_signature?: string | null
-          amount: number
-          currency?: string | null
-          status?: string
-          payment_method?: string | null
-          error_code?: string | null
-          error_description?: string | null
-          metadata?: Json | null
-          created_at?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          subscription_id?: string | null
-          razorpay_order_id?: string | null
-          razorpay_payment_id?: string | null
-          razorpay_signature?: string | null
-          amount?: number
-          currency?: string | null
-          status?: string
-          payment_method?: string | null
-          error_code?: string | null
-          error_description?: string | null
-          metadata?: Json | null
-          created_at?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      razorpay_webhook_events: {
-        Row: {
-          id: string
-          event_id: string
-          event_type: string
-          payload: Json
-          processed: boolean | null
-          processed_at: string | null
-          created_at: string | null
-        }
-        Insert: {
-          id?: string
-          event_id: string
-          event_type: string
-          payload: Json
-          processed?: boolean | null
-          processed_at?: string | null
-          created_at?: string | null
-        }
-        Update: {
-          id?: string
-          event_id?: string
-          event_type?: string
-          payload?: Json
-          processed?: boolean | null
-          processed_at?: string | null
-          created_at?: string | null
-        }
-        Relationships: []
-      }
-      pending_registrations: {
-        Row: {
-          id: string
-          email: string
-          password_hash: string
-          restaurant_name: string
-          restaurant_description: string | null
-          plan_id: string
-          billing_cycle: string
-          razorpay_subscription_id: string | null
-          status: string
-          created_at: string | null
-          expires_at: string | null
-          completed_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          id?: string
-          email: string
-          password_hash: string
-          restaurant_name: string
-          restaurant_description?: string | null
-          plan_id: string
-          billing_cycle?: string
-          razorpay_subscription_id?: string | null
-          status?: string
-          created_at?: string | null
-          expires_at?: string | null
-          completed_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          id?: string
-          email?: string
-          password_hash?: string
-          restaurant_name?: string
-          restaurant_description?: string | null
-          plan_id?: string
-          billing_cycle?: string
-          razorpay_subscription_id?: string | null
-          status?: string
-          created_at?: string | null
-          expires_at?: string | null
-          completed_at?: string | null
-          user_id?: string | null
         }
         Relationships: []
       }
@@ -605,9 +669,45 @@ export type Database = {
         }
         Returns: Json
       }
+      check_bell_feature_access: {
+        Args: { p_user_id: string }
+        Returns: boolean
+      }
       check_bell_rate_limit: {
         Args: { p_device_fingerprint: string; p_restaurant_id: string }
         Returns: boolean
+      }
+      check_image_upload_limit: {
+        Args: { p_user_id: string }
+        Returns: Json
+      }
+      check_rate_limit: {
+        Args: {
+          p_endpoint: string
+          p_identifier: string
+          p_max_requests?: number
+          p_window_minutes?: number
+        }
+        Returns: boolean
+      }
+      check_restaurant_subscription: {
+        Args: { restaurant_uuid: string }
+        Returns: Json
+      }
+      cleanup_audit_logs: { Args: Record<PropertyKey, never>; Returns: undefined }
+      cleanup_expired_sessions: { Args: Record<PropertyKey, never>; Returns: number }
+      cleanup_old_rate_limits: { Args: Record<PropertyKey, never>; Returns: undefined }
+      clear_failed_logins: {
+        Args: { p_identifier: string }
+        Returns: undefined
+      }
+      create_menu_session: {
+        Args: {
+          p_device_fingerprint?: string
+          p_restaurant_id: string
+          p_session_duration_minutes?: number
+        }
+        Returns: Json
       }
       create_user_profile: {
         Args: {
@@ -617,26 +717,63 @@ export type Database = {
         }
         Returns: Json
       }
+      disable_expired_subscriptions: { Args: Record<PropertyKey, never>; Returns: number }
       ensure_profile_exists: { Args: { user_id: string }; Returns: boolean }
+      get_user_plan_details: {
+        Args: { p_user_id: string }
+        Returns: Json
+      }
+      generate_approval_token: {
+        Args: { p_action: string; p_user_id: string }
+        Returns: string
+      }
+      get_public_social_links: {
+        Args: { rest_id: string }
+        Returns: {
+          facebook: string
+          instagram: string
+          twitter: string
+          website: string
+          whatsapp: string
+          youtube: string
+        }[]
+      }
+      has_active_subscription: { Args: { user_uuid: string }; Returns: boolean }
+      is_login_blocked: { Args: { p_identifier: string }; Returns: boolean }
+      is_subscription_active: { Args: { p_user_id: string }; Returns: boolean }
+      is_user_approved: { Args: { user_uuid: string }; Returns: boolean }
+      is_valid_email: { Args: { email_text: string }; Returns: boolean }
+      is_valid_url: { Args: { url_text: string }; Returns: boolean }
+      log_security_event: {
+        Args: {
+          p_details?: Json
+          p_event_type: string
+          p_ip_address?: string
+          p_success?: boolean
+          p_user_agent?: string
+          p_user_id?: string
+        }
+        Returns: undefined
+      }
+      process_approval: { Args: { p_token: string }; Returns: Json }
+      reactivate_subscription: {
+        Args: {
+          p_period_end: string
+          p_period_start: string
+          p_subscription_id: string
+          p_user_id: string
+        }
+        Returns: boolean
+      }
+      record_failed_login: {
+        Args: { p_identifier: string; p_type?: string }
+        Returns: undefined
+      }
+      sanitize_text: { Args: { input_text: string }; Returns: string }
       use_signup_code: { Args: { code_value: string }; Returns: Json }
-      create_menu_session: {
-        Args: {
-          p_restaurant_id: string
-          p_device_fingerprint?: string
-          p_session_duration_minutes?: number
-        }
-        Returns: Json
-      }
       validate_menu_session: {
-        Args: {
-          p_session_token: string
-          p_idle_timeout_minutes?: number
-        }
+        Args: { p_idle_timeout_minutes?: number; p_session_token: string }
         Returns: Json
-      }
-      cleanup_expired_sessions: {
-        Args: Record<PropertyKey, never>
-        Returns: number
       }
     }
     Enums: {
@@ -647,3 +784,126 @@ export type Database = {
     }
   }
 }
+
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {},
+  },
+} as const

@@ -15,6 +15,9 @@ interface Plan {
   price_yearly: number | null;
   features: unknown;
   is_active: boolean | null;
+  max_images: number | null;
+  bell_feature_enabled: boolean | null;
+  plan_tier: number | null;
 }
 
 interface SubscriptionPlansProps {
@@ -38,7 +41,7 @@ export const SubscriptionPlans = ({ onSubscriptionSuccess }: SubscriptionPlansPr
         .from('subscription_plans')
         .select('*')
         .eq('is_active', true)
-        .order('name', { ascending: true }); // Basic comes before Premium alphabetically
+        .order('plan_tier', { ascending: true });
 
       if (error) throw error;
       setPlans(data || []);
@@ -109,8 +112,8 @@ export const SubscriptionPlans = ({ onSubscriptionSuccess }: SubscriptionPlansPr
 
       {/* Plans Grid */}
       <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-        {plans.map((plan, index) => {
-          const isPremium = index === 1;
+        {plans.map((plan) => {
+          const isBasicPlus = plan.name.toLowerCase().includes('plus') || plan.plan_tier === 2;
           const price = billingCycle === 'yearly' ? plan.price_yearly : plan.price_monthly;
           const isSelected = selectedPlan === plan.id;
 
@@ -118,25 +121,25 @@ export const SubscriptionPlans = ({ onSubscriptionSuccess }: SubscriptionPlansPr
             <Card
               key={plan.id}
               className={`p-8 relative overflow-hidden transition-all duration-300 hover:shadow-xl ${
-                isPremium
+                isBasicPlus
                   ? 'border-2 border-primary bg-gradient-to-br from-primary/5 to-accent/5'
                   : 'border-2 hover:border-primary/30'
               }`}
             >
-              {isPremium && (
+              {isBasicPlus && (
                 <div className="absolute top-4 right-4">
                   <Badge className="bg-gradient-to-r from-primary to-accent text-white">
                     <Crown className="w-3 h-3 mr-1" />
-                    Popular
+                    Bell Feature
                   </Badge>
                 </div>
               )}
 
               <div className="flex items-center gap-3 mb-4">
                 <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                  isPremium ? 'bg-gradient-to-br from-primary to-accent' : 'bg-primary/10'
+                  isBasicPlus ? 'bg-gradient-to-br from-primary to-accent' : 'bg-primary/10'
                 }`}>
-                  {isPremium ? (
+                  {isBasicPlus ? (
                     <Crown className="w-6 h-6 text-white" />
                   ) : (
                     <Star className="w-6 h-6 text-primary" />
@@ -144,7 +147,7 @@ export const SubscriptionPlans = ({ onSubscriptionSuccess }: SubscriptionPlansPr
                 </div>
                 <div>
                   <h3 className="text-2xl font-bold">{plan.name}</h3>
-                  <p className="text-sm text-muted-foreground">{plan.description}</p>
+                  <p className="text-sm text-muted-foreground">{plan.max_images} images{plan.bell_feature_enabled ? ' + Bell Calling' : ''}</p>
                 </div>
               </div>
 
@@ -166,9 +169,9 @@ export const SubscriptionPlans = ({ onSubscriptionSuccess }: SubscriptionPlansPr
                 {(plan.features as string[]).map((feature, i) => (
                   <div key={i} className="flex items-center gap-3">
                     <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
-                      isPremium ? 'bg-primary/10' : 'bg-green-500/10'
+                      isBasicPlus ? 'bg-primary/10' : 'bg-green-500/10'
                     }`}>
-                      <Check className={`w-3 h-3 ${isPremium ? 'text-primary' : 'text-green-500'}`} />
+                      <Check className={`w-3 h-3 ${isBasicPlus ? 'text-primary' : 'text-green-500'}`} />
                     </div>
                     <span className="text-sm">{feature}</span>
                   </div>
@@ -179,7 +182,7 @@ export const SubscriptionPlans = ({ onSubscriptionSuccess }: SubscriptionPlansPr
                 onClick={() => handleSubscribe(plan.id)}
                 disabled={loading}
                 className={`w-full h-12 rounded-full ${
-                  isPremium
+                  isBasicPlus
                     ? 'bg-gradient-to-r from-primary to-accent hover:opacity-90'
                     : ''
                 }`}

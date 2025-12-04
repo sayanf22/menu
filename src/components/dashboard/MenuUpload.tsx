@@ -27,6 +27,14 @@ interface MenuUploadProps {
   restaurantId: string;
 }
 
+interface UploadLimit {
+  can_upload: boolean;
+  current_count: number;
+  max_allowed: number;
+  plan_name: string;
+  remaining: number;
+}
+
 const MenuUpload = ({ restaurantId }: MenuUploadProps) => {
   const [uploading, setUploading] = useState(false);
   const [compressing, setCompressing] = useState(false);
@@ -38,10 +46,25 @@ const MenuUpload = ({ restaurantId }: MenuUploadProps) => {
   const [imageToDelete, setImageToDelete] = useState<{ id: string; url: string } | null>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [imageToView, setImageToView] = useState<string | null>(null);
+  const [uploadLimit, setUploadLimit] = useState<UploadLimit | null>(null);
 
   useEffect(() => {
     fetchMenuImages();
+    fetchUploadLimit();
   }, [restaurantId]);
+
+  const fetchUploadLimit = async () => {
+    try {
+      const { data, error } = await supabase.rpc("check_image_upload_limit", {
+        p_user_id: restaurantId
+      });
+      if (!error && data) {
+        setUploadLimit(data as UploadLimit);
+      }
+    } catch (error) {
+      console.error("Error fetching upload limit:", error);
+    }
+  };
 
   const fetchMenuImages = async () => {
     try {
@@ -105,6 +128,27 @@ const MenuUpload = ({ restaurantId }: MenuUploadProps) => {
       setUploading(true);
       const files = event.target.files;
       if (!files || files.length === 0) return;
+
+      // Check upload limit before proceeding
+      const { data: limitCheck } = await supabase.rpc("check_image_upload_limit", {
+        p_user_id: restaurantId
+      });
+      
+      const limit = limitCheck as UploadLimit;
+      if (!limit?.can_upload) {
+        toast.error(`You've reached your upload limit (${limit?.max_allowed || 5} images). Upgrade to Basic Plus for more uploads!`);
+        setUploading(false);
+        event.target.value = "";
+        return;
+      }
+
+      // Check if uploading these files would exceed the limit
+      if (files.length > (limit?.remaining || 0)) {
+        toast.error(`You can only upload ${limit?.remaining || 0} more image(s). Upgrade your plan for more!`);
+        setUploading(false);
+        event.target.value = "";
+        return;
+      }
 
       // Validate file types
       for (let i = 0; i < files.length; i++) {
@@ -184,6 +228,7 @@ const MenuUpload = ({ restaurantId }: MenuUploadProps) => {
 
       toast.success("Images uploaded successfully!");
       await fetchMenuImages();
+      await fetchUploadLimit(); // Refresh limit after upload
     } catch (error: any) {
       toast.error(error.message || "Error uploading images");
     } finally {
@@ -231,6 +276,7 @@ const MenuUpload = ({ restaurantId }: MenuUploadProps) => {
 
       toast.success("Image deleted successfully!");
       await fetchMenuImages();
+      await fetchUploadLimit(); // Refresh limit after delete
     } catch (error: any) {
       toast.error(error.message || "Error deleting image");
     } finally {
@@ -254,9 +300,46 @@ const MenuUpload = ({ restaurantId }: MenuUploadProps) => {
 
   return (
     <div className="space-y-6">
+      {/* Upload Limit Banner */}
+      {uploadLimit && (
+        <div className={`p-3 rounded-lg border animate-fade-in ${
+          uploadLimit.remaining === 0 
+            ? 'bg-orange-50 border-orange-200 dark:bg-orange-950/20 dark:border-orange-800' 
+            : 'bg-muted/50 border-border'
+        }`}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <ImageIcon className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm">
+                <span className="font-medium">{uploadLimit.current_count}</span>
+                <span className="text-muted-foreground"> / {uploadLimit.max_allowed} images</span>
+                <span className="text-xs text-muted-foreground ml-2">({uploadLimit.plan_name} Plan)</span>
+              </span>
+            </div>
+            {uploadLimit.remaining === 0 && (
+              <span className="text-xs text-orange-600 dark:text-orange-400 font-medium">
+                Upgrade for more uploads
+              </span>
+            )}
+          </div>
+          <div className="mt-2 h-1.5 bg-muted rounded-full overflow-hidden">
+            <div 
+              className={`h-full rounded-full transition-all duration-500 ${
+                uploadLimit.remaining === 0 ? 'bg-orange-500' : 'bg-primary'
+              }`}
+              style={{ width: `${(uploadLimit.current_count / uploadLimit.max_allowed) * 100}%` }}
+            />
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center gap-4 animate-fade-in">
-        <Button asChild disabled={uploading || compressing} className="transition-bounce hover:scale-105">
-          <label className="cursor-pointer">
+        <Button 
+          asChild 
+          disabled={uploading || compressing || (uploadLimit?.remaining === 0)} 
+          className="transition-bounce hover:scale-105"
+        >
+          <label className={`cursor-pointer ${uploadLimit?.remaining === 0 ? 'cursor-not-allowed opacity-50' : ''}`}>
             {uploading || compressing ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
@@ -269,12 +352,12 @@ const MenuUpload = ({ restaurantId }: MenuUploadProps) => {
               accept="image/*"
               className="hidden"
               onChange={handleFileUpload}
-              disabled={uploading || compressing}
+              disabled={uploading || compressing || (uploadLimit?.remaining === 0)}
             />
           </label>
         </Button>
         <p className="text-sm text-muted-foreground animate-slide-in-right" style={{ animationDelay: '0.1s' }}>
-          {menuImages.length} image{menuImages.length !== 1 ? "s" : ""} uploaded
+          {uploadLimit?.remaining || 0} upload{uploadLimit?.remaining !== 1 ? "s" : ""} remaining
         </p>
       </div>
 

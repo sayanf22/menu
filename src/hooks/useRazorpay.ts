@@ -153,12 +153,27 @@ export function useRazorpay() {
         },
         modal: { ondismiss: () => { setLoading(false); toast.info("Payment cancelled"); } },
       });
-      rzp.on("payment.failed", (res: RazorpayErrorResponse) => { setLoading(false); toast.error(res.error.description); onFailure?.(res.error); });
+      rzp.on("payment.failed", (res: RazorpayErrorResponse) => { 
+        setLoading(false); 
+        const errorDesc = res.error.description || "Payment failed";
+        // Check for common Razorpay errors and provide better messages
+        if (res.error.code === 'BAD_REQUEST_ERROR' || errorDesc.includes('502') || errorDesc.includes('gateway')) {
+          toast.error("Payment gateway is temporarily unavailable. Please try again in a few minutes.");
+        } else {
+          toast.error(errorDesc);
+        }
+        onFailure?.(res.error); 
+      });
       rzp.open();
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to initiate payment";
       setError(errorMessage);
-      toast.error(errorMessage);
+      // Provide better error messages for common issues
+      if (errorMessage.includes('502') || errorMessage.includes('gateway') || errorMessage.includes('network')) {
+        toast.error("Payment gateway is temporarily unavailable. Please try again in a few minutes.");
+      } else {
+        toast.error(errorMessage);
+      }
       onFailure?.(err instanceof Error ? err : { description: errorMessage });
       setLoading(false);
     }
@@ -217,12 +232,27 @@ export function useRazorpay() {
         },
         modal: { ondismiss: () => setLoading(false) },
       });
-      rzp.on("payment.failed", (res: RazorpayErrorResponse) => { setLoading(false); toast.error(res.error.description); onFailure?.(res.error); });
+      rzp.on("payment.failed", (res: RazorpayErrorResponse) => { 
+        setLoading(false); 
+        const errorDesc = res.error.description || "Payment failed";
+        // Check for common Razorpay errors and provide better messages
+        if (res.error.code === 'BAD_REQUEST_ERROR' || errorDesc.includes('502') || errorDesc.includes('gateway')) {
+          toast.error("Payment gateway is temporarily unavailable. Please try again in a few minutes.");
+        } else {
+          toast.error(errorDesc);
+        }
+        onFailure?.(res.error); 
+      });
       rzp.open();
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to initiate payment";
       setError(errorMessage);
-      toast.error(errorMessage);
+      // Provide better error messages for common issues
+      if (errorMessage.includes('502') || errorMessage.includes('gateway') || errorMessage.includes('network')) {
+        toast.error("Payment gateway is temporarily unavailable. Please try again in a few minutes.");
+      } else {
+        toast.error(errorMessage);
+      }
       onFailure?.(err instanceof Error ? err : { description: errorMessage });
       setLoading(false);
     }

@@ -264,7 +264,7 @@ const Index = () => {
                     : "text-muted-foreground hover:text-foreground"
                 } hover:scale-105 active:scale-95`}
               >
-                Basic Plan
+                Basic - ₹249/mo
               </button>
               <button
                 onClick={() => setActiveTab("premium")}
@@ -275,7 +275,7 @@ const Index = () => {
                 } hover:scale-105 active:scale-95`}
               >
                 <Crown className="w-4 h-4 inline mr-1" />
-                Premium Plan
+                Basic Plus - ₹369/mo
               </button>
             </div>
           </div>
@@ -403,7 +403,7 @@ const Index = () => {
                 {activeTab === "basic" ? "Basic Plan Features" : (
                   <span className="flex items-center gap-2">
                     <Crown className="w-6 h-6 text-primary" />
-                    Premium Plan Features
+                    Basic Plus Features
                   </span>
                 )}
               </h3>
@@ -412,11 +412,12 @@ const Index = () => {
                   <>
                     {[
                       "Digital Menu with QR Code",
-                      "Upload Menu Images",
+                      "5 Menu Image Uploads",
                       "Basic Analytics Dashboard",
                       "Customer Feedback Collection",
                       "Social Media Links",
                       "Unlimited Menu Updates",
+                      "Email Support",
                     ].map((feature, i) => (
                       <div key={i} className="flex items-center gap-3 transition-all duration-300 hover:translate-x-1">
                         <div className="w-6 h-6 rounded-full bg-green-500/10 flex items-center justify-center flex-shrink-0 dark:bg-green-500/20">
@@ -426,9 +427,9 @@ const Index = () => {
                       </div>
                     ))}
                     {[
-                      "Online Ordering",
-                      "WhatsApp Integration",
-                      "Multi-Location Support",
+                      "Bell Calling Feature",
+                      "10 Image Uploads",
+                      "Priority Support",
                     ].map((feature, i) => (
                       <div key={i} className="flex items-center gap-3 opacity-50">
                         <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
@@ -442,14 +443,11 @@ const Index = () => {
                   <>
                     {[
                       "Everything in Basic",
-                      "Online Food Ordering System",
-                      "WhatsApp Order Integration",
-                      "Multi-Location Support",
-                      "Advanced Analytics & Reports",
-                      "Menu Categories & Organization",
-                      "Restaurant Logo & Branding",
-                      "Custom Branding & White Label",
-                      "Priority 24/7 Support",
+                      "10 Menu Image Uploads",
+                      "Bell Calling Feature",
+                      "Priority Customer Support",
+                      "Advanced Analytics",
+                      "Custom Branding Options",
                     ].map((feature, i) => (
                       <div key={i} className="flex items-center gap-3 transition-all duration-300 hover:translate-x-1">
                         <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 dark:bg-primary/20">
@@ -466,16 +464,16 @@ const Index = () => {
                 {activeTab === "basic" ? (
                   <Link to="/auth">
                     <Button className="rounded-full h-12 px-8 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all duration-300 hover:scale-105 active:scale-95 hover:shadow-xl">
-                      Start with Basic - ₹499/mo
+                      Start with Basic - ₹249/mo
                     </Button>
                   </Link>
                 ) : (
-                  <a href="https://www.addmenu.site" target="_blank" rel="noopener noreferrer">
+                  <Link to="/auth">
                     <Button className="rounded-full h-12 px-8 bg-gradient-to-r from-primary to-accent hover:opacity-90 shadow-lg shadow-primary/20 transition-all duration-300 hover:scale-105 active:scale-95 hover:shadow-xl">
-                      Explore Premium
+                      Get Basic Plus - ₹369/mo
                       <ChevronRight className="w-4 h-4 ml-1" />
                     </Button>
-                  </a>
+                  </Link>
                 )}
               </div>
             </div>
@@ -518,18 +516,19 @@ const Index = () => {
                 <p className="text-muted-foreground mb-6">Perfect for small restaurants</p>
                 
                 <div className="mb-6">
-                  <span className="text-4xl font-bold">₹499</span>
+                  <span className="text-4xl font-bold">₹249</span>
                   <span className="text-muted-foreground">/month</span>
                 </div>
 
                 <div className="space-y-3 mb-8">
                   {[
                     "Digital Menu with QR Code",
-                    "Upload Menu Images",
+                    "5 Menu Image Uploads",
                     "Basic Analytics",
                     "Customer Feedback",
                     "Social Media Links",
                     "Unlimited Updates",
+                    "Email Support",
                   ].map((feature, i) => (
                     <div key={i} className="flex items-center gap-3 transition-all duration-300 hover:translate-x-1">
                       <div className="w-5 h-5 rounded-full bg-green-500/10 flex items-center justify-center flex-shrink-0 dark:bg-green-500/20">
@@ -549,13 +548,13 @@ const Index = () => {
               </div>
             </Card>
 
-            {/* Premium Plan */}
+            {/* Basic Plus Plan */}
             <Card className="p-8 border-2 border-primary bg-gradient-to-br from-primary/5 via-background to-accent/5 relative overflow-hidden dark:from-primary/10 dark:to-accent/10 rounded-3xl hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-300">
-              {/* Popular badge */}
+              {/* Bell Feature badge */}
               <div className="absolute top-4 right-4">
                 <div className="px-3 py-1 bg-primary text-white text-xs font-medium rounded-full flex items-center gap-1">
                   <Crown className="w-3 h-3" />
-                  Popular
+                  Bell Feature
                 </div>
               </div>
               
@@ -563,25 +562,24 @@ const Index = () => {
               
               <div className="relative">
                 <h3 className="text-2xl font-bold mb-2 flex items-center gap-2">
-                  Premium
+                  Basic Plus
                   <Crown className="w-5 h-5 text-primary" />
                 </h3>
-                <p className="text-muted-foreground mb-6">For growing restaurants</p>
+                <p className="text-muted-foreground mb-6">For growing restaurants with bell service</p>
                 
                 <div className="mb-6">
-                  <span className="text-4xl font-bold">Custom</span>
-                  <span className="text-muted-foreground block text-sm mt-1">Contact for pricing</span>
+                  <span className="text-4xl font-bold">₹369</span>
+                  <span className="text-muted-foreground">/month</span>
                 </div>
 
                 <div className="space-y-3 mb-8">
                   {[
                     "Everything in Basic",
-                    "Online Food Ordering",
-                    "WhatsApp Integration",
-                    "Multi-Location Support",
+                    "10 Menu Image Uploads",
+                    "Bell Calling Feature",
+                    "Priority Customer Support",
                     "Advanced Analytics",
-                    "Custom Branding",
-                    "Priority Support",
+                    "Custom Branding Options",
                   ].map((feature, i) => (
                     <div key={i} className="flex items-center gap-3 transition-all duration-300 hover:translate-x-1">
                       <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 dark:bg-primary/20">
@@ -592,12 +590,12 @@ const Index = () => {
                   ))}
                 </div>
 
-                <a href="https://www.addmenu.site" target="_blank" rel="noopener noreferrer" className="block">
+                <Link to="/auth" className="block">
                   <Button className="w-full rounded-full h-12 bg-gradient-to-r from-primary to-accent hover:opacity-90 shadow-lg shadow-primary/20 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] hover:shadow-xl">
-                    Explore Premium
-                    <ChevronRight className="w-4 h-4 ml-2" />
+                    Get Basic Plus
+                    <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
-                </a>
+                </Link>
               </div>
             </Card>
           </div>

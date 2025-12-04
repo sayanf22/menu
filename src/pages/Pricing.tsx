@@ -18,6 +18,9 @@ interface Plan {
   price_monthly: number;
   price_yearly: number | null;
   features: any;
+  max_images: number | null;
+  bell_feature_enabled: boolean | null;
+  plan_tier: number | null;
 }
 
 const Pricing = () => {
@@ -58,7 +61,7 @@ const Pricing = () => {
         .from('subscription_plans')
         .select('*')
         .eq('is_active', true)
-        .order('name', { ascending: true }); // Basic comes before Premium alphabetically
+        .order('plan_tier', { ascending: true });
 
       if (error) throw error;
       setPlans(data || []);
@@ -69,17 +72,23 @@ const Pricing = () => {
           id: 'basic',
           name: 'Basic',
           description: 'Perfect for small restaurants',
-          price_monthly: 200,
-          price_yearly: 2000,
-          features: ["Digital Menu with QR Code", "Upload Menu Images", "Basic Analytics Dashboard", "Customer Feedback Collection", "Social Media Links", "Unlimited Menu Updates", "Email Support"]
+          price_monthly: 24900,
+          price_yearly: 249000,
+          features: ["Digital Menu with QR Code", "5 Menu Image Uploads", "Basic Analytics Dashboard", "Customer Feedback Collection", "Social Media Links", "Unlimited Menu Updates", "Email Support"],
+          max_images: 5,
+          bell_feature_enabled: false,
+          plan_tier: 1
         },
         {
-          id: 'premium',
-          name: 'Premium',
-          description: 'For growing businesses',
-          price_monthly: 200,
-          price_yearly: 2000,
-          features: ["Everything in Basic", "Online Food Ordering System", "WhatsApp Order Integration", "Multi-Location Support", "Advanced Analytics & Reports", "Menu Categories & Organization", "Restaurant Logo & Branding", "Custom Branding & White Label", "Priority 24/7 Support"]
+          id: 'basic-plus',
+          name: 'Basic Plus',
+          description: 'For growing restaurants with bell service',
+          price_monthly: 36900,
+          price_yearly: 369000,
+          features: ["Everything in Basic", "10 Menu Image Uploads", "Bell Calling Feature", "Priority Customer Support", "Advanced Analytics", "Custom Branding Options"],
+          max_images: 10,
+          bell_feature_enabled: true,
+          plan_tier: 2
         }
       ]);
     } finally {
@@ -190,8 +199,8 @@ const Pricing = () => {
                 </div>
               ) : (
                 <div className="grid md:grid-cols-2 gap-6">
-                  {plans.map((plan, index) => {
-                    const isPremium = plan.name.toLowerCase() === 'premium' || index === 1;
+                  {plans.map((plan) => {
+                    const isBasicPlus = plan.name.toLowerCase().includes('plus') || plan.plan_tier === 2;
                     const price = billingCycle === 'yearly' ? plan.price_yearly : plan.price_monthly;
                     const isSelected = selectedPlan === plan.id;
                     const features = (plan.features as string[]) || [];
@@ -200,16 +209,16 @@ const Pricing = () => {
                       <Card
                         key={plan.id}
                         className={`p-6 border-2 relative overflow-hidden rounded-2xl transition-all duration-300 hover:shadow-lg ${
-                          isPremium
+                          isBasicPlus
                             ? 'border-primary bg-gradient-to-br from-primary/5 via-background to-accent/5'
                             : 'border-border hover:border-primary/30'
                         }`}
                       >
-                        {isPremium && (
+                        {isBasicPlus && (
                           <div className="absolute top-3 right-3">
                             <Badge className="bg-gradient-to-r from-primary to-accent text-white text-xs">
                               <Crown className="w-3 h-3 mr-1" />
-                              Popular
+                              Bell Feature
                             </Badge>
                           </div>
                         )}
@@ -217,9 +226,9 @@ const Pricing = () => {
                         <div className="relative">
                           <div className="flex items-center gap-3 mb-4">
                             <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                              isPremium ? 'bg-gradient-to-br from-primary to-accent' : 'bg-primary/10'
+                              isBasicPlus ? 'bg-gradient-to-br from-primary to-accent' : 'bg-primary/10'
                             }`}>
-                              {isPremium ? (
+                              {isBasicPlus ? (
                                 <Crown className="w-5 h-5 text-white" />
                               ) : (
                                 <Star className="w-5 h-5 text-primary" />
@@ -227,7 +236,7 @@ const Pricing = () => {
                             </div>
                             <div>
                               <h3 className="text-xl font-bold">{plan.name}</h3>
-                              <p className="text-sm text-muted-foreground">{plan.description}</p>
+                              <p className="text-sm text-muted-foreground">{plan.max_images} images{plan.bell_feature_enabled ? ' + Bell Calling' : ''}</p>
                             </div>
                           </div>
 
@@ -249,9 +258,9 @@ const Pricing = () => {
                             {features.map((feature, i) => (
                               <div key={i} className="flex items-center gap-2">
                                 <div className={`w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 ${
-                                  isPremium ? 'bg-primary/10' : 'bg-green-500/10'
+                                  isBasicPlus ? 'bg-primary/10' : 'bg-green-500/10'
                                 }`}>
-                                  <Check className={`w-2.5 h-2.5 ${isPremium ? 'text-primary' : 'text-green-500'}`} />
+                                  <Check className={`w-2.5 h-2.5 ${isBasicPlus ? 'text-primary' : 'text-green-500'}`} />
                                 </div>
                                 <span className="text-sm">{feature}</span>
                               </div>
@@ -262,7 +271,7 @@ const Pricing = () => {
                             onClick={() => handleSubscribe(plan.id)}
                             disabled={loading}
                             className={`w-full rounded-full h-11 shadow-md transition-all duration-300 ${
-                              isPremium
+                              isBasicPlus
                                 ? 'bg-gradient-to-r from-primary to-accent hover:opacity-90'
                                 : 'bg-primary hover:bg-primary/90'
                             }`}
@@ -299,30 +308,40 @@ const Pricing = () => {
                 <div className="grid grid-cols-3 gap-4 p-3 bg-muted/50 font-semibold text-sm">
                   <div>Feature</div>
                   <div className="text-center">Basic</div>
-                  <div className="text-center text-primary">Premium</div>
+                  <div className="text-center text-primary">Basic Plus</div>
                 </div>
                 
                 {[
-                  { feature: "Digital QR Menu", basic: true, premium: true },
-                  { feature: "Menu Image Upload", basic: true, premium: true },
-                  { feature: "Basic Analytics", basic: true, premium: true },
-                  { feature: "Customer Feedback", basic: true, premium: true },
-                  { feature: "Social Media Links", basic: true, premium: true },
-                  { feature: "Unlimited Updates", basic: true, premium: true },
-                  { feature: "Online Ordering", basic: false, premium: true },
-                  { feature: "WhatsApp Integration", basic: false, premium: true },
-                  { feature: "Multi-Location", basic: false, premium: true },
-                  { feature: "Advanced Analytics", basic: false, premium: true },
-                  { feature: "Custom Branding", basic: false, premium: true },
-                  { feature: "Priority Support", basic: false, premium: true },
+                  { feature: "Digital QR Menu", basic: true, basicPlus: true },
+                  { feature: "Menu Image Uploads", basic: "5", basicPlus: "10" },
+                  { feature: "Basic Analytics", basic: true, basicPlus: true },
+                  { feature: "Customer Feedback", basic: true, basicPlus: true },
+                  { feature: "Social Media Links", basic: true, basicPlus: true },
+                  { feature: "Unlimited Updates", basic: true, basicPlus: true },
+                  { feature: "Bell Calling Feature", basic: false, basicPlus: true },
+                  { feature: "Advanced Analytics", basic: false, basicPlus: true },
+                  { feature: "Custom Branding", basic: false, basicPlus: true },
+                  { feature: "Priority Support", basic: false, basicPlus: true },
                 ].map((row, i) => (
                   <div key={i} className={`grid grid-cols-3 gap-4 p-3 text-sm ${i % 2 === 0 ? 'bg-background' : 'bg-muted/20'}`}>
                     <div>{row.feature}</div>
                     <div className="text-center">
-                      {row.basic ? <Check className="w-4 h-4 text-green-500 mx-auto" /> : <span className="text-muted-foreground">—</span>}
+                      {typeof row.basic === 'string' ? (
+                        <span className="font-medium">{row.basic}</span>
+                      ) : row.basic ? (
+                        <Check className="w-4 h-4 text-green-500 mx-auto" />
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
                     </div>
                     <div className="text-center">
-                      {row.premium ? <Check className="w-4 h-4 text-primary mx-auto" /> : <span className="text-muted-foreground">—</span>}
+                      {typeof row.basicPlus === 'string' ? (
+                        <span className="font-medium text-primary">{row.basicPlus}</span>
+                      ) : row.basicPlus ? (
+                        <Check className="w-4 h-4 text-primary mx-auto" />
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
                     </div>
                   </div>
                 ))}

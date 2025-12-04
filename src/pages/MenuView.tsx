@@ -115,6 +115,7 @@ const MenuView = () => {
   const [canSubmitFeedback, setCanSubmitFeedback] = useState(true);
   const [sessionExpired, setSessionExpired] = useState<{ expired: boolean; reason?: string; message?: string }>({ expired: false });
   const [sessionRestaurantId, setSessionRestaurantId] = useState<string | null>(null);
+  const [bellFeatureEnabled, setBellFeatureEnabled] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll();
   const headerOpacity = useTransform(scrollYProgress, [0, 0.03], [0, 1]);
@@ -228,22 +229,21 @@ const MenuView = () => {
     try { await supabase.from("view_logs").insert({ restaurant_id: restId }); } catch (error) { console.error("Error logging view:", error); }
   }, []);
 
-  const checkSubscriptionStatus = useCallback(async (userId: string): Promise<boolean> => {
+  const checkSubscriptionStatus = useCallback(async (userId: string): Promise<{ active: boolean; reason?: string }> => {
     try {
-      const { data: subscription } = await supabase
-        .from("user_subscriptions")
-        .select("status, current_period_end")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .single();
+      // Use server-side function for secure subscription check
+      const { data, error } = await supabase.rpc("check_restaurant_subscription", {
+        restaurant_uuid: userId
+      });
       
-      if (!subscription) return false;
-      if (subscription.status !== 'active') return false;
-      if (subscription.current_period_end && new Date(subscription.current_period_end) < new Date()) return false;
-      return true;
+      if (error) {
+        console.error("Subscription check error:", error);
+        return { active: false, reason: "error" };
+      }
+      
+      return data as { active: boolean; reason?: string };
     } catch {
-      return false;
+      return { active: false, reason: "error" };
     }
   }, []);
 
@@ -251,8 +251,14 @@ const MenuView = () => {
     try {
       setLoading(true);
       
-      // Check subscription status first
-      const hasActiveSubscription = await checkSubscriptionStatus(restaurantId!);
+      // Check subscription status first using secure server-side function
+      const subscriptionCheck = await checkSubscriptionStatus(restaurantId!);
+      
+      // Check bell feature access
+      const { data: bellAccess } = await supabase.rpc("check_bell_feature_access", {
+        p_user_id: restaurantId!
+      });
+      setBellFeatureEnabled(bellAccess === true);
       
       const [profileResult, imagesResult, socialResult] = await Promise.all([
         supabase.from("profiles").select("restaurant_name, restaurant_description, logo_url, is_disabled, bell_service_enabled").eq("id", restaurantId).maybeSingle(),
@@ -262,8 +268,13 @@ const MenuView = () => {
       
       if (profileResult.data) {
         // Mark as disabled if no active subscription or already disabled
-        const isDisabled = profileResult.data.is_disabled || !hasActiveSubscription;
-        setProfile(isDisabled ? { ...profileResult.data, disabled: true, subscriptionExpired: !hasActiveSubscription } : profileResult.data);
+        const isDisabled = profileResult.data.is_disabled || !subscriptionCheck.active;
+        setProfile(isDisabled ? { 
+          ...profileResult.data, 
+          disabled: true, 
+          subscriptionExpired: !subscriptionCheck.active,
+          subscriptionReason: subscriptionCheck.reason 
+        } : profileResult.data);
       }
       if (imagesResult.data) setMenuImages(imagesResult.data);
       if (socialResult.data) setSocialLinks(socialResult.data);
@@ -274,8 +285,14 @@ const MenuView = () => {
     try {
       setLoading(true);
       
-      // Check subscription status first
-      const hasActiveSubscription = await checkSubscriptionStatus(restId);
+      // Check subscription status first using secure server-side function
+      const subscriptionCheck = await checkSubscriptionStatus(restId);
+      
+      // Check bell feature access
+      const { data: bellAccess } = await supabase.rpc("check_bell_feature_access", {
+        p_user_id: restId
+      });
+      setBellFeatureEnabled(bellAccess === true);
       
       const [profileResult, imagesResult, socialResult] = await Promise.all([
         supabase.from("profiles").select("restaurant_name, restaurant_description, logo_url, is_disabled, bell_service_enabled").eq("id", restId).maybeSingle(),
@@ -285,8 +302,13 @@ const MenuView = () => {
       
       if (profileResult.data) {
         // Mark as disabled if no active subscription or already disabled
-        const isDisabled = profileResult.data.is_disabled || !hasActiveSubscription;
-        setProfile(isDisabled ? { ...profileResult.data, disabled: true, subscriptionExpired: !hasActiveSubscription } : profileResult.data);
+        const isDisabled = profileResult.data.is_disabled || !subscriptionCheck.active;
+        setProfile(isDisabled ? { 
+          ...profileResult.data, 
+          disabled: true, 
+          subscriptionExpired: !subscriptionCheck.active,
+          subscriptionReason: subscriptionCheck.reason 
+        } : profileResult.data);
       }
       if (imagesResult.data) setMenuImages(imagesResult.data);
       if (socialResult.data) setSocialLinks(socialResult.data);
@@ -560,8 +582,8 @@ const handleSubmitFeedback = async (e: React.FormEvent) => {
         )}
       </AnimatePresence>
 
-      {/* Bell Button - Call Waiter (only show if bell service is enabled) */}
-      {effectiveRestaurantId && profile?.bell_service_enabled !== false && <BellButton restaurantId={effectiveRestaurantId} />}
+      {/* Bell Button - Call Waiter (only show if bell feature is enabled in subscription AND profile) */}
+      {effectiveRestaurantId && bellFeatureEnabled && profile?.bell_service_enabled !== false && <BellButton restaurantId={effectiveRestaurantId} />}
     </div>
   );
 };

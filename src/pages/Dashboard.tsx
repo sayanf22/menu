@@ -45,6 +45,7 @@ const BellNotifications = lazy(() => import("@/components/dashboard/BellNotifica
 const FeedbackList = lazy(() => import("@/components/dashboard/FeedbackList"));
 const RestaurantProfile = lazy(() => import("@/components/dashboard/RestaurantProfile"));
 const SubscriptionStatus = lazy(() => import("@/components/dashboard/SubscriptionStatus"));
+const SubscriptionPlans = lazy(() => import("@/components/SubscriptionPlans"));
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -212,50 +213,93 @@ const Dashboard = () => {
     );
   }
 
-  // Show payment message if account is disabled
-  if (profile?.is_disabled) {
+  // Show subscription renewal page if account is disabled OR no active subscription
+  const needsSubscription = profile?.is_disabled || !isSubscriptionActive();
+  
+  if (needsSubscription) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-gray-50 to-gray-100">
-        <Card className="max-w-md w-full shadow-lg">
-          <CardHeader className="text-center">
-            <div className="mx-auto mb-4 w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center">
-              <svg className="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-            </div>
-            <CardTitle className="text-2xl">Account Suspended</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4 text-center">
-            <p className="text-gray-700">
-              Your account has been temporarily suspended. This usually happens when there's a pending payment or subscription renewal.
-            </p>
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-left">
-              <p className="font-semibold text-blue-900 mb-2">To reactivate your account:</p>
-              <ul className="text-sm text-blue-800 space-y-1">
-                <li>• Complete your pending payment</li>
-                <li>• Contact our support team</li>
-                <li>• We'll reactivate your account immediately</li>
-              </ul>
-            </div>
-            <div className="bg-gray-50 rounded-lg p-4 text-left">
-              <p className="font-semibold text-gray-900 mb-2">Contact Support:</p>
-              <p className="text-sm text-gray-700">Email: support@addmenu.com</p>
-              <p className="text-sm text-gray-700">Phone: +91-XXXXXXXXXX</p>
-              <p className="text-sm text-gray-700 mt-2">WhatsApp: +91-XXXXXXXXXX</p>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+        <div className="container mx-auto px-4 py-8">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+                <Home className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <h1 className="font-semibold">{profile?.restaurant_name || "AddMenu"}</h1>
+                <p className="text-sm text-muted-foreground">{user?.email}</p>
+              </div>
             </div>
             <Button
               onClick={async () => {
                 await supabase.auth.signOut();
-                navigate("/auth");
+                navigate("/");
               }}
               variant="outline"
-              className="w-full mt-4"
+              size="sm"
             >
               <LogOut className="mr-2 h-4 w-4" />
               Logout
             </Button>
-          </CardContent>
-        </Card>
+          </div>
+
+          {/* Subscription Required Message */}
+          <div className="max-w-4xl mx-auto">
+            <Card className={`mb-8 ${profile?.is_disabled ? 'border-orange-200 bg-orange-50 dark:bg-orange-950/20 dark:border-orange-800' : 'border-blue-200 bg-blue-50 dark:bg-blue-950/20 dark:border-blue-800'}`}>
+              <CardContent className="p-6">
+                <div className="flex items-start gap-4">
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${profile?.is_disabled ? 'bg-orange-100 dark:bg-orange-900/50' : 'bg-blue-100 dark:bg-blue-900/50'}`}>
+                    <CreditCard className={`h-6 w-6 ${profile?.is_disabled ? 'text-orange-600 dark:text-orange-400' : 'text-blue-600 dark:text-blue-400'}`} />
+                  </div>
+                  <div>
+                    <h2 className={`text-lg font-semibold mb-1 ${profile?.is_disabled ? 'text-orange-900 dark:text-orange-100' : 'text-blue-900 dark:text-blue-100'}`}>
+                      {profile?.is_disabled ? 'Subscription Expired' : 'Subscribe to Get Started'}
+                    </h2>
+                    <p className={profile?.is_disabled ? 'text-orange-800 dark:text-orange-200' : 'text-blue-800 dark:text-blue-200'}>
+                      {profile?.is_disabled 
+                        ? 'Your subscription has expired. Please choose a plan below to reactivate your account.'
+                        : 'Choose a plan below to start using AddMenu and create your digital menu.'}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Subscription Plans */}
+            <div className="mb-8">
+              <h2 className="text-2xl font-bold text-center mb-2">Choose Your Plan</h2>
+              <p className="text-center text-muted-foreground mb-8">
+                Select a plan to reactivate your account and continue using all features.
+              </p>
+              <Suspense fallback={<div className="flex justify-center py-8"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
+                <SubscriptionPlans
+                  onSubscriptionSuccess={() => {
+                    toast.success("Subscription activated! Refreshing...");
+                    window.location.reload();
+                  }}
+                />
+              </Suspense>
+            </div>
+
+            {/* Help Section */}
+            <Card className="bg-muted/50">
+              <CardContent className="p-6">
+                <h3 className="font-semibold mb-3">Need Help?</h3>
+                <div className="grid sm:grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p className="text-muted-foreground">Email Support</p>
+                    <a href="mailto:support@addmenu.in" className="text-primary hover:underline">support@addmenu.in</a>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">WhatsApp</p>
+                    <a href="https://wa.me/917005832798" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">+91 7005832798</a>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
     );
   }
