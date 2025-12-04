@@ -61,11 +61,29 @@ const Auth = () => {
   // Track if we're in recovery mode to prevent redirect
   const [isRecoveryMode, setIsRecoveryMode] = useState(false);
 
-  // Main initialization effect - handles recovery tokens and session check
+  // Check URL for recovery indicators on mount (before any async operations)
   useEffect(() => {
-    // Listen for auth state changes FIRST (for recovery event)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('Auth event:', event);
+    const hash = window.location.hash;
+    const urlParams = new URLSearchParams(window.location.search);
+    
+    // Check for recovery indicators in URL
+    const hasRecoveryInHash = hash && (hash.includes('type=recovery') || hash.includes('type%3Drecovery'));
+    const hasRecoveryInParams = urlParams.get('type') === 'recovery';
+    const hasErrorRecovery = urlParams.get('error_description')?.includes('recovery');
+    
+    if (hasRecoveryInHash || hasRecoveryInParams || hasErrorRecovery) {
+      console.log('Recovery mode detected from URL');
+      setIsRecoveryMode(true);
+      setShowPasswordReset(true);
+      setLoading(false);
+    }
+  }, []);
+
+  // Main initialization effect - handles auth state and session check
+  useEffect(() => {
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      console.log('Auth event:', event, 'isRecoveryMode:', isRecoveryMode, 'showPasswordReset:', showPasswordReset);
       
       if (event === 'PASSWORD_RECOVERY') {
         // User clicked password reset link - Supabase detected recovery
@@ -73,47 +91,38 @@ const Auth = () => {
         setIsRecoveryMode(true);
         setShowPasswordReset(true);
         setLoading(false);
-      } else if (event === 'SIGNED_IN' && !isRecoveryMode && !showPasswordReset) {
-        // Only redirect if NOT in recovery mode
-        navigate("/dashboard");
+      } else if (event === 'SIGNED_IN') {
+        // Check if we're in recovery mode - if so, don't redirect
+        if (isRecoveryMode || showPasswordReset) {
+          console.log('SIGNED_IN but in recovery mode, not redirecting');
+          setLoading(false);
+        } else {
+          console.log('SIGNED_IN, redirecting to dashboard');
+          navigate("/dashboard");
+        }
+      } else if (event === 'SIGNED_OUT') {
+        setLoading(false);
       }
     });
     
     const initialize = async () => {
-      // Check URL hash for recovery token (from email link)
-      // Supabase uses hash format: #access_token=...&type=recovery&...
-      const hash = window.location.hash;
-      
-      if (hash && hash.includes('type=recovery')) {
-        console.log('Recovery token found in URL hash');
-        // Don't do anything here - let Supabase handle it via onAuthStateChange
-        // The PASSWORD_RECOVERY event will fire
-        setIsRecoveryMode(true);
-        setShowPasswordReset(true);
-        setLoading(false);
-        
-        // Clear the hash from URL after a short delay
-        setTimeout(() => {
-          window.history.replaceState(null, '', window.location.pathname);
-        }, 100);
-        return;
-      }
-      
-      // Also check query params (some Supabase versions use this)
-      const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get('type') === 'recovery') {
-        console.log('Recovery token found in URL params');
-        setIsRecoveryMode(true);
-        setShowPasswordReset(true);
+      // If already in recovery mode, don't do session check
+      if (isRecoveryMode || showPasswordReset) {
+        console.log('Already in recovery mode, skipping session check');
         setLoading(false);
         return;
       }
       
-      // Only check session and redirect if NOT in recovery mode
+      // Check for existing session
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        if (session && !isRecoveryMode && !showPasswordReset) {
-          navigate("/dashboard");
+        if (session) {
+          // Double check we're not in recovery mode
+          if (!isRecoveryMode && !showPasswordReset) {
+            navigate("/dashboard");
+          } else {
+            setLoading(false);
+          }
         } else {
           setLoading(false);
         }
@@ -123,9 +132,13 @@ const Auth = () => {
       }
     };
     
-    initialize();
+    // Small delay to let the first useEffect run and set recovery mode
+    const timer = setTimeout(initialize, 100);
     
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timer);
+    };
   }, [navigate, isRecoveryMode, showPasswordReset]);
 
   // Check for plan parameter from pricing page
