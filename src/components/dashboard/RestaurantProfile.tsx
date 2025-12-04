@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,16 +8,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Loader2, Save, Edit, Upload, X, Bell, BellOff } from "lucide-react";
+import { Loader2, Save, Edit, Upload, X, Bell, BellOff, Crown, Lock, Sparkles } from "lucide-react";
 import { compressImage, COMPRESSION_PRESETS, getCompressionStats } from "@/lib/image-compression";
-// Logo uploads go to Supabase Storage (not R2) for simplicity
 
 interface RestaurantProfileProps {
     restaurantId: string;
-    onProfileUpdate?: (profile: any) => void;
+    onProfileUpdate?: (profile: Record<string, unknown>) => void;
 }
 
 const RestaurantProfile = ({ restaurantId, onProfileUpdate }: RestaurantProfileProps) => {
+    const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [editing, setEditing] = useState(false);
@@ -25,6 +26,7 @@ const RestaurantProfile = ({ restaurantId, onProfileUpdate }: RestaurantProfileP
     const [compressionProgress, setCompressionProgress] = useState(0);
     const [logoFile, setLogoFile] = useState<File | null>(null);
     const [logoPreview, setLogoPreview] = useState<string | null>(null);
+    const [hasBellAccess, setHasBellAccess] = useState<boolean | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [profile, setProfile] = useState({
         restaurant_name: "",
@@ -36,7 +38,19 @@ const RestaurantProfile = ({ restaurantId, onProfileUpdate }: RestaurantProfileP
 
     useEffect(() => {
         fetchProfile();
+        checkBellAccess();
     }, [restaurantId]);
+
+    const checkBellAccess = async () => {
+        try {
+            const { data, error } = await supabase.rpc("check_bell_feature_access", {
+                p_user_id: restaurantId
+            });
+            setHasBellAccess(error ? false : data === true);
+        } catch {
+            setHasBellAccess(false);
+        }
+    };
 
     const fetchProfile = async () => {
         try {
@@ -47,10 +61,7 @@ const RestaurantProfile = ({ restaurantId, onProfileUpdate }: RestaurantProfileP
                 .single();
 
             if (error) {
-                // Check if error is due to missing logo_url column
                 if (error.message?.includes("logo_url") || error.message?.includes("column")) {
-                    console.warn("Logo column not found - migration may not be applied yet");
-                    // Fetch without logo_url
                     const { data: basicData, error: basicError } = await supabase
                         .from("profiles")
                         .select("restaurant_name, restaurant_description")
@@ -61,8 +72,8 @@ const RestaurantProfile = ({ restaurantId, onProfileUpdate }: RestaurantProfileP
 
                     if (basicData) {
                         setProfile({
-                            restaurant_name: (basicData as any).restaurant_name || "",
-                            restaurant_description: (basicData as any).restaurant_description || "",
+                            restaurant_name: (basicData as Record<string, unknown>).restaurant_name as string || "",
+                            restaurant_description: (basicData as Record<string, unknown>).restaurant_description as string || "",
                             logo_url: "",
                             bell_service_enabled: true,
                         });
@@ -73,17 +84,18 @@ const RestaurantProfile = ({ restaurantId, onProfileUpdate }: RestaurantProfileP
             }
 
             if (data) {
+                const profileData = data as Record<string, unknown>;
                 setProfile({
-                    restaurant_name: (data as any).restaurant_name || "",
-                    restaurant_description: (data as any).restaurant_description || "",
-                    logo_url: (data as any).logo_url || "",
-                    bell_service_enabled: (data as any).bell_service_enabled !== false, // Default to true
+                    restaurant_name: profileData.restaurant_name as string || "",
+                    restaurant_description: profileData.restaurant_description as string || "",
+                    logo_url: profileData.logo_url as string || "",
+                    bell_service_enabled: profileData.bell_service_enabled !== false,
                 });
-                if ((data as any).logo_url) {
-                    setLogoPreview((data as any).logo_url);
+                if (profileData.logo_url) {
+                    setLogoPreview(profileData.logo_url as string);
                 }
             }
-        } catch (error: any) {
+        } catch (error) {
             console.error("Error fetching profile:", error);
             toast.error("Error loading profile");
         } finally {
@@ -124,7 +136,6 @@ const RestaurantProfile = ({ restaurantId, onProfileUpdate }: RestaurantProfileP
 
         setUploading(true);
         try {
-            // Compress logo before upload (target: 150KB max)
             if (logoFile.size > 150 * 1024) {
                 setCompressing(true);
                 setCompressionProgress(0);
@@ -146,7 +157,6 @@ const RestaurantProfile = ({ restaurantId, onProfileUpdate }: RestaurantProfileP
             const fileExt = logoFile.name.split(".").pop();
             const fileName = `${restaurantId}/logo-${Date.now()}.${fileExt}`;
 
-            // Delete old logo if exists
             if (profile.logo_url) {
                 try {
                     const oldPath = profile.logo_url.split("/").slice(-2).join("/");
@@ -156,7 +166,6 @@ const RestaurantProfile = ({ restaurantId, onProfileUpdate }: RestaurantProfileP
                 }
             }
 
-            // Upload compressed logo to Supabase Storage
             const { error: uploadError } = await supabase.storage
                 .from("restaurant-logos")
                 .upload(fileName, compressedFile, { upsert: true });
@@ -172,9 +181,9 @@ const RestaurantProfile = ({ restaurantId, onProfileUpdate }: RestaurantProfileP
                 .getPublicUrl(fileName);
 
             return publicUrl;
-        } catch (error: any) {
+        } catch (error) {
             console.error("Error uploading logo:", error);
-            toast.error(error.message || "Error uploading logo");
+            toast.error("Error uploading logo");
             return null;
         } finally {
             setUploading(false);
@@ -192,26 +201,14 @@ const RestaurantProfile = ({ restaurantId, onProfileUpdate }: RestaurantProfileP
         setSaving(true);
 
         try {
-            // Ensure profile exists first
-            const { error: profileError } = await supabase.rpc('ensure_profile_exists' as any, {
-                user_id: restaurantId
-            });
-
-            if (profileError) {
-                console.error('Profile creation error:', profileError);
-                throw new Error('Failed to create user profile');
-            }
-
-            // Upload logo if changed
+            await supabase.rpc('ensure_profile_exists', { user_id: restaurantId });
             const logoUrl = await uploadLogo();
 
-            // Try to update with logo_url first
-            let updateData: any = {
+            const updateData: Record<string, unknown> = {
                 restaurant_name: profile.restaurant_name.trim(),
                 restaurant_description: profile.restaurant_description.trim() || null,
             };
 
-            // Only include logo_url if we have one or if the column exists
             if (logoUrl !== null) {
                 updateData.logo_url = logoUrl;
             }
@@ -222,9 +219,7 @@ const RestaurantProfile = ({ restaurantId, onProfileUpdate }: RestaurantProfileP
                 .eq("id", restaurantId);
 
             if (error) {
-                // If error is about logo_url column, try without it
                 if (error.message?.includes("logo_url") || error.message?.includes("column")) {
-                    console.warn("Logo column not found, updating without logo");
                     const { error: retryError } = await supabase
                         .from("profiles")
                         .update({
@@ -234,8 +229,6 @@ const RestaurantProfile = ({ restaurantId, onProfileUpdate }: RestaurantProfileP
                         .eq("id", restaurantId);
 
                     if (retryError) throw retryError;
-
-                    toast.warning("Profile updated, but logo feature requires database migration. Please run RUN_THIS_SQL.sql");
                 } else {
                     throw error;
                 }
@@ -244,17 +237,14 @@ const RestaurantProfile = ({ restaurantId, onProfileUpdate }: RestaurantProfileP
             toast.success("Profile updated successfully!");
             setEditing(false);
             setLogoFile(null);
-
-            // Update local state
             setProfile(prev => ({ ...prev, logo_url: logoUrl || "" }));
 
-            // Notify parent component of the update
             if (onProfileUpdate) {
                 onProfileUpdate({ ...profile, logo_url: logoUrl });
             }
-        } catch (error: any) {
+        } catch (error) {
             console.error("Error updating profile:", error);
-            toast.error(error.message || "Error updating profile");
+            toast.error("Error updating profile");
         } finally {
             setSaving(false);
         }
@@ -264,10 +254,15 @@ const RestaurantProfile = ({ restaurantId, onProfileUpdate }: RestaurantProfileP
         setEditing(false);
         setLogoFile(null);
         setLogoPreview(profile.logo_url || null);
-        fetchProfile(); // Reset to original values
+        fetchProfile();
     };
 
     const handleBellServiceToggle = async (enabled: boolean) => {
+        if (!hasBellAccess) {
+            toast.error("Upgrade to Basic Plus to use Bell Service");
+            return;
+        }
+        
         setBellServiceSaving(true);
         try {
             const { error } = await supabase
@@ -283,7 +278,7 @@ const RestaurantProfile = ({ restaurantId, onProfileUpdate }: RestaurantProfileP
             if (onProfileUpdate) {
                 onProfileUpdate({ ...profile, bell_service_enabled: enabled });
             }
-        } catch (error: any) {
+        } catch (error) {
             console.error("Error updating bell service:", error);
             toast.error("Failed to update bell service setting");
         } finally {
@@ -302,221 +297,203 @@ const RestaurantProfile = ({ restaurantId, onProfileUpdate }: RestaurantProfileP
     }
 
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                    Restaurant Profile
-                    {!editing && (
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setEditing(true)}
-                        >
-                            <Edit className="mr-2 h-4 w-4" />
-                            Edit
-                        </Button>
-                    )}
-                </CardTitle>
-                <CardDescription>
-                    Manage your restaurant information that appears on your menu
-                </CardDescription>
-            </CardHeader>
-            <CardContent>
-                {editing ? (
-                    <form onSubmit={handleSave} className="space-y-4">
-                        <div className="space-y-2">
-                            <Label>Restaurant Logo</Label>
-                            <div className="flex items-center gap-4">
-                                {logoPreview && (
-                                    <div className="relative">
-                                        <img
-                                            src={logoPreview}
-                                            alt="Logo preview"
-                                            className="w-24 h-24 object-cover rounded-lg border"
-                                        />
-                                        <Button
-                                            type="button"
-                                            variant="destructive"
-                                            size="icon"
-                                            className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
-                                            onClick={handleRemoveLogo}
-                                        >
-                                            <X className="h-3 w-3" />
+        <div className="space-y-6">
+            {/* Restaurant Profile Card */}
+            <Card>
+                <CardHeader className="pb-4">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <CardTitle>Restaurant Profile</CardTitle>
+                            <CardDescription>
+                                Manage your restaurant information that appears on your menu
+                            </CardDescription>
+                        </div>
+                        {!editing && (
+                            <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
+                                <Edit className="mr-2 h-4 w-4" />
+                                Edit
+                            </Button>
+                        )}
+                    </div>
+                </CardHeader>
+                <CardContent>
+                    {editing ? (
+                        <form onSubmit={handleSave} className="space-y-5">
+                            {/* Logo Upload */}
+                            <div className="space-y-2">
+                                <Label>Restaurant Logo</Label>
+                                <div className="flex items-center gap-4">
+                                    {logoPreview && (
+                                        <div className="relative">
+                                            <img src={logoPreview} alt="Logo preview" className="w-20 h-20 object-cover rounded-xl border-2" />
+                                            <Button type="button" variant="destructive" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full" onClick={handleRemoveLogo}>
+                                                <X className="h-3 w-3" />
+                                            </Button>
+                                        </div>
+                                    )}
+                                    <div className="flex-1">
+                                        <Input ref={fileInputRef} type="file" accept="image/*" onChange={handleLogoChange} className="hidden" id="logo-upload" />
+                                        <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+                                            <Upload className="mr-2 h-4 w-4" />
+                                            {logoPreview ? "Change Logo" : "Upload Logo"}
                                         </Button>
+                                        <p className="text-xs text-muted-foreground mt-2">Max 2MB, auto-compressed</p>
+                                    </div>
+                                </div>
+                                {compressing && (
+                                    <div className="p-3 bg-muted/50 rounded-lg border">
+                                        <div className="flex items-center justify-between text-sm mb-2">
+                                            <span>Compressing...</span>
+                                            <span>{compressionProgress}%</span>
+                                        </div>
+                                        <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                                            <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${compressionProgress}%` }} />
+                                        </div>
                                     </div>
                                 )}
-                                <div className="flex-1">
-                                    <Input
-                                        ref={fileInputRef}
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={handleLogoChange}
-                                        className="hidden"
-                                        id="logo-upload"
-                                    />
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        onClick={() => fileInputRef.current?.click()}
-                                        disabled={uploading}
-                                    >
-                                        <Upload className="mr-2 h-4 w-4" />
-                                        {logoPreview ? "Change Logo" : "Upload Logo"}
-                                    </Button>
-                                    <p className="text-xs text-muted-foreground mt-2">
-                                        Max 2MB. Will be compressed to ~150KB
-                                    </p>
-                                </div>
                             </div>
-                            {/* Compression Progress Bar */}
-                            {compressing && (
-                                <div className="space-y-2 p-3 bg-muted/50 rounded-lg border animate-fade-in">
-                                    <div className="flex items-center justify-between text-sm">
-                                        <span className="font-medium">Compressing logo...</span>
-                                        <span className="text-muted-foreground">{compressionProgress}%</span>
-                                    </div>
-                                    <div className="h-2 bg-muted rounded-full overflow-hidden">
-                                        <div 
-                                            className="h-full bg-primary rounded-full transition-all duration-300 ease-out"
-                                            style={{ width: `${compressionProgress}%` }}
-                                        />
+
+                            {/* Restaurant Name */}
+                            <div className="space-y-2">
+                                <Label htmlFor="restaurant_name">Restaurant Name <span className="text-destructive">*</span></Label>
+                                <Input id="restaurant_name" placeholder="Your Restaurant Name" value={profile.restaurant_name} onChange={(e) => setProfile({ ...profile, restaurant_name: e.target.value })} required />
+                            </div>
+
+                            {/* Description */}
+                            <div className="space-y-2">
+                                <Label htmlFor="restaurant_description">Description</Label>
+                                <Textarea id="restaurant_description" placeholder="Brief description (optional)" value={profile.restaurant_description} onChange={(e) => setProfile({ ...profile, restaurant_description: e.target.value })} rows={3} />
+                            </div>
+
+                            {/* Action Buttons */}
+                            <div className="flex gap-3 pt-2">
+                                <Button type="button" variant="outline" onClick={handleCancel} className="flex-1">Cancel</Button>
+                                <Button type="submit" disabled={saving || uploading} className="flex-1">
+                                    {(saving || uploading) ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                                    {uploading ? "Uploading..." : "Save"}
+                                </Button>
+                            </div>
+                        </form>
+                    ) : (
+                        <div className="space-y-4">
+                            {profile.restaurant_name === "New Restaurant" ? (
+                                <div className="text-center py-8 border-2 border-dashed rounded-xl">
+                                    <h3 className="text-lg font-semibold mb-2">Welcome!</h3>
+                                    <p className="text-muted-foreground mb-4">Set up your restaurant profile</p>
+                                    <Button onClick={() => setEditing(true)}>
+                                        <Edit className="mr-2 h-4 w-4" />
+                                        Set Up Profile
+                                    </Button>
+                                </div>
+                            ) : (
+                                <div className="grid gap-4">
+                                    {profile.logo_url && (
+                                        <div className="flex items-center gap-4">
+                                            <img src={profile.logo_url} alt="Logo" className="w-16 h-16 object-cover rounded-xl border" />
+                                            <div>
+                                                <p className="text-xs text-muted-foreground">Restaurant Logo</p>
+                                                <p className="font-medium">Uploaded</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                    <div className="grid sm:grid-cols-2 gap-4">
+                                        <div className="p-4 bg-muted/30 rounded-xl">
+                                            <p className="text-xs text-muted-foreground mb-1">Restaurant Name</p>
+                                            <p className="font-semibold text-lg">{profile.restaurant_name}</p>
+                                        </div>
+                                        <div className="p-4 bg-muted/30 rounded-xl">
+                                            <p className="text-xs text-muted-foreground mb-1">Description</p>
+                                            <p className="text-sm">{profile.restaurant_description || "Not provided"}</p>
+                                        </div>
                                     </div>
                                 </div>
                             )}
                         </div>
+                    )}
+                </CardContent>
+            </Card>
 
-                        <div className="space-y-2">
-                            <Label htmlFor="restaurant_name">
-                                Restaurant Name <span className="text-destructive">*</span>
-                            </Label>
-                            <Input
-                                id="restaurant_name"
-                                placeholder="Your Restaurant Name"
-                                value={profile.restaurant_name}
-                                onChange={(e) =>
-                                    setProfile({ ...profile, restaurant_name: e.target.value })
-                                }
-                                required
-                            />
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="restaurant_description">Description</Label>
-                            <Textarea
-                                id="restaurant_description"
-                                placeholder="Brief description of your restaurant (optional)"
-                                value={profile.restaurant_description}
-                                onChange={(e) =>
-                                    setProfile({ ...profile, restaurant_description: e.target.value })
-                                }
-                                rows={3}
-                            />
-                            <p className="text-xs text-muted-foreground">
-                                This description will appear on your public menu page
-                            </p>
-                        </div>
-
-                        <div className="flex gap-2">
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={handleCancel}
-                                className="flex-1"
-                            >
-                                Cancel
-                            </Button>
-                            <Button type="submit" disabled={saving || uploading} className="flex-1">
-                                {(saving || uploading) ? (
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                ) : (
-                                    <Save className="mr-2 h-4 w-4" />
-                                )}
-                                {uploading ? "Uploading..." : "Save Changes"}
-                            </Button>
-                        </div>
-                    </form>
-                ) : (
-                    <div className="space-y-4">
-                        {profile.restaurant_name === "New Restaurant" ? (
-                            <div className="text-center py-6 border-2 border-dashed border-muted rounded-lg">
-                                <h3 className="text-lg font-semibold mb-2">Welcome to MenuQR!</h3>
-                                <p className="text-muted-foreground mb-4">
-                                    Let's start by setting up your restaurant profile
-                                </p>
-                                <Button onClick={() => setEditing(true)}>
-                                    <Edit className="mr-2 h-4 w-4" />
-                                    Set Up Profile
-                                </Button>
-                            </div>
-                        ) : (
-                            <>
-                                {profile.logo_url && (
-                                    <div>
-                                        <Label className="text-sm font-medium text-muted-foreground">
-                                            Restaurant Logo
-                                        </Label>
-                                        <img
-                                            src={profile.logo_url}
-                                            alt="Restaurant logo"
-                                            className="w-24 h-24 object-cover rounded-lg border mt-2"
-                                        />
-                                    </div>
-                                )}
-
-                                <div>
-                                    <Label className="text-sm font-medium text-muted-foreground">
-                                        Restaurant Name
-                                    </Label>
-                                    <p className="text-lg font-semibold">
-                                        {profile.restaurant_name}
-                                    </p>
-                                </div>
-
-                                <div>
-                                    <Label className="text-sm font-medium text-muted-foreground">
-                                        Description
-                                    </Label>
-                                    <p className="text-sm">
-                                        {profile.restaurant_description || "No description provided"}
-                                    </p>
-                                </div>
-
-                                {/* Bell Service Toggle */}
-                                <div className="pt-4 border-t">
-                                    <div className={`flex items-center justify-between p-4 rounded-xl transition-all ${
+            {/* Bell Service Settings Card - Separate Card */}
+            <Card>
+                <CardHeader className="pb-4">
+                    <CardTitle className="flex items-center gap-2">
+                        <Bell className="h-5 w-5" />
+                        Bell Service
+                    </CardTitle>
+                    <CardDescription>
+                        Allow customers to call for service from their table
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    {hasBellAccess ? (
+                        /* User has Bell Access - Show Toggle */
+                        <div className={`p-5 rounded-xl border-2 transition-all ${
+                            profile.bell_service_enabled 
+                                ? "bg-primary/5 border-primary/30" 
+                                : "bg-muted/30 border-muted"
+                        }`}>
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-4">
+                                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${
                                         profile.bell_service_enabled 
-                                            ? "bg-primary/10 border border-primary/30" 
-                                            : "bg-muted/50 border border-muted"
+                                            ? "bg-primary text-primary-foreground" 
+                                            : "bg-muted text-muted-foreground"
                                     }`}>
-                                        <div className="flex items-center gap-3">
-                                            {profile.bell_service_enabled ? (
-                                                <Bell className="h-6 w-6 text-primary" />
-                                            ) : (
-                                                <BellOff className="h-6 w-6 text-muted-foreground" />
+                                        {profile.bell_service_enabled ? <Bell className="h-6 w-6" /> : <BellOff className="h-6 w-6" />}
+                                    </div>
+                                    <div>
+                                        <p className="font-semibold flex items-center gap-2">
+                                            {profile.bell_service_enabled ? "Enabled" : "Disabled"}
+                                            {profile.bell_service_enabled && (
+                                                <span className="text-xs px-2 py-0.5 rounded-full bg-green-500/20 text-green-600 font-medium">Active</span>
                                             )}
-                                            <div>
-                                                <Label className="font-semibold text-base">Bell Service</Label>
-                                                <p className="text-sm text-muted-foreground">
-                                                    {profile.bell_service_enabled 
-                                                        ? "Customers can call you from the menu" 
-                                                        : "Bell button hidden from customers"}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <Switch 
-                                            checked={profile.bell_service_enabled}
-                                            onCheckedChange={handleBellServiceToggle}
-                                            disabled={bellServiceSaving}
-                                            className="scale-125"
-                                        />
+                                        </p>
+                                        <p className="text-sm text-muted-foreground">
+                                            {profile.bell_service_enabled 
+                                                ? "Customers can tap the bell icon to call you" 
+                                                : "Bell button is hidden from customers"}
+                                        </p>
                                     </div>
                                 </div>
-                            </>
-                        )}
-                    </div>
-                )}
-            </CardContent>
-        </Card>
+                                <div className="flex items-center gap-2">
+                                    {bellServiceSaving && <Loader2 className="h-4 w-4 animate-spin" />}
+                                    <Switch 
+                                        checked={profile.bell_service_enabled}
+                                        onCheckedChange={handleBellServiceToggle}
+                                        disabled={bellServiceSaving}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        /* User doesn't have Bell Access - Show Upgrade */
+                        <div className="p-5 rounded-xl border-2 border-dashed border-amber-300 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 dark:border-amber-700">
+                            <div className="flex items-start gap-4">
+                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center flex-shrink-0">
+                                    <Lock className="h-6 w-6 text-white" />
+                                </div>
+                                <div className="flex-1">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <h4 className="font-semibold">Upgrade Required</h4>
+                                        <Crown className="h-4 w-4 text-amber-500" />
+                                    </div>
+                                    <p className="text-sm text-muted-foreground mb-4">
+                                        Bell Service is available with Basic Plus plan. Let customers call for service directly from their table.
+                                    </p>
+                                    <Button 
+                                        onClick={() => navigate('/pricing')}
+                                        className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white"
+                                    >
+                                        <Sparkles className="h-4 w-4 mr-2" />
+                                        Upgrade to Basic Plus
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+        </div>
     );
 };
 

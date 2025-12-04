@@ -435,29 +435,36 @@ export const BellNotifications = ({ restaurantId, variant = "header" }: BellNoti
   }
 
   // Header variant - Small icon for header
+  // Don't show bell button if user doesn't have bell access (cleaner UI)
+  if (!hasBellAccess) {
+    return null;
+  }
+
   return (
     <>
       <Button
-        variant={hasBellAccess && isListening ? "default" : "outline"}
+        variant={isListening ? "default" : "outline"}
         size="icon"
-        className={`relative ${!hasBellAccess ? "text-muted-foreground border-dashed" : ""}`}
+        className={`relative transition-all duration-200 ${
+          isListening 
+            ? "bg-primary hover:bg-primary/90 shadow-md" 
+            : "hover:border-primary/50"
+        } ${stopSound ? "animate-pulse ring-2 ring-destructive ring-offset-2" : ""}`}
         onClick={stopSound ? stopCurrentSound : toggleListening}
-        title={hasBellAccess ? (isListening ? "Bell Active" : "Activate Bell") : "Upgrade to Basic Plus"}
+        title={isListening ? (stopSound ? "Click to stop ringing" : "Bell Active - Listening") : "Activate Bell Service"}
       >
-        {!hasBellAccess ? (
-          <Bell className="h-5 w-5 text-muted-foreground/50" />
-        ) : isListening ? (
-          <BellRing className={`h-5 w-5 ${stopSound ? "animate-bounce" : "animate-pulse"}`} />
+        {isListening ? (
+          <BellRing className={`h-5 w-5 ${stopSound ? "animate-bounce" : ""}`} />
         ) : (
           <Bell className="h-5 w-5" />
         )}
-        {hasBellAccess && pendingCount > 0 && (
-          <span className="absolute -top-1 -right-1 w-5 h-5 bg-destructive text-destructive-foreground text-xs rounded-full flex items-center justify-center animate-pulse">
-            {pendingCount}
+        {pendingCount > 0 && (
+          <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-destructive text-destructive-foreground text-xs font-bold rounded-full flex items-center justify-center animate-bounce shadow-sm">
+            {pendingCount > 9 ? "9+" : pendingCount}
           </span>
         )}
-        {!hasBellAccess && (
-          <Lock className="absolute -bottom-1 -right-1 w-3 h-3 text-muted-foreground" />
+        {isListening && !stopSound && (
+          <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-background" />
         )}
       </Button>
 

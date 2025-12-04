@@ -122,16 +122,24 @@ const Dashboard = () => {
         return;
       }
       
+      // Type the response properly
+      const response = data as {
+        has_subscription: boolean;
+        is_active: boolean;
+        subscription: Record<string, unknown> | null;
+        plan: Record<string, unknown> | null;
+      } | null;
+      
       // Transform the response to match expected format
-      if (data && data.has_subscription && data.subscription) {
+      if (response && response.has_subscription && response.subscription) {
         const subscriptionData = {
-          ...data.subscription,
-          subscription_plans: data.plan,
+          ...response.subscription,
+          subscription_plans: response.plan,
           // Add computed is_active from backend
-          _is_active: data.is_active
+          _is_active: response.is_active
         };
         setSubscription(subscriptionData);
-        console.log("Subscription fetched from backend:", data.is_active, data.plan?.name);
+        console.log("Subscription fetched from backend:", response.is_active, (response.plan as any)?.name);
       } else {
         setSubscription(null);
         console.log("No subscription found");
