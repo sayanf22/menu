@@ -427,7 +427,7 @@ const RestaurantProfile = ({ restaurantId, onProfileUpdate }: RestaurantProfileP
             }
 
             await supabase.auth.resetPasswordForEmail(user.email, {
-                redirectTo: `${window.location.origin}/auth`,
+                redirectTo: `${window.location.origin}/reset-password`,
             });
 
             toast.success("Password reset link sent to your email!");

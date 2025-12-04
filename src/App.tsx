@@ -7,6 +7,7 @@ import { ThemeProvider } from "next-themes";
 import { supabase } from "@/integrations/supabase/client";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
 import MenuView from "./pages/MenuView";
 import QRSession from "./pages/QRSession";
@@ -74,6 +75,7 @@ const App = () => {
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/qr/:restaurantId" element={<QRSession />} />
             <Route path="/menu/:restaurantId" element={<MenuView />} />

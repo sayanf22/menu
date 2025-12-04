@@ -9,7 +9,7 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Eye, EyeOff, Check, Crown, Star, ArrowRight, ArrowLeft, CreditCard, KeyRound } from "lucide-react";
+import { Loader2, Eye, EyeOff, Check, Crown, Star, ArrowRight, ArrowLeft, CreditCard } from "lucide-react";
 import { sanitizeInput, isValidEmail, resetRateLimit, checkRateLimit, RATE_LIMITS } from "@/lib/security";
 import { useRazorpay } from "@/hooks/useRazorpay";
 
@@ -51,78 +51,48 @@ const Auth = () => {
   });
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
-  const [showPasswordReset, setShowPasswordReset] = useState(false);
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [updatingPassword, setUpdatingPassword] = useState(false);
 
-  // Track if we're in recovery mode to prevent redirect
-  const [isRecoveryMode, setIsRecoveryMode] = useState(false);
-
-  // Check URL for recovery indicators on mount (before any async operations)
+  // Check URL for recovery indicators and redirect to reset-password page
   useEffect(() => {
     const hash = window.location.hash;
     const urlParams = new URLSearchParams(window.location.search);
     
-    // Check for recovery indicators in URL
+    // Check for recovery indicators in URL - redirect to dedicated reset page
     const hasRecoveryInHash = hash && (hash.includes('type=recovery') || hash.includes('type%3Drecovery'));
     const hasRecoveryInParams = urlParams.get('type') === 'recovery';
-    const hasErrorRecovery = urlParams.get('error_description')?.includes('recovery');
     
-    if (hasRecoveryInHash || hasRecoveryInParams || hasErrorRecovery) {
-      console.log('Recovery mode detected from URL');
-      setIsRecoveryMode(true);
-      setShowPasswordReset(true);
-      setLoading(false);
+    if (hasRecoveryInHash || hasRecoveryInParams) {
+      console.log('Recovery mode detected, redirecting to reset-password page');
+      // Redirect to reset-password page with the same URL params/hash
+      navigate('/reset-password' + window.location.search + window.location.hash);
+      return;
     }
-  }, []);
+  }, [navigate]);
 
   // Main initialization effect - handles auth state and session check
   useEffect(() => {
     // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      console.log('Auth event:', event, 'isRecoveryMode:', isRecoveryMode, 'showPasswordReset:', showPasswordReset);
+      console.log('Auth event:', event);
       
       if (event === 'PASSWORD_RECOVERY') {
-        // User clicked password reset link - Supabase detected recovery
-        console.log('PASSWORD_RECOVERY event detected');
-        setIsRecoveryMode(true);
-        setShowPasswordReset(true);
-        setLoading(false);
+        // Redirect to dedicated reset password page
+        console.log('PASSWORD_RECOVERY event detected, redirecting to reset-password');
+        navigate("/reset-password");
       } else if (event === 'SIGNED_IN') {
-        // Check if we're in recovery mode - if so, don't redirect
-        if (isRecoveryMode || showPasswordReset) {
-          console.log('SIGNED_IN but in recovery mode, not redirecting');
-          setLoading(false);
-        } else {
-          console.log('SIGNED_IN, redirecting to dashboard');
-          navigate("/dashboard");
-        }
+        console.log('SIGNED_IN, redirecting to dashboard');
+        navigate("/dashboard");
       } else if (event === 'SIGNED_OUT') {
         setLoading(false);
       }
     });
     
     const initialize = async () => {
-      // If already in recovery mode, don't do session check
-      if (isRecoveryMode || showPasswordReset) {
-        console.log('Already in recovery mode, skipping session check');
-        setLoading(false);
-        return;
-      }
-      
       // Check for existing session
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
-          // Double check we're not in recovery mode
-          if (!isRecoveryMode && !showPasswordReset) {
-            navigate("/dashboard");
-          } else {
-            setLoading(false);
-          }
+          navigate("/dashboard");
         } else {
           setLoading(false);
         }
@@ -132,14 +102,12 @@ const Auth = () => {
       }
     };
     
-    // Small delay to let the first useEffect run and set recovery mode
-    const timer = setTimeout(initialize, 100);
+    initialize();
     
     return () => {
       subscription.unsubscribe();
-      clearTimeout(timer);
     };
-  }, [navigate, isRecoveryMode, showPasswordReset]);
+  }, [navigate]);
 
   // Check for plan parameter from pricing page
   useEffect(() => {
@@ -310,7 +278,7 @@ const Auth = () => {
 
     try {
       await supabase.auth.resetPasswordForEmail(resetEmail, {
-        redirectTo: `${window.location.origin}/auth`,
+        redirectTo: `${window.location.origin}/reset-password`,
       });
       toast.success("If an account exists, you'll receive a password reset link.");
       setShowForgotPassword(false);
@@ -319,44 +287,6 @@ const Auth = () => {
       toast.success("If an account exists, you'll receive a password reset link.");
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleUpdatePassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (newPassword.length < 8) {
-      toast.error("Password must be at least 8 characters long");
-      return;
-    }
-
-    if (newPassword !== confirmPassword) {
-      toast.error("Passwords do not match");
-      return;
-    }
-
-    setUpdatingPassword(true);
-
-    try {
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword,
-      });
-
-      if (error) throw error;
-
-      toast.success("Password updated successfully! You can now sign in.");
-      setShowPasswordReset(false);
-      setIsRecoveryMode(false);
-      setNewPassword("");
-      setConfirmPassword("");
-      
-      // Sign out to clear the recovery session
-      await supabase.auth.signOut();
-    } catch (err) {
-      console.error('Password update error:', err);
-      toast.error("Failed to update password. Please try again or request a new reset link.");
-    } finally {
-      setUpdatingPassword(false);
     }
   };
 
@@ -389,107 +319,14 @@ const Auth = () => {
           </div>
           <CardTitle className="text-2xl font-bold">AddMenu</CardTitle>
           <CardDescription>
-            {showPasswordReset 
-              ? 'Reset your password' 
-              : signUpStep === 'plan' 
-                ? 'Select a plan to continue' 
-                : 'Create your digital menu'}
+            {signUpStep === 'plan' 
+              ? 'Select a plan to continue' 
+              : 'Create your digital menu'}
           </CardDescription>
         </CardHeader>
         
         <CardContent>
-          {showPasswordReset ? (
-            <div className="space-y-4">
-              <div className="flex items-center justify-center mb-4">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <KeyRound className="w-6 h-6 text-primary" />
-                </div>
-              </div>
-              <h3 className="text-lg font-semibold text-center">Set New Password</h3>
-              <p className="text-sm text-muted-foreground text-center">
-                Enter your new password below
-              </p>
-              
-              <form onSubmit={handleUpdatePassword} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="new-password">New Password</Label>
-                  <div className="relative">
-                    <Input
-                      id="new-password"
-                      type={showNewPassword ? "text" : "password"}
-                      placeholder="Min 8 characters"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      required
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                      onClick={() => setShowNewPassword(!showNewPassword)}
-                    >
-                      {showNewPassword ? (
-                        <EyeOff className="h-4 w-4 text-muted-foreground" />
-                      ) : (
-                        <Eye className="h-4 w-4 text-muted-foreground" />
-                      )}
-                    </Button>
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="confirm-password">Confirm Password</Label>
-                  <div className="relative">
-                    <Input
-                      id="confirm-password"
-                      type={showConfirmPassword ? "text" : "password"}
-                      placeholder="Confirm your password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      required
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    >
-                      {showConfirmPassword ? (
-                        <EyeOff className="h-4 w-4 text-muted-foreground" />
-                      ) : (
-                        <Eye className="h-4 w-4 text-muted-foreground" />
-                      )}
-                    </Button>
-                  </div>
-                </div>
-                
-                <Button type="submit" className="w-full" disabled={updatingPassword}>
-                  {updatingPassword ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Updating...
-                    </>
-                  ) : (
-                    "Update Password"
-                  )}
-                </Button>
-              </form>
-              
-              <Button
-                variant="link"
-                className="w-full text-sm"
-                onClick={() => {
-                  setShowPasswordReset(false);
-                  setIsRecoveryMode(false);
-                  supabase.auth.signOut();
-                }}
-              >
-                Cancel and go back to sign in
-              </Button>
-            </div>
-          ) : signUpStep === 'plan' ? (
+          {signUpStep === 'plan' ? (
             <div className="space-y-4">
               <Button
                 variant="ghost"
