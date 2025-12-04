@@ -7,13 +7,38 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "13.0.5"
-  }
   public: {
     Tables: {
+      admin_audit_log: {
+        Row: {
+          action_type: string
+          admin_email: string
+          created_at: string | null
+          details: Json | null
+          id: string
+          ip_address: string | null
+          target_user_id: string
+        }
+        Insert: {
+          action_type: string
+          admin_email: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          ip_address?: string | null
+          target_user_id: string
+        }
+        Update: {
+          action_type?: string
+          admin_email?: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          ip_address?: string | null
+          target_user_id?: string
+        }
+        Relationships: []
+      }
       admin_credentials: {
         Row: {
           created_at: string | null
@@ -562,6 +587,9 @@ export type Database = {
           current_period_end: string | null
           current_period_start: string | null
           id: string
+          pending_billing_cycle: string | null
+          pending_plan_id: string | null
+          pending_razorpay_subscription_id: string | null
           plan_id: string | null
           razorpay_customer_id: string | null
           razorpay_subscription_id: string | null
@@ -577,6 +605,9 @@ export type Database = {
           current_period_end?: string | null
           current_period_start?: string | null
           id?: string
+          pending_billing_cycle?: string | null
+          pending_plan_id?: string | null
+          pending_razorpay_subscription_id?: string | null
           plan_id?: string | null
           razorpay_customer_id?: string | null
           razorpay_subscription_id?: string | null
@@ -592,6 +623,9 @@ export type Database = {
           current_period_end?: string | null
           current_period_start?: string | null
           id?: string
+          pending_billing_cycle?: string | null
+          pending_plan_id?: string | null
+          pending_razorpay_subscription_id?: string | null
           plan_id?: string | null
           razorpay_customer_id?: string | null
           razorpay_subscription_id?: string | null
@@ -633,15 +667,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      admin_create_signup_code: {
-        Args: { code_value: string; max_uses_value?: number }
-        Returns: Json
-      }
-      admin_delete_signup_code: { Args: { code_id: string }; Returns: Json }
       admin_get_profiles: {
         Args: Record<PropertyKey, never>
         Returns: {
           approval_status: string
+          billing_cycle: string
           created_at: string
           disabled_at: string
           email: string
@@ -649,17 +679,33 @@ export type Database = {
           is_disabled: boolean
           restaurant_description: string
           restaurant_name: string
+          subscription_end: string
+          subscription_plan: string
+          subscription_status: string
         }[]
       }
-      admin_get_signup_codes: {
+      admin_get_subscription_plans: {
         Args: Record<PropertyKey, never>
         Returns: {
-          code: string
-          created_at: string
-          current_uses: number
+          bell_feature_enabled: boolean
           id: string
-          max_uses: number
+          max_images: number
+          name: string
+          price_monthly: number
         }[]
+      }
+      admin_grant_subscription: {
+        Args: {
+          p_admin_email: string
+          p_months: number
+          p_plan_id: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
+      admin_revoke_subscription: {
+        Args: { p_admin_email: string; p_user_id: string }
+        Returns: Json
       }
       admin_update_profile_status: {
         Args: {
@@ -677,10 +723,7 @@ export type Database = {
         Args: { p_device_fingerprint: string; p_restaurant_id: string }
         Returns: boolean
       }
-      check_image_upload_limit: {
-        Args: { p_user_id: string }
-        Returns: Json
-      }
+      check_image_upload_limit: { Args: { p_user_id: string }; Returns: Json }
       check_rate_limit: {
         Args: {
           p_endpoint: string
@@ -694,7 +737,6 @@ export type Database = {
         Args: { restaurant_uuid: string }
         Returns: Json
       }
-      cleanup_audit_logs: { Args: Record<PropertyKey, never>; Returns: undefined }
       cleanup_expired_sessions: { Args: Record<PropertyKey, never>; Returns: number }
       cleanup_old_rate_limits: { Args: Record<PropertyKey, never>; Returns: undefined }
       clear_failed_logins: {
@@ -719,14 +761,6 @@ export type Database = {
       }
       disable_expired_subscriptions: { Args: Record<PropertyKey, never>; Returns: number }
       ensure_profile_exists: { Args: { user_id: string }; Returns: boolean }
-      get_user_plan_details: {
-        Args: { p_user_id: string }
-        Returns: Json
-      }
-      generate_approval_token: {
-        Args: { p_action: string; p_user_id: string }
-        Returns: string
-      }
       get_public_social_links: {
         Args: { rest_id: string }
         Returns: {
@@ -738,6 +772,7 @@ export type Database = {
           youtube: string
         }[]
       }
+      get_user_plan_details: { Args: { p_user_id: string }; Returns: Json }
       has_active_subscription: { Args: { user_uuid: string }; Returns: boolean }
       is_login_blocked: { Args: { p_identifier: string }; Returns: boolean }
       is_subscription_active: { Args: { p_user_id: string }; Returns: boolean }
@@ -755,13 +790,12 @@ export type Database = {
         }
         Returns: undefined
       }
-      process_approval: { Args: { p_token: string }; Returns: Json }
       reactivate_subscription: {
         Args: {
-          p_period_end: string
-          p_period_start: string
-          p_subscription_id: string
           p_user_id: string
+          p_subscription_id: string
+          p_period_start: string
+          p_period_end: string
         }
         Returns: boolean
       }
@@ -770,7 +804,6 @@ export type Database = {
         Returns: undefined
       }
       sanitize_text: { Args: { input_text: string }; Returns: string }
-      use_signup_code: { Args: { code_value: string }; Returns: Json }
       validate_menu_session: {
         Args: { p_idle_timeout_minutes?: number; p_session_token: string }
         Returns: Json
@@ -785,33 +818,27 @@ export type Database = {
   }
 }
 
-type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
-
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+type PublicSchema = Database[Extract<keyof Database, "public">]
 
 export type Tables<
-  DefaultSchemaTableNameOrOptions extends
-    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-    | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+  PublicTableNameOrOptions extends
+    | keyof (PublicSchema["Tables"] & PublicSchema["Views"])
+    | { schema: keyof Database },
+  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
+    ? keyof (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
+        Database[PublicTableNameOrOptions["schema"]]["Views"])
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+> = PublicTableNameOrOptions extends { schema: keyof Database }
+  ? (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
+      Database[PublicTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])
-    ? (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+  : PublicTableNameOrOptions extends keyof (PublicSchema["Tables"] &
+        PublicSchema["Views"])
+    ? (PublicSchema["Tables"] &
+        PublicSchema["Views"])[PublicTableNameOrOptions] extends {
         Row: infer R
       }
       ? R
@@ -819,24 +846,20 @@ export type Tables<
     : never
 
 export type TablesInsert<
-  DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+  PublicTableNameOrOptions extends
+    | keyof PublicSchema["Tables"]
+    | { schema: keyof Database },
+  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
+    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = PublicTableNameOrOptions extends { schema: keyof Database }
+  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+  : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
+    ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
         Insert: infer I
       }
       ? I
@@ -844,24 +867,20 @@ export type TablesInsert<
     : never
 
 export type TablesUpdate<
-  DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+  PublicTableNameOrOptions extends
+    | keyof PublicSchema["Tables"]
+    | { schema: keyof Database },
+  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
+    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = PublicTableNameOrOptions extends { schema: keyof Database }
+  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+  : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
+    ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
         Update: infer U
       }
       ? U
@@ -869,37 +888,31 @@ export type TablesUpdate<
     : never
 
 export type Enums<
-  DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema["Enums"]
-    | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+  PublicEnumNameOrOptions extends
+    | keyof PublicSchema["Enums"]
+    | { schema: keyof Database },
+  EnumName extends PublicEnumNameOrOptions extends { schema: keyof Database }
+    ? keyof Database[PublicEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
-> = DefaultSchemaEnumNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
-  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
-    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+> = PublicEnumNameOrOptions extends { schema: keyof Database }
+  ? Database[PublicEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : PublicEnumNameOrOptions extends keyof PublicSchema["Enums"]
+    ? PublicSchema["Enums"][PublicEnumNameOrOptions]
     : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof DatabaseWithoutInternals },
+    | keyof PublicSchema["CompositeTypes"]
+    | { schema: keyof Database },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
+    schema: keyof Database
   }
-    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    ? keyof Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never = never,
-> = PublicCompositeTypeNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+> = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
+  ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof PublicSchema["CompositeTypes"]
+    ? PublicSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
 
 export const Constants = {
