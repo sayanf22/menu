@@ -192,13 +192,24 @@ export function useRazorpay() {
       const scriptLoaded = await loadRazorpayScript();
       if (!scriptLoaded) throw new Error("Failed to load payment");
 
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error("Please login to continue");
+      // Refresh session to ensure we have a valid token
+      const { data: { session }, error: sessionError } = await supabase.auth.refreshSession();
+      if (sessionError || !session) {
+        // Try getting existing session as fallback
+        const { data: { session: existingSession } } = await supabase.auth.getSession();
+        if (!existingSession) throw new Error("Please login to continue");
+      }
 
       const response = await supabase.functions.invoke("create-razorpay-subscription", {
         body: { plan_id: params.planId, billing_cycle: params.billingCycle },
       });
-      if (response.error) throw new Error(response.error.message);
+      if (response.error) {
+        // Handle 401 specifically - session may have expired
+        if (response.error.message?.includes('401') || response.error.message?.includes('Unauthorized')) {
+          throw new Error("Session expired. Please refresh the page and try again.");
+        }
+        throw new Error(response.error.message);
+      }
       const data = response.data;
 
       const rzp = new window.Razorpay({
@@ -210,6 +221,9 @@ export function useRazorpay() {
         theme: { color: "#f97316" },
         handler: async (res: RazorpayResponse) => {
           try {
+            // Refresh session before verify call (payment modal may have been open for a while)
+            await supabase.auth.refreshSession();
+            
             const verifyRes = await supabase.functions.invoke("verify-razorpay-subscription", {
               body: {
                 razorpay_subscription_id: res.razorpay_subscription_id,
