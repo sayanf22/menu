@@ -58,16 +58,19 @@ const Auth = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [updatingPassword, setUpdatingPassword] = useState(false);
 
-  // Check for password recovery token in URL hash (from email link)
+  // Main initialization effect - handles recovery tokens and session check
   useEffect(() => {
-    const handlePasswordRecovery = async () => {
-      // Check URL hash for recovery token
+    let isRecoveryMode = false;
+    
+    const initialize = async () => {
+      // First, check URL hash for recovery token (from email link)
       const hashParams = new URLSearchParams(window.location.hash.substring(1));
       const accessToken = hashParams.get('access_token');
       const type = hashParams.get('type');
       
       if (type === 'recovery' && accessToken) {
         // User clicked password reset link - show password reset form
+        isRecoveryMode = true;
         setShowPasswordReset(true);
         setLoading(false);
         
@@ -81,19 +84,37 @@ const Auth = () => {
             console.error('Error setting recovery session:', error);
             toast.error('Invalid or expired reset link. Please request a new one.');
             setShowPasswordReset(false);
+            isRecoveryMode = false;
           }
         } catch (err) {
           console.error('Recovery session error:', err);
+          isRecoveryMode = false;
         }
         
         // Clear the hash from URL
         window.history.replaceState(null, '', window.location.pathname);
+        return; // Don't check session if in recovery mode
+      }
+      
+      // Only check session and redirect if NOT in recovery mode
+      if (!isRecoveryMode) {
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session) {
+            navigate("/dashboard");
+          } else {
+            setLoading(false);
+          }
+        } catch (error) {
+          console.error("Error checking session:", error);
+          setLoading(false);
+        }
       }
     };
     
-    handlePasswordRecovery();
+    initialize();
     
-    // Also listen for auth state changes (for recovery)
+    // Listen for auth state changes (for recovery)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') {
         setShowPasswordReset(true);
@@ -102,7 +123,7 @@ const Auth = () => {
     });
     
     return () => subscription.unsubscribe();
-  }, []);
+  }, [navigate]);
 
   // Check for plan parameter from pricing page
   useEffect(() => {
@@ -116,23 +137,6 @@ const Auth = () => {
       fetchPlans();
     }
   }, [searchParams]);
-
-  useEffect(() => {
-    const checkSession = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-          navigate("/dashboard");
-        } else {
-          setLoading(false);
-        }
-      } catch (error) {
-        console.error("Error checking session:", error);
-        setLoading(false);
-      }
-    };
-    checkSession();
-  }, [navigate]);
 
   const fetchPlans = async () => {
     setLoadingPlans(true);

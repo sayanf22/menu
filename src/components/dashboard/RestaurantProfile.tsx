@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Loader2, Save, Edit, Upload, X, Bell, BellOff, Crown, Lock, Sparkles, Check } from "lucide-react";
+import { Loader2, Save, Edit, Upload, X, Bell, BellOff, Crown, Lock, Sparkles, Check, KeyRound, Eye, EyeOff } from "lucide-react";
 import { compressImage, COMPRESSION_PRESETS, getCompressionStats } from "@/lib/image-compression";
 import { useRazorpay } from "@/hooks/useRazorpay";
 import {
@@ -51,6 +51,16 @@ const RestaurantProfile = ({ restaurantId, onProfileUpdate }: RestaurantProfileP
         bell_service_enabled: true,
     });
     const [bellServiceSaving, setBellServiceSaving] = useState(false);
+    
+    // Password change states
+    const [showPasswordChange, setShowPasswordChange] = useState(false);
+    const [currentPassword, setCurrentPassword] = useState("");
+    const [newPassword, setNewPassword] = useState("");
+    const [confirmNewPassword, setConfirmNewPassword] = useState("");
+    const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false);
+    const [changingPassword, setChangingPassword] = useState(false);
 
     useEffect(() => {
         fetchProfile();
@@ -342,6 +352,70 @@ const RestaurantProfile = ({ restaurantId, onProfileUpdate }: RestaurantProfileP
         }
     };
 
+    const handleChangePassword = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        // Validation
+        if (newPassword.length < 8) {
+            toast.error("New password must be at least 8 characters long");
+            return;
+        }
+
+        if (newPassword !== confirmNewPassword) {
+            toast.error("New passwords do not match");
+            return;
+        }
+
+        setChangingPassword(true);
+
+        try {
+            // First verify current password by re-authenticating
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user?.email) {
+                toast.error("Unable to verify user. Please try again.");
+                return;
+            }
+
+            // Verify current password
+            const { error: signInError } = await supabase.auth.signInWithPassword({
+                email: user.email,
+                password: currentPassword,
+            });
+
+            if (signInError) {
+                toast.error("Current password is incorrect");
+                return;
+            }
+
+            // Update to new password
+            const { error: updateError } = await supabase.auth.updateUser({
+                password: newPassword,
+            });
+
+            if (updateError) {
+                throw updateError;
+            }
+
+            toast.success("Password changed successfully!");
+            setShowPasswordChange(false);
+            setCurrentPassword("");
+            setNewPassword("");
+            setConfirmNewPassword("");
+        } catch (error) {
+            console.error("Error changing password:", error);
+            toast.error("Failed to change password. Please try again.");
+        } finally {
+            setChangingPassword(false);
+        }
+    };
+
+    const handleCancelPasswordChange = () => {
+        setShowPasswordChange(false);
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmNewPassword("");
+    };
+
     if (loading) {
         return (
             <Card>
@@ -544,6 +618,155 @@ const RestaurantProfile = ({ restaurantId, onProfileUpdate }: RestaurantProfileP
                                         Upgrade to Basic Plus
                                     </Button>
                                 </div>
+                            </div>
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+
+            {/* Account Security Card */}
+            <Card>
+                <CardHeader className="pb-4">
+                    <CardTitle className="flex items-center gap-2">
+                        <KeyRound className="h-5 w-5" />
+                        Account Security
+                    </CardTitle>
+                    <CardDescription>
+                        Manage your password and account security
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    {showPasswordChange ? (
+                        <form onSubmit={handleChangePassword} className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="current-password">Current Password</Label>
+                                <div className="relative">
+                                    <Input
+                                        id="current-password"
+                                        type={showCurrentPassword ? "text" : "password"}
+                                        value={currentPassword}
+                                        onChange={(e) => setCurrentPassword(e.target.value)}
+                                        placeholder="Enter current password"
+                                        required
+                                    />
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                                        onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                                    >
+                                        {showCurrentPassword ? (
+                                            <EyeOff className="h-4 w-4 text-muted-foreground" />
+                                        ) : (
+                                            <Eye className="h-4 w-4 text-muted-foreground" />
+                                        )}
+                                    </Button>
+                                </div>
+                            </div>
+                            
+                            <div className="space-y-2">
+                                <Label htmlFor="new-password">New Password</Label>
+                                <div className="relative">
+                                    <Input
+                                        id="new-password"
+                                        type={showNewPassword ? "text" : "password"}
+                                        value={newPassword}
+                                        onChange={(e) => setNewPassword(e.target.value)}
+                                        placeholder="Min 8 characters"
+                                        required
+                                    />
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                                        onClick={() => setShowNewPassword(!showNewPassword)}
+                                    >
+                                        {showNewPassword ? (
+                                            <EyeOff className="h-4 w-4 text-muted-foreground" />
+                                        ) : (
+                                            <Eye className="h-4 w-4 text-muted-foreground" />
+                                        )}
+                                    </Button>
+                                </div>
+                            </div>
+                            
+                            <div className="space-y-2">
+                                <Label htmlFor="confirm-new-password">Confirm New Password</Label>
+                                <div className="relative">
+                                    <Input
+                                        id="confirm-new-password"
+                                        type={showConfirmNewPassword ? "text" : "password"}
+                                        value={confirmNewPassword}
+                                        onChange={(e) => setConfirmNewPassword(e.target.value)}
+                                        placeholder="Confirm new password"
+                                        required
+                                    />
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                                        onClick={() => setShowConfirmNewPassword(!showConfirmNewPassword)}
+                                    >
+                                        {showConfirmNewPassword ? (
+                                            <EyeOff className="h-4 w-4 text-muted-foreground" />
+                                        ) : (
+                                            <Eye className="h-4 w-4 text-muted-foreground" />
+                                        )}
+                                    </Button>
+                                </div>
+                            </div>
+                            
+                            <div className="flex gap-3 pt-2">
+                                <Button 
+                                    type="button" 
+                                    variant="outline" 
+                                    onClick={handleCancelPasswordChange}
+                                    className="flex-1"
+                                >
+                                    Cancel
+                                </Button>
+                                <Button 
+                                    type="submit" 
+                                    disabled={changingPassword}
+                                    className="flex-1"
+                                >
+                                    {changingPassword ? (
+                                        <>
+                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                            Updating...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <KeyRound className="mr-2 h-4 w-4" />
+                                            Update Password
+                                        </>
+                                    )}
+                                </Button>
+                            </div>
+                        </form>
+                    ) : (
+                        <div className="p-4 bg-muted/30 rounded-xl">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                                        <Lock className="h-5 w-5 text-primary" />
+                                    </div>
+                                    <div>
+                                        <p className="font-medium">Password</p>
+                                        <p className="text-sm text-muted-foreground">Last changed: Unknown</p>
+                                    </div>
+                                </div>
+                                <Button 
+                                    variant="outline" 
+                                    size="sm"
+                                    onClick={() => setShowPasswordChange(true)}
+                                >
+                                    <Edit className="mr-2 h-4 w-4" />
+                                    Change
+                                </Button>
                             </div>
                         </div>
                     )}
