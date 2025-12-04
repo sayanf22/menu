@@ -50,6 +50,7 @@ const SubscriptionPlans = lazy(() => import("@/components/SubscriptionPlans"));
 const Dashboard = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const [subscriptionLoading, setSubscriptionLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [subscription, setSubscription] = useState<any>(null);
@@ -107,6 +108,7 @@ const Dashboard = () => {
   };
 
   const fetchSubscription = async (userId: string) => {
+    setSubscriptionLoading(true);
     try {
       const { data, error } = await supabase
         .from("user_subscriptions")
@@ -114,13 +116,22 @@ const Dashboard = () => {
         .eq("user_id", userId)
         .order("created_at", { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
-      if (!error && data) {
-        setSubscription(data);
+      if (error) {
+        console.error("Error fetching subscription:", error);
+        setSubscription(null);
+        return;
       }
+      
+      // Set subscription data (could be null if no subscription exists)
+      setSubscription(data);
+      console.log("Subscription fetched:", data?.status, data?.subscription_plans?.name);
     } catch (error) {
       console.error("Error fetching subscription:", error);
+      setSubscription(null);
+    } finally {
+      setSubscriptionLoading(false);
     }
   };
 
@@ -146,15 +157,22 @@ const Dashboard = () => {
   };
 
   const isSubscriptionActive = () => {
-    if (!subscription) return false;
-    return subscription.status === 'active';
+    if (!subscription) {
+      console.log("No subscription found");
+      return false;
+    }
+    const isActive = subscription.status === 'active';
+    console.log("Subscription status check:", subscription.status, "isActive:", isActive);
+    return isActive;
   };
 
   const isSubscriptionExpired = () => {
     if (!subscription) return true;
     if (subscription.status === 'cancelled' || subscription.status === 'halted') return true;
     if (subscription.current_period_end) {
-      return new Date(subscription.current_period_end) < new Date();
+      const expired = new Date(subscription.current_period_end) < new Date();
+      console.log("Period end:", subscription.current_period_end, "expired:", expired);
+      return expired;
     }
     return false;
   };
@@ -205,7 +223,7 @@ const Dashboard = () => {
     }
   };
 
-  if (loading) {
+  if (loading || subscriptionLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
