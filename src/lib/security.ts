@@ -217,6 +217,7 @@ export const RATE_LIMITS = {
   login: { maxRequests: 10, windowMs: 300000 }, // 10 per 5 minutes
   signup: { maxRequests: 10, windowMs: 300000 }, // 10 per 5 minutes
   passwordReset: { maxRequests: 5, windowMs: 600000 }, // 5 per 10 minutes
+  passwordChange: { maxRequests: 5, windowMs: 600000 }, // 5 per 10 minutes
   
   // User actions - moderate limits
   feedback: { maxRequests: 10, windowMs: 60000 }, // 10 per minute
@@ -227,3 +228,50 @@ export const RATE_LIMITS = {
   viewMenu: { maxRequests: 100, windowMs: 60000 }, // 100 per minute
   search: { maxRequests: 30, windowMs: 60000 }, // 30 per minute
 } as const;
+
+/**
+ * Password strength validation
+ * Returns score 0-4 and feedback
+ */
+export function validatePasswordStrength(password: string): {
+  score: number;
+  feedback: string[];
+  isStrong: boolean;
+} {
+  const feedback: string[] = [];
+  let score = 0;
+
+  if (password.length >= 8) score++;
+  else feedback.push("At least 8 characters");
+
+  if (password.length >= 12) score++;
+
+  if (/[a-z]/.test(password) && /[A-Z]/.test(password)) score++;
+  else feedback.push("Mix of uppercase and lowercase");
+
+  if (/\d/.test(password)) score++;
+  else feedback.push("At least one number");
+
+  if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) score++;
+  else feedback.push("At least one special character");
+
+  // Check for common weak patterns
+  const weakPatterns = [
+    /^123456/,
+    /^password/i,
+    /^qwerty/i,
+    /^abc123/i,
+    /(.)\1{3,}/, // 4+ repeated characters
+  ];
+  
+  if (weakPatterns.some(pattern => pattern.test(password))) {
+    score = Math.max(0, score - 2);
+    feedback.push("Avoid common patterns");
+  }
+
+  return {
+    score: Math.min(score, 4),
+    feedback,
+    isStrong: score >= 3,
+  };
+}

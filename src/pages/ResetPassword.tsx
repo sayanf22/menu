@@ -7,7 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Eye, EyeOff, KeyRound, CheckCircle } from "lucide-react";
+import { Loader2, Eye, EyeOff, KeyRound, CheckCircle, AlertCircle } from "lucide-react";
+import { validatePasswordStrength } from "@/lib/security";
 
 const ResetPassword = () => {
   const navigate = useNavigate();
@@ -51,11 +52,14 @@ const ResetPassword = () => {
   }, []);
 
 
+  const passwordStrength = validatePasswordStrength(newPassword);
+
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (newPassword.length < 8) {
-      toast.error("Password must be at least 8 characters long");
+    // Password strength validation
+    if (!passwordStrength.isStrong) {
+      toast.error(`Weak password: ${passwordStrength.feedback.slice(0, 2).join(', ')}`);
       return;
     }
 
@@ -173,6 +177,34 @@ const ResetPassword = () => {
                       )}
                     </Button>
                   </div>
+                  {newPassword && (
+                    <div className="space-y-1">
+                      <div className="flex gap-1">
+                        {[1, 2, 3, 4].map((level) => (
+                          <div
+                            key={level}
+                            className={`h-1 flex-1 rounded-full transition-colors ${
+                              passwordStrength.score >= level
+                                ? passwordStrength.score <= 1
+                                  ? "bg-red-500"
+                                  : passwordStrength.score <= 2
+                                  ? "bg-orange-500"
+                                  : passwordStrength.score <= 3
+                                  ? "bg-yellow-500"
+                                  : "bg-green-500"
+                                : "bg-muted"
+                            }`}
+                          />
+                        ))}
+                      </div>
+                      {passwordStrength.feedback.length > 0 && (
+                        <p className="text-xs text-muted-foreground flex items-center gap-1">
+                          <AlertCircle className="h-3 w-3" />
+                          {passwordStrength.feedback[0]}
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
                 
                 <div className="space-y-2">

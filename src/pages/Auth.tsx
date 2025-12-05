@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, Eye, EyeOff, Check, Crown, Star, ArrowRight, ArrowLeft, CreditCard } from "lucide-react";
-import { sanitizeInput, isValidEmail, resetRateLimit, checkRateLimit, RATE_LIMITS } from "@/lib/security";
+import { sanitizeInput, isValidEmail, resetRateLimit, checkRateLimit, RATE_LIMITS, validatePasswordStrength } from "@/lib/security";
 import { useRazorpay } from "@/hooks/useRazorpay";
 
 interface Plan {
@@ -175,8 +175,10 @@ const Auth = () => {
       return false;
     }
 
-    if (signUpData.password.length < 8) {
-      toast.error("Password must be at least 8 characters long");
+    // Password strength validation
+    const strength = validatePasswordStrength(signUpData.password);
+    if (!strength.isStrong) {
+      toast.error(`Weak password: ${strength.feedback.slice(0, 2).join(', ')}`);
       return false;
     }
 

@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { Loader2, Save, Edit, Upload, X, Bell, BellOff, Crown, Lock, Sparkles, Check, KeyRound, Eye, EyeOff } from "lucide-react";
 import { compressImage, COMPRESSION_PRESETS, getCompressionStats } from "@/lib/image-compression";
 import { useRazorpay } from "@/hooks/useRazorpay";
+import { checkRateLimit, RATE_LIMITS, validatePasswordStrength } from "@/lib/security";
 import {
     Dialog,
     DialogContent,
@@ -356,14 +357,27 @@ const RestaurantProfile = ({ restaurantId, onProfileUpdate }: RestaurantProfileP
     const handleChangePassword = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        // Validation
-        if (newPassword.length < 8) {
-            toast.error("New password must be at least 8 characters long");
+        // Rate limit check
+        if (!checkRateLimit('passwordChange', RATE_LIMITS.passwordChange.maxRequests, RATE_LIMITS.passwordChange.windowMs)) {
+            toast.error("Too many password change attempts. Please wait 10 minutes.");
+            return;
+        }
+
+        // Password strength validation
+        const strength = validatePasswordStrength(newPassword);
+        if (!strength.isStrong) {
+            toast.error(`Weak password: ${strength.feedback.slice(0, 2).join(', ')}`);
             return;
         }
 
         if (newPassword !== confirmNewPassword) {
             toast.error("New passwords do not match");
+            return;
+        }
+
+        // Prevent using same password
+        if (currentPassword === newPassword) {
+            toast.error("New password must be different from current password");
             return;
         }
 
