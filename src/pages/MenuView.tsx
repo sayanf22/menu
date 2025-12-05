@@ -197,7 +197,7 @@ const MenuView = () => {
         setSessionRestaurantId(sessionData.restaurant_id!);
         fetchMenuDataForRestaurant(sessionData.restaurant_id!);
         logViewForRestaurant(sessionData.restaurant_id!);
-        fetchClientInfo();
+        fetchClientInfo(sessionData.restaurant_id!);
         
         // Set up activity tracking - validate session every 5 minutes
         activityIntervalRef.current = setInterval(async () => {
@@ -236,13 +236,14 @@ const MenuView = () => {
   
   useEffect(() => { if (!loading && profile) { const timer = setTimeout(() => setShowSplash(false), 1200); return () => clearTimeout(timer); } }, [loading, profile]);
 
-  const fetchClientInfo = useCallback(async () => {
+  const fetchClientInfo = useCallback(async (restId?: string) => {
     try {
+      const targetId = restId || restaurantId;
       const fingerprint = generateDeviceFingerprint();
       setDeviceFingerprint(fingerprint);
       const [ipResult, feedbackResult] = await Promise.all([
         supabase.functions.invoke("get-client-info"),
-        restaurantId ? supabase.from("feedback").select("created_at").eq("restaurant_id", restaurantId).eq("device_fingerprint", fingerprint).gte("created_at", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()).maybeSingle() : Promise.resolve({ data: null })
+        targetId ? supabase.from("feedback").select("created_at").eq("restaurant_id", targetId).eq("device_fingerprint", fingerprint).gte("created_at", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()).maybeSingle() : Promise.resolve({ data: null })
       ]);
       if (ipResult.data?.ip) setClientIp(ipResult.data.ip);
       if (feedbackResult.data) setCanSubmitFeedback(false);
@@ -353,9 +354,14 @@ const handleSubmitFeedback = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!canSubmitFeedback) { toast.error("You have already submitted feedback recently."); return; }
     if (feedback.rating === 0) { toast.error("Please select a rating"); return; }
+    
+    // Use effective restaurant ID (from session or URL)
+    const targetRestaurantId = sessionRestaurantId || restaurantId;
+    if (!targetRestaurantId) { toast.error("Restaurant not found"); return; }
+    
     setSubmitting(true);
     try {
-      const { error } = await supabase.from("feedback").insert({ restaurant_id: restaurantId, rating: feedback.rating, customer_name: feedback.name || null, comment: feedback.comment || null, customer_ip: clientIp || null, device_fingerprint: deviceFingerprint || null });
+      const { error } = await supabase.from("feedback").insert({ restaurant_id: targetRestaurantId, rating: feedback.rating, customer_name: feedback.name || null, comment: feedback.comment || null, customer_ip: clientIp || null, device_fingerprint: deviceFingerprint || null });
       if (error) throw error;
       toast.success("Thank you for your feedback!");
       setFeedback({ rating: 0, name: "", comment: "" });
