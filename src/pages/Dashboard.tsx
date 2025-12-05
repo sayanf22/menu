@@ -47,13 +47,30 @@ const RestaurantProfile = lazy(() => import("@/components/dashboard/RestaurantPr
 const SubscriptionStatus = lazy(() => import("@/components/dashboard/SubscriptionStatus"));
 const SubscriptionPlans = lazy(() => import("@/components/SubscriptionPlans"));
 
+interface UserProfile {
+  id: string;
+  restaurant_name: string;
+  restaurant_description: string | null;
+  logo_url: string | null;
+  bell_service_enabled: boolean;
+  approval_status: string;
+}
+
+interface UserSubscription {
+  id: string;
+  plan_id: string | null;
+  status: string;
+  billing_cycle: string;
+  current_period_end: string | null;
+}
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [subscriptionLoading, setSubscriptionLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
-  const [profile, setProfile] = useState<any>(null);
-  const [subscription, setSubscription] = useState<any>(null);
+  const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [subscription, setSubscription] = useState<UserSubscription | null>(null);
   const [newFeedbackCount, setNewFeedbackCount] = useState(0);
   const [activeTab, setActiveTab] = useState("profile");
   const { initiatePayment, loading: paymentLoading } = useRazorpay();
@@ -70,6 +87,7 @@ const Dashboard = () => {
     });
 
     return () => subscription.unsubscribe();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate]);
 
   const checkUser = async () => {
@@ -139,7 +157,7 @@ const Dashboard = () => {
           _is_active: response.is_active
         };
         setSubscription(subscriptionData);
-        console.log("Subscription fetched from backend:", response.is_active, (response.plan as any)?.name);
+        console.log("Subscription fetched from backend:", response.is_active, (response.plan as { name?: string } | null)?.name);
       } else {
         setSubscription(null);
         console.log("No subscription found");
@@ -489,8 +507,8 @@ const Dashboard = () => {
                 <Suspense fallback={<div className="flex justify-center py-8"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
                   <RestaurantProfile
                     restaurantId={user?.id}
-                    onProfileUpdate={(updatedProfile: any) => {
-                      setProfile((prev: any) => ({ ...prev, ...updatedProfile }));
+                    onProfileUpdate={(updatedProfile: Record<string, unknown>) => {
+                      setProfile((prev) => prev ? { ...prev, ...updatedProfile } as UserProfile : null);
                     }}
                   />
                 </Suspense>

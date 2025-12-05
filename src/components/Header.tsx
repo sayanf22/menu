@@ -18,6 +18,7 @@ export const Header = () => {
         setIsAnimating(false);
       }, 200);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
 
   // Prevent body scroll when menu is open

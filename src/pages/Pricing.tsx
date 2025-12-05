@@ -17,7 +17,7 @@ interface Plan {
   description: string | null;
   price_monthly: number;
   price_yearly: number | null;
-  features: any;
+  features: string[];
   max_images: number | null;
   bell_feature_enabled: boolean | null;
   plan_tier: number | null;
@@ -29,7 +29,7 @@ const Pricing = () => {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   const [loadingPlans, setLoadingPlans] = useState(true);
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
   const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
   const { initiatePayment, loading } = useRazorpay();
 

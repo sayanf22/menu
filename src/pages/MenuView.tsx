@@ -95,6 +95,33 @@ const SocialIcon = memo(({ href, children, label }: { href: string; children: Re
 ));
 SocialIcon.displayName = "SocialIcon";
 
+// Type definitions for menu data
+interface RestaurantProfile {
+  restaurant_name: string;
+  restaurant_description?: string;
+  logo_url?: string;
+  is_disabled?: boolean;
+  bell_service_enabled?: boolean;
+  disabled?: boolean;
+  subscriptionExpired?: boolean;
+  subscriptionReason?: string;
+}
+
+interface MenuImage {
+  id: string;
+  image_url: string;
+  display_order: number;
+}
+
+interface SocialLinksData {
+  facebook?: string;
+  instagram?: string;
+  twitter?: string;
+  youtube?: string;
+  whatsapp?: string;
+  website?: string;
+}
+
 const MenuView = () => {
   const { restaurantId } = useParams();
   const [searchParams] = useSearchParams();
@@ -102,9 +129,9 @@ const MenuView = () => {
   
   const [loading, setLoading] = useState(true);
   const [showSplash, setShowSplash] = useState(true);
-  const [profile, setProfile] = useState<any>(null);
-  const [menuImages, setMenuImages] = useState<any[]>([]);
-  const [socialLinks, setSocialLinks] = useState<any>(null);
+  const [profile, setProfile] = useState<RestaurantProfile | null>(null);
+  const [menuImages, setMenuImages] = useState<MenuImage[]>([]);
+  const [socialLinks, setSocialLinks] = useState<SocialLinksData | null>(null);
   const [feedback, setFeedback] = useState({ rating: 0, name: "", comment: "" });
   const [submitting, setSubmitting] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
@@ -204,6 +231,7 @@ const MenuView = () => {
         clearInterval(activityIntervalRef.current);
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionToken, restaurantId]);
   
   useEffect(() => { if (!loading && profile) { const timer = setTimeout(() => setShowSplash(false), 1200); return () => clearTimeout(timer); } }, [loading, profile]);
@@ -345,7 +373,7 @@ const handleSubmitFeedback = async (e: React.FormEvent) => {
   if (sessionExpired.expired) {
     return (
       <SessionExpired
-        reason={sessionExpired.reason as any}
+        reason={sessionExpired.reason as "expired" | "invalid" | "idle" | undefined}
         message={sessionExpired.message}
       />
     );

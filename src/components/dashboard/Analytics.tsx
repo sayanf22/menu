@@ -41,6 +41,7 @@ const Analytics = ({ restaurantId }: AnalyticsProps) => {
     return () => {
       subscription.unsubscribe();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restaurantId]);
 
   const fetchAnalytics = async () => {

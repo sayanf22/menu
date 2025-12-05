@@ -24,6 +24,7 @@ const SocialLinks = ({ restaurantId }: SocialLinksProps) => {
 
   useEffect(() => {
     fetchSocialLinks();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restaurantId]);
 
   const fetchSocialLinks = async () => {
@@ -93,8 +94,9 @@ const SocialLinks = ({ restaurantId }: SocialLinksProps) => {
       }
 
       toast.success("Social links saved successfully!");
-    } catch (error: any) {
-      toast.error(error.message || "Error saving social links");
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Error saving social links";
+      toast.error(errorMessage);
     } finally {
       setSaving(false);
     }

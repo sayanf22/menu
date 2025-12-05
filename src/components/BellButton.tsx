@@ -74,7 +74,7 @@ export const BellButton = ({ restaurantId }: BellButtonProps) => {
 
       // Cooldown for 60 seconds
       setTimeout(() => setCooldown(false), 60000);
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error calling waiter:", error);
       toast.error("Failed to call waiter. Please try again.");
     } finally {

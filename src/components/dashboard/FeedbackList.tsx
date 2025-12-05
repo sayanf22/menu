@@ -4,17 +4,26 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Star, Loader2, MessageSquare } from "lucide-react";
 import { format } from "date-fns";
 
+interface FeedbackItem {
+  id: string;
+  customer_name: string | null;
+  rating: number;
+  comment: string | null;
+  created_at: string;
+}
+
 interface FeedbackListProps {
   restaurantId: string;
 }
 
 const FeedbackList = ({ restaurantId }: FeedbackListProps) => {
   const [loading, setLoading] = useState(true);
-  const [feedback, setFeedback] = useState<any[]>([]);
+  const [feedback, setFeedback] = useState<FeedbackItem[]>([]);
   const [averageRating, setAverageRating] = useState(0);
 
   useEffect(() => {
     fetchFeedback();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restaurantId]);
 
   const fetchFeedback = async () => {

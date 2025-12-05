@@ -68,6 +68,7 @@ const RestaurantProfile = ({ restaurantId, onProfileUpdate }: RestaurantProfileP
         fetchProfile();
         checkBellAccess();
         fetchBasicPlusPlan();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [restaurantId]);
 
     const checkBellAccess = async () => {

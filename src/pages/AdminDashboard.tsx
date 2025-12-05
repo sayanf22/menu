@@ -66,6 +66,7 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     checkAdminSession();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const checkAdminSession = async () => {
@@ -176,8 +177,9 @@ const AdminDashboard = () => {
       }
 
       await loadProfiles();
-    } catch (error: any) {
-      toast.error(`Action failed: ${error.message}`);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      toast.error(`Action failed: ${errorMessage}`);
     } finally {
       setActionLoading(false);
       setSelectedProfile(null);

@@ -22,6 +22,7 @@ const QRSession = () => {
     if (restaurantId) {
       createSession();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restaurantId]);
 
   const createSession = async () => {

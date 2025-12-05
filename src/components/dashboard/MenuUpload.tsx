@@ -40,7 +40,7 @@ const MenuUpload = ({ restaurantId }: MenuUploadProps) => {
   const [compressing, setCompressing] = useState(false);
   const [compressionProgress, setCompressionProgress] = useState(0);
   const [currentFileName, setCurrentFileName] = useState("");
-  const [menuImages, setMenuImages] = useState<any[]>([]);
+  const [menuImages, setMenuImages] = useState<{ id: string; image_url: string; display_order: number }[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [imageToDelete, setImageToDelete] = useState<{ id: string; url: string } | null>(null);
@@ -51,6 +51,7 @@ const MenuUpload = ({ restaurantId }: MenuUploadProps) => {
   useEffect(() => {
     fetchMenuImages();
     fetchUploadLimit();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restaurantId]);
 
   const fetchUploadLimit = async () => {
@@ -199,9 +200,9 @@ const MenuUpload = ({ restaurantId }: MenuUploadProps) => {
         const publicUrl = uploadResult.url;
 
         // Ensure profile exists before inserting
-        const { error: profileError } = await supabase.rpc('ensure_profile_exists' as any, {
+        const { error: profileError } = await supabase.rpc('ensure_profile_exists', {
           user_id: restaurantId
-        });
+        } as { user_id: string });
 
         if (profileError) {
           console.error('Profile creation error:', profileError);
@@ -229,8 +230,9 @@ const MenuUpload = ({ restaurantId }: MenuUploadProps) => {
       toast.success("Images uploaded successfully!");
       await fetchMenuImages();
       await fetchUploadLimit(); // Refresh limit after upload
-    } catch (error: any) {
-      toast.error(error.message || "Error uploading images");
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Error uploading images";
+      toast.error(errorMessage);
     } finally {
       setUploading(false);
       event.target.value = "";
@@ -277,8 +279,9 @@ const MenuUpload = ({ restaurantId }: MenuUploadProps) => {
       toast.success("Image deleted successfully!");
       await fetchMenuImages();
       await fetchUploadLimit(); // Refresh limit after delete
-    } catch (error: any) {
-      toast.error(error.message || "Error deleting image");
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Error deleting image";
+      toast.error(errorMessage);
     } finally {
       setDeleteDialogOpen(false);
       setImageToDelete(null);

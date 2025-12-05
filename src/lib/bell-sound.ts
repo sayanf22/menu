@@ -6,9 +6,18 @@
 // Bell sound using Web Audio API (no external files needed)
 let audioContext: AudioContext | null = null;
 
+interface WindowWithWebkit extends Window {
+  webkitAudioContext?: typeof AudioContext;
+}
+
 function getAudioContext(): AudioContext {
   if (!audioContext) {
-    audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const AudioContextClass = window.AudioContext || (window as WindowWithWebkit).webkitAudioContext;
+    if (AudioContextClass) {
+      audioContext = new AudioContextClass();
+    } else {
+      throw new Error('AudioContext not supported');
+    }
   }
   return audioContext;
 }

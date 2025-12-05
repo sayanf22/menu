@@ -42,7 +42,12 @@ export const BellNotifications = ({ restaurantId, variant = "header" }: BellNoti
   const [stopSound, setStopSound] = useState<(() => void) | null>(null);
   const [hasBellAccess, setHasBellAccess] = useState<boolean | null>(null);
   const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
-  const [basicPlusPlan, setBasicPlusPlan] = useState<any>(null);
+  const [basicPlusPlan, setBasicPlusPlan] = useState<{
+    id: string;
+    name: string;
+    price_monthly: number;
+    price_yearly: number;
+  } | null>(null);
   const { initiatePayment, loading: paymentLoading } = useRazorpay();
 
   // Check bell feature access
@@ -86,8 +91,8 @@ export const BellNotifications = ({ restaurantId, variant = "header" }: BellNoti
   }, [restaurantId]);
 
   const handleNewNotification = useCallback(
-    (payload: any) => {
-      const newNotification = payload.new as Notification;
+    (payload: { new: Notification }) => {
+      const newNotification = payload.new;
       setNotifications((prev) => [newNotification, ...prev.slice(0, 19)]);
       setPendingCount((prev) => prev + 1);
 
