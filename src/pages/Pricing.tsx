@@ -75,7 +75,7 @@ const ALL_PLANS: Plan[] = [
     name: "Advanced",
     description: "Digital menu with categories",
     price_monthly: 59900,
-    price_yearly: 599000,
+    price_yearly: 658900, // 11 months price (1 month free)
     features: [
       "Digital menu with categories",
       "Up to 50 menu items",
@@ -97,7 +97,7 @@ const ALL_PLANS: Plan[] = [
     name: "Premium",
     description: "Complete ordering system",
     price_monthly: 99900,
-    price_yearly: 999000,
+    price_yearly: 1098900, // 11 months price (1 month free)
     features: [
       "Everything in Advanced",
       "Unlimited menu items",

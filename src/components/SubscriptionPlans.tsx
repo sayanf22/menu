@@ -58,7 +58,7 @@ const ALL_PLANS: Plan[] = [
     name: "Advanced",
     description: "Menu with categories",
     price_monthly: 59900,
-    price_yearly: 599000,
+    price_yearly: 658900, // 11 months price (1 month free)
     features: ["Menu categories", "50 menu items", "Toggle availability", "Advanced Bell", "Dark/Light mode"],
     max_images: 50,
     bell_feature_enabled: true,
@@ -73,7 +73,7 @@ const ALL_PLANS: Plan[] = [
     name: "Premium",
     description: "Complete ordering system",
     price_monthly: 99900,
-    price_yearly: 999000,
+    price_yearly: 1098900, // 11 months price (1 month free)
     features: ["Everything in Advanced", "Unlimited items", "Order management", "Order notifications", "Priority support"],
     max_images: null,
     bell_feature_enabled: true,
