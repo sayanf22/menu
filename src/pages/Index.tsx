@@ -21,14 +21,66 @@ import {
   Clock,
   Globe,
   Crown,
+  Bell,
+  Rocket,
+  ExternalLink,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { SEO } from "@/components/SEO";
 
+type PlanType = "basic" | "standard" | "advanced" | "premium";
+
+const PLANS = {
+  basic: {
+    name: "Basic",
+    price: 249,
+    description: "Perfect for small restaurants",
+    icon: Star,
+    features: ["Digital Menu with QR Code", "5 Menu Image Uploads", "Basic Analytics", "Customer Feedback", "Social Media Links", "Email Support"],
+    notIncluded: ["Bell Calling Feature", "10+ Image Uploads", "Priority Support"],
+    gradient: "",
+    isExternal: false,
+    externalUrl: "",
+  },
+  standard: {
+    name: "Standard",
+    price: 369,
+    description: "With bell service",
+    icon: Bell,
+    features: ["Everything in Basic", "10 Menu Image Uploads", "Bell Calling Feature", "Priority Support", "Advanced Analytics", "Custom Branding"],
+    notIncluded: [],
+    gradient: "from-amber-500 to-orange-500",
+    isExternal: false,
+    externalUrl: "",
+  },
+  advanced: {
+    name: "Advanced",
+    price: 599,
+    description: "Menu with categories",
+    icon: Zap,
+    features: ["Menu categories", "50 menu items", "Toggle availability", "Advanced Bell", "Dark/Light mode", "Mobile responsive"],
+    notIncluded: [],
+    gradient: "from-blue-500 to-cyan-500",
+    isExternal: true,
+    externalUrl: "https://addmenu.site/?mode=signup&plan=advanced",
+  },
+  premium: {
+    name: "Premium",
+    price: 999,
+    description: "Complete ordering system",
+    icon: Rocket,
+    features: ["Everything in Advanced", "Unlimited items", "Order management", "Order notifications", "Order tracking", "Priority support"],
+    notIncluded: [],
+    gradient: "from-purple-500 to-pink-500",
+    isExternal: true,
+    externalUrl: "https://addmenu.site/?mode=signup&plan=premium",
+  },
+};
+
 const Index = () => {
-  const [activeTab, setActiveTab] = useState<"basic" | "basicPlus">("basic");
+  const [activeTab, setActiveTab] = useState<PlanType>("basic");
   const [deviceView, setDeviceView] = useState<"phone" | "tablet">("phone");
 
   return (
@@ -223,7 +275,7 @@ const Index = () => {
               See the <span className="text-primary">Difference</span>
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Compare Basic and Basic Plus features on different devices
+              Compare all plans and features on different devices
             </p>
           </div>
 
@@ -255,28 +307,28 @@ const Index = () => {
 
           {/* Plan Switcher */}
           <div className="flex justify-center mb-10">
-            <div className="inline-flex p-1.5 bg-muted rounded-full dark:bg-muted/50">
-              <button
-                onClick={() => setActiveTab("basic")}
-                className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300 ${
-                  activeTab === "basic"
-                    ? "bg-primary text-white shadow-lg shadow-primary/25"
-                    : "text-muted-foreground hover:text-foreground"
-                } hover:scale-105 active:scale-95`}
-              >
-                Basic - ₹249/mo
-              </button>
-              <button
-                onClick={() => setActiveTab("basicPlus")}
-                className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300 ${
-                  activeTab === "basicPlus"
-                    ? "bg-gradient-to-r from-primary to-accent text-white shadow-lg shadow-primary/25"
-                    : "text-muted-foreground hover:text-foreground"
-                } hover:scale-105 active:scale-95`}
-              >
-                <Crown className="w-4 h-4 inline mr-1" />
-                Basic Plus - ₹369/mo
-              </button>
+            <div className="inline-flex flex-wrap justify-center gap-2 p-1.5 bg-muted rounded-2xl dark:bg-muted/50">
+              {(Object.keys(PLANS) as PlanType[]).map((planKey) => {
+                const plan = PLANS[planKey];
+                const isActive = activeTab === planKey;
+                const Icon = plan.icon;
+                return (
+                  <button
+                    key={planKey}
+                    onClick={() => setActiveTab(planKey)}
+                    className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 flex items-center gap-1.5 ${
+                      isActive
+                        ? plan.gradient
+                          ? `bg-gradient-to-r ${plan.gradient} text-white shadow-lg`
+                          : "bg-primary text-white shadow-lg shadow-primary/25"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted-foreground/10"
+                    } hover:scale-105 active:scale-95`}
+                  >
+                    <Icon className="w-3.5 h-3.5" />
+                    {plan.name} - ₹{plan.price}/mo
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -399,83 +451,63 @@ const Index = () => {
 
             {/* Feature List */}
             <div className="max-w-md">
-              <h3 className="text-2xl font-bold mb-6">
-                {activeTab === "basic" ? "Basic Plan Features" : (
-                  <span className="flex items-center gap-2">
-                    <Crown className="w-6 h-6 text-primary" />
-                    Basic Plus Features
-                  </span>
-                )}
-              </h3>
-              <div className="space-y-4">
-                {activeTab === "basic" ? (
+              {(() => {
+                const plan = PLANS[activeTab];
+                const Icon = plan.icon;
+                return (
                   <>
-                    {[
-                      "Digital Menu with QR Code",
-                      "5 Menu Image Uploads",
-                      "Basic Analytics Dashboard",
-                      "Customer Feedback Collection",
-                      "Social Media Links",
-                      "Unlimited Menu Updates",
-                      "Email Support",
-                    ].map((feature, i) => (
-                      <div key={i} className="flex items-center gap-3 transition-all duration-300 hover:translate-x-1">
-                        <div className="w-6 h-6 rounded-full bg-green-500/10 flex items-center justify-center flex-shrink-0 dark:bg-green-500/20">
-                          <Check className="w-4 h-4 text-green-500" />
+                    <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
+                      <Icon className={`w-6 h-6 ${plan.gradient ? 'text-primary' : 'text-primary'}`} />
+                      {plan.name} Plan Features
+                      {plan.isExternal && (
+                        <span className="text-xs bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-100 px-2 py-0.5 rounded-full">Pro</span>
+                      )}
+                    </h3>
+                    <div className="space-y-4">
+                      {plan.features.map((feature, i) => (
+                        <div key={i} className="flex items-center gap-3 transition-all duration-300 hover:translate-x-1">
+                          <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
+                            plan.gradient ? 'bg-primary/10 dark:bg-primary/20' : 'bg-green-500/10 dark:bg-green-500/20'
+                          }`}>
+                            <Check className={`w-4 h-4 ${plan.gradient ? 'text-primary' : 'text-green-500'}`} />
+                          </div>
+                          <span>{feature}</span>
                         </div>
-                        <span>{feature}</span>
-                      </div>
-                    ))}
-                    {[
-                      "Bell Calling Feature",
-                      "10 Image Uploads",
-                      "Priority Support",
-                    ].map((feature, i) => (
-                      <div key={i} className="flex items-center gap-3 opacity-50">
-                        <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-                          <X className="w-4 h-4 text-muted-foreground" />
+                      ))}
+                      {plan.notIncluded.map((feature, i) => (
+                        <div key={i} className="flex items-center gap-3 opacity-50">
+                          <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                            <X className="w-4 h-4 text-muted-foreground" />
+                          </div>
+                          <span className="line-through">{feature}</span>
                         </div>
-                        <span className="line-through">{feature}</span>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
+                    
+                    <div className="mt-8">
+                      {plan.isExternal ? (
+                        <a href={plan.externalUrl} target="_blank" rel="noopener noreferrer">
+                          <Button className={`rounded-full h-12 px-8 shadow-lg transition-all duration-300 hover:scale-105 active:scale-95 hover:shadow-xl ${
+                            plan.gradient ? `bg-gradient-to-r ${plan.gradient} hover:opacity-90` : 'bg-primary hover:bg-primary/90'
+                          }`}>
+                            Get {plan.name} - ₹{plan.price}/mo
+                            <ExternalLink className="w-4 h-4 ml-2" />
+                          </Button>
+                        </a>
+                      ) : (
+                        <Link to="/auth">
+                          <Button className={`rounded-full h-12 px-8 shadow-lg shadow-primary/20 transition-all duration-300 hover:scale-105 active:scale-95 hover:shadow-xl ${
+                            plan.gradient ? `bg-gradient-to-r ${plan.gradient} hover:opacity-90` : 'bg-primary hover:bg-primary/90'
+                          }`}>
+                            Get {plan.name} - ₹{plan.price}/mo
+                            <ChevronRight className="w-4 h-4 ml-1" />
+                          </Button>
+                        </Link>
+                      )}
+                    </div>
                   </>
-                ) : (
-                  <>
-                    {[
-                      "Everything in Basic",
-                      "10 Menu Image Uploads",
-                      "Bell Calling Feature",
-                      "Priority Customer Support",
-                      "Advanced Analytics",
-                      "Custom Branding Options",
-                    ].map((feature, i) => (
-                      <div key={i} className="flex items-center gap-3 transition-all duration-300 hover:translate-x-1">
-                        <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 dark:bg-primary/20">
-                          <Check className="w-4 h-4 text-primary" />
-                        </div>
-                        <span>{feature}</span>
-                      </div>
-                    ))}
-                  </>
-                )}
-              </div>
-              
-              <div className="mt-8">
-                {activeTab === "basic" ? (
-                  <Link to="/auth">
-                    <Button className="rounded-full h-12 px-8 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all duration-300 hover:scale-105 active:scale-95 hover:shadow-xl">
-                      Start with Basic - ₹249/mo
-                    </Button>
-                  </Link>
-                ) : (
-                  <Link to="/auth">
-                    <Button className="rounded-full h-12 px-8 bg-gradient-to-r from-primary to-accent hover:opacity-90 shadow-lg shadow-primary/20 transition-all duration-300 hover:scale-105 active:scale-95 hover:shadow-xl">
-                      Get Basic Plus - ₹369/mo
-                      <ChevronRight className="w-4 h-4 ml-1" />
-                    </Button>
-                  </Link>
-                )}
-              </div>
+                );
+              })()}
             </div>
           </div>
         </div>
@@ -506,98 +538,93 @@ const Index = () => {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            {/* Basic Plan */}
-            <Card className="p-8 border-2 border-border hover:border-primary/30 transition-all duration-300 relative overflow-hidden dark:border-border/50 dark:hover:border-primary/40 rounded-3xl hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 dark:bg-primary/3" />
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+            {(Object.entries(PLANS) as [PlanType, typeof PLANS.basic][]).map(([key, plan]) => {
+              const Icon = plan.icon;
+              const isHighlighted = key === "standard" || key === "premium";
               
-              <div className="relative">
-                <h3 className="text-2xl font-bold mb-2">Basic</h3>
-                <p className="text-muted-foreground mb-6">Perfect for small restaurants</p>
-                
-                <div className="mb-6">
-                  <span className="text-4xl font-bold">₹249</span>
-                  <span className="text-muted-foreground">/month</span>
-                </div>
-
-                <div className="space-y-3 mb-8">
-                  {[
-                    "Digital Menu with QR Code",
-                    "5 Menu Image Uploads",
-                    "Basic Analytics",
-                    "Customer Feedback",
-                    "Social Media Links",
-                    "Unlimited Updates",
-                    "Email Support",
-                  ].map((feature, i) => (
-                    <div key={i} className="flex items-center gap-3 transition-all duration-300 hover:translate-x-1">
-                      <div className="w-5 h-5 rounded-full bg-green-500/10 flex items-center justify-center flex-shrink-0 dark:bg-green-500/20">
-                        <Check className="w-3 h-3 text-green-500" />
+              return (
+                <Card 
+                  key={key}
+                  className={`p-6 border-2 relative overflow-hidden rounded-3xl hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 ${
+                    isHighlighted 
+                      ? 'border-primary bg-gradient-to-br from-primary/5 via-background to-accent/5 dark:from-primary/10 dark:to-accent/10' 
+                      : 'border-border hover:border-primary/30 dark:border-border/50 dark:hover:border-primary/40'
+                  }`}
+                >
+                  {/* Badge */}
+                  {isHighlighted && (
+                    <div className="absolute top-3 right-3">
+                      <div className={`px-2 py-1 text-white text-xs font-medium rounded-full flex items-center gap-1 ${
+                        key === "premium" ? 'bg-gradient-to-r from-purple-500 to-pink-500' : 'bg-gradient-to-r from-amber-500 to-orange-500'
+                      }`}>
+                        {key === "premium" ? <Rocket className="w-3 h-3" /> : <Crown className="w-3 h-3" />}
+                        {key === "premium" ? "Best" : "Popular"}
                       </div>
-                      <span className="text-sm">{feature}</span>
                     </div>
-                  ))}
-                </div>
-
-                <Link to="/auth" className="block">
-                  <Button className="w-full rounded-full h-12 bg-primary hover:bg-primary/90 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] hover:shadow-lg">
-                    Get Started
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
-                </Link>
-              </div>
-            </Card>
-
-            {/* Basic Plus Plan */}
-            <Card className="p-8 border-2 border-primary bg-gradient-to-br from-primary/5 via-background to-accent/5 relative overflow-hidden dark:from-primary/10 dark:to-accent/10 rounded-3xl hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-300">
-              {/* Bell Feature badge */}
-              <div className="absolute top-4 right-4">
-                <div className="px-3 py-1 bg-primary text-white text-xs font-medium rounded-full flex items-center gap-1">
-                  <Crown className="w-3 h-3" />
-                  Bell Feature
-                </div>
-              </div>
-              
-              <div className="absolute top-0 left-0 w-40 h-40 bg-primary/10 rounded-full blur-3xl -translate-y-1/2 -translate-x-1/2 dark:bg-primary/5" />
-              
-              <div className="relative">
-                <h3 className="text-2xl font-bold mb-2 flex items-center gap-2">
-                  Basic Plus
-                  <Crown className="w-5 h-5 text-primary" />
-                </h3>
-                <p className="text-muted-foreground mb-6">For growing restaurants with bell service</p>
-                
-                <div className="mb-6">
-                  <span className="text-4xl font-bold">₹369</span>
-                  <span className="text-muted-foreground">/month</span>
-                </div>
-
-                <div className="space-y-3 mb-8">
-                  {[
-                    "Everything in Basic",
-                    "10 Menu Image Uploads",
-                    "Bell Calling Feature",
-                    "Priority Customer Support",
-                    "Advanced Analytics",
-                    "Custom Branding Options",
-                  ].map((feature, i) => (
-                    <div key={i} className="flex items-center gap-3 transition-all duration-300 hover:translate-x-1">
-                      <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 dark:bg-primary/20">
-                        <Check className="w-3 h-3 text-primary" />
+                  )}
+                  
+                  {plan.isExternal && (
+                    <div className="absolute top-3 left-3">
+                      <div className="px-2 py-1 bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-100 text-xs font-medium rounded-full flex items-center gap-1">
+                        <ExternalLink className="w-3 h-3" />
+                        Pro
                       </div>
-                      <span className="text-sm">{feature}</span>
                     </div>
-                  ))}
-                </div>
+                  )}
+                  
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 dark:bg-primary/3" />
+                  
+                  <div className="relative pt-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${
+                        plan.gradient ? `bg-gradient-to-br ${plan.gradient} text-white` : 'bg-primary/10 text-primary'
+                      }`}>
+                        <Icon className="w-4 h-4" />
+                      </div>
+                      <h3 className="text-xl font-bold">{plan.name}</h3>
+                    </div>
+                    <p className="text-muted-foreground text-sm mb-4">{plan.description}</p>
+                    
+                    <div className="mb-5">
+                      <span className="text-3xl font-bold">₹{plan.price}</span>
+                      <span className="text-muted-foreground text-sm">/month</span>
+                    </div>
 
-                <Link to="/auth" className="block">
-                  <Button className="w-full rounded-full h-12 bg-gradient-to-r from-primary to-accent hover:opacity-90 shadow-lg shadow-primary/20 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] hover:shadow-xl">
-                    Get Basic Plus
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
-                </Link>
-              </div>
-            </Card>
+                    <div className="space-y-2 mb-6">
+                      {plan.features.slice(0, 5).map((feature, i) => (
+                        <div key={i} className="flex items-center gap-2 transition-all duration-300 hover:translate-x-1">
+                          <div className="w-4 h-4 rounded-full bg-green-500/10 flex items-center justify-center flex-shrink-0 dark:bg-green-500/20">
+                            <Check className="w-2.5 h-2.5 text-green-500" />
+                          </div>
+                          <span className="text-xs text-muted-foreground">{feature}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {plan.isExternal ? (
+                      <a href={plan.externalUrl} target="_blank" rel="noopener noreferrer" className="block">
+                        <Button className={`w-full rounded-full h-10 text-sm transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] hover:shadow-lg ${
+                          plan.gradient ? `bg-gradient-to-r ${plan.gradient} hover:opacity-90 text-white` : 'bg-primary hover:bg-primary/90'
+                        }`}>
+                          Get {plan.name}
+                          <ExternalLink className="w-3.5 h-3.5 ml-2" />
+                        </Button>
+                      </a>
+                    ) : (
+                      <Link to="/auth" className="block">
+                        <Button className={`w-full rounded-full h-10 text-sm transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] hover:shadow-lg ${
+                          plan.gradient ? `bg-gradient-to-r ${plan.gradient} hover:opacity-90 text-white shadow-lg shadow-primary/20` : 'bg-primary hover:bg-primary/90'
+                        }`}>
+                          Get Started
+                          <ArrowRight className="w-3.5 h-3.5 ml-2" />
+                        </Button>
+                      </Link>
+                    )}
+                  </div>
+                </Card>
+              );
+            })}
           </div>
         </div>
       </section>
