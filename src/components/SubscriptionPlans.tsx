@@ -32,7 +32,7 @@ const ALL_PLANS: Plan[] = [
     name: "Basic",
     description: "Perfect for small restaurants",
     price_monthly: 24900,
-    price_yearly: 249000,
+    price_yearly: 273900, // 11 months price (1 month free)
     features: ["Digital Menu with QR Code", "5 Menu Image Uploads", "Basic Analytics", "Customer Feedback", "Social Media Links"],
     max_images: 5,
     bell_feature_enabled: false,
@@ -44,7 +44,7 @@ const ALL_PLANS: Plan[] = [
     name: "Standard",
     description: "With bell service",
     price_monthly: 36900,
-    price_yearly: 369000,
+    price_yearly: 405900, // 11 months price (1 month free)
     features: ["Everything in Basic", "10 Menu Images", "Bell Calling Feature", "Priority Support", "Advanced Analytics"],
     max_images: 10,
     bell_feature_enabled: true,
@@ -232,7 +232,7 @@ export const SubscriptionPlans = ({ showTitle = true, compact = false }: Subscri
             }`}
           >
             Yearly
-            <Badge variant="secondary" className="text-xs bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-100">Save 17%</Badge>
+            <Badge variant="secondary" className="text-xs bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-100">1 Month Free</Badge>
           </button>
         </div>
       </div>

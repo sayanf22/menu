@@ -35,7 +35,7 @@ const ALL_PLANS: Plan[] = [
     name: "Basic",
     description: "Perfect for small restaurants",
     price_monthly: 24900,
-    price_yearly: 249000,
+    price_yearly: 273900, // 11 months price (1 month free)
     features: [
       "Digital Menu with QR Code",
       "5 Menu Image Uploads",
@@ -54,7 +54,7 @@ const ALL_PLANS: Plan[] = [
     name: "Standard",
     description: "Growing restaurants with bell service",
     price_monthly: 36900,
-    price_yearly: 369000,
+    price_yearly: 405900, // 11 months price (1 month free)
     features: [
       "Everything in Basic",
       "10 Menu Image Uploads",
@@ -292,7 +292,7 @@ const Pricing = () => {
                   }`}
                 >
                   Yearly
-                  <Badge variant="secondary" className="text-xs bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-100">Save 17%</Badge>
+                  <Badge variant="secondary" className="text-xs bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-100">1 Month Free</Badge>
                 </button>
               </motion.div>
             </div>
@@ -362,8 +362,8 @@ const Pricing = () => {
                               <span className="text-muted-foreground text-sm">/{billingCycle === 'yearly' ? 'yr' : 'mo'}</span>
                             </div>
                             {billingCycle === 'yearly' && plan.price_yearly && (
-                              <p className="text-xs text-green-600 mt-1">
-                                Save {formatPrice((plan.price_monthly * 12) - plan.price_yearly)}/year
+                              <p className="text-xs text-green-600 mt-1 font-medium">
+                                🎉 1 month free! Pay for 11, get 12
                               </p>
                             )}
                           </div>
