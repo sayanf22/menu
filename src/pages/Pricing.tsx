@@ -4,116 +4,188 @@ import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Check, Crown, ArrowRight, MessageCircle, Sparkles, Star, Zap, Shield, Users, Loader2 } from "lucide-react";
+import { Check, Crown, ArrowRight, MessageCircle, Sparkles, Star, Zap, Shield, Users, Loader2, Bell, ExternalLink, Rocket } from "lucide-react";
 import { Helmet } from "react-helmet";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useRazorpay } from "@/hooks/useRazorpay";
 import { toast } from "sonner";
+import { motion } from "framer-motion";
 
 interface Plan {
   id: string;
   name: string;
-  description: string | null;
+  description: string;
   price_monthly: number;
   price_yearly: number | null;
   features: string[];
   max_images: number | null;
-  bell_feature_enabled: boolean | null;
-  plan_tier: number | null;
+  bell_feature_enabled: boolean;
+  plan_tier: number;
+  isExternal?: boolean;
+  externalUrl?: string;
+  highlight?: boolean;
+  icon: "star" | "zap" | "bell" | "rocket";
+  gradientClass?: string;
 }
+
+const ALL_PLANS: Plan[] = [
+  {
+    id: "basic",
+    name: "Basic",
+    description: "Perfect for small restaurants",
+    price_monthly: 24900,
+    price_yearly: 249000,
+    features: [
+      "Digital Menu with QR Code",
+      "5 Menu Image Uploads",
+      "Basic Analytics Dashboard",
+      "Customer Feedback Collection",
+      "Social Media Links",
+      "Email Support"
+    ],
+    max_images: 5,
+    bell_feature_enabled: false,
+    plan_tier: 1,
+    icon: "star"
+  },
+  {
+    id: "standard",
+    name: "Standard",
+    description: "Growing restaurants with bell service",
+    price_monthly: 36900,
+    price_yearly: 369000,
+    features: [
+      "Everything in Basic",
+      "10 Menu Image Uploads",
+      "Bell Calling Feature",
+      "Priority Support",
+      "Advanced Analytics",
+      "Custom Branding"
+    ],
+    max_images: 10,
+    bell_feature_enabled: true,
+    plan_tier: 2,
+    highlight: true,
+    icon: "bell",
+    gradientClass: "from-amber-500 to-orange-500"
+  },
+  {
+    id: "advanced",
+    name: "Advanced",
+    description: "Digital menu with categories",
+    price_monthly: 59900,
+    price_yearly: 599000,
+    features: [
+      "Digital menu with categories",
+      "Up to 50 menu items",
+      "Toggle item availability",
+      "QR code generation",
+      "Advanced Bell Feature",
+      "Dark/Light mode"
+    ],
+    max_images: 50,
+    bell_feature_enabled: true,
+    plan_tier: 3,
+    isExternal: true,
+    externalUrl: "https://addmenu.site/?mode=signup&plan=advanced",
+    icon: "zap",
+    gradientClass: "from-blue-500 to-cyan-500"
+  },
+  {
+    id: "premium",
+    name: "Premium",
+    description: "Complete ordering system",
+    price_monthly: 99900,
+    price_yearly: 999000,
+    features: [
+      "Everything in Advanced",
+      "Unlimited menu items",
+      "Real-time order management",
+      "Order notifications",
+      "Order status tracking",
+      "Priority support"
+    ],
+    max_images: null,
+    bell_feature_enabled: true,
+    plan_tier: 4,
+    isExternal: true,
+    externalUrl: "https://addmenu.site/?mode=signup&plan=premium",
+    highlight: true,
+    icon: "rocket",
+    gradientClass: "from-purple-500 to-pink-500"
+  }
+];
 
 const Pricing = () => {
   const navigate = useNavigate();
-  const [plans, setPlans] = useState<Plan[]>([]);
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
-  const [loadingPlans, setLoadingPlans] = useState(true);
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
   const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
+  const [dbPlans, setDbPlans] = useState<Map<string, string>>(new Map());
   const { initiatePayment, loading } = useRazorpay();
 
   useEffect(() => {
-    fetchPlans();
     checkUser();
+    fetchDbPlans();
   }, []);
 
   const checkUser = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     setUser(session?.user || null);
-    
     if (session?.user) {
-      // Check if user has active subscription
       const { data: subscription } = await supabase
         .from('user_subscriptions')
         .select('*')
         .eq('user_id', session.user.id)
         .eq('status', 'active')
         .single();
-      
       setHasActiveSubscription(!!subscription);
     }
   };
 
-  const fetchPlans = async () => {
+  const fetchDbPlans = async () => {
     try {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('subscription_plans')
-        .select('*')
-        .eq('is_active', true)
-        .order('plan_tier', { ascending: true });
-
-      if (error) throw error;
-      setPlans(data || []);
+        .select('id, name')
+        .eq('is_active', true);
+      if (data) {
+        const planMap = new Map<string, string>();
+        data.forEach(p => {
+          if (p.name.toLowerCase() === 'basic') planMap.set('basic', p.id);
+          else if (p.name.toLowerCase().includes('plus')) planMap.set('standard', p.id);
+        });
+        setDbPlans(planMap);
+      }
     } catch (err) {
       console.error('Error fetching plans:', err);
-      setPlans([
-        {
-          id: 'basic',
-          name: 'Basic',
-          description: 'Perfect for small restaurants',
-          price_monthly: 24900,
-          price_yearly: 249000,
-          features: ["Digital Menu with QR Code", "5 Menu Image Uploads", "Basic Analytics Dashboard", "Customer Feedback Collection", "Social Media Links", "Unlimited Menu Updates", "Email Support"],
-          max_images: 5,
-          bell_feature_enabled: false,
-          plan_tier: 1
-        },
-        {
-          id: 'basic-plus',
-          name: 'Basic Plus',
-          description: 'For growing restaurants with bell service',
-          price_monthly: 36900,
-          price_yearly: 369000,
-          features: ["Everything in Basic", "10 Menu Image Uploads", "Bell Calling Feature", "Priority Customer Support", "Advanced Analytics", "Custom Branding Options"],
-          max_images: 10,
-          bell_feature_enabled: true,
-          plan_tier: 2
-        }
-      ]);
-    } finally {
-      setLoadingPlans(false);
     }
   };
 
-  const handleSubscribe = async (planId: string) => {
-    // If not logged in, redirect to auth with plan info
-    if (!user) {
-      navigate(`/auth?plan=${planId}&cycle=${billingCycle}`);
+  const handleSubscribe = async (plan: Plan) => {
+    if (plan.isExternal && plan.externalUrl) {
+      window.open(plan.externalUrl, '_blank');
       return;
     }
-
-    // If already has active subscription
+    const dbPlanId = dbPlans.get(plan.id);
+    if (!dbPlanId) {
+      toast.error('Plan not available');
+      return;
+    }
+    if (!user) {
+      navigate(`/auth?plan=${dbPlanId}&cycle=${billingCycle}`);
+      return;
+    }
     if (hasActiveSubscription) {
       toast.info('You already have an active subscription');
       navigate('/dashboard');
       return;
     }
-
-    // Existing user without subscription - initiate payment
-    setSelectedPlan(planId);
+    setSelectedPlan(plan.id);
     await initiatePayment(
-      { planId, billingCycle },
+      { planId: dbPlanId, billingCycle },
       () => {
         setSelectedPlan(null);
         toast.success('Subscription activated!');
@@ -131,12 +203,30 @@ const Pricing = () => {
     }).format(paise / 100);
   };
 
+  const getIcon = (icon: string, className: string) => {
+    switch (icon) {
+      case "star": return <Star className={className} />;
+      case "bell": return <Bell className={className} />;
+      case "zap": return <Zap className={className} />;
+      case "rocket": return <Rocket className={className} />;
+      default: return <Star className={className} />;
+    }
+  };
+
+  const getGradientStyle = (gradientClass?: string) => {
+    if (!gradientClass) return {};
+    if (gradientClass.includes("amber")) return { background: 'linear-gradient(135deg, rgba(245,158,11,0.1), rgba(249,115,22,0.05))' };
+    if (gradientClass.includes("blue")) return { background: 'linear-gradient(135deg, rgba(59,130,246,0.1), rgba(6,182,212,0.05))' };
+    if (gradientClass.includes("purple")) return { background: 'linear-gradient(135deg, rgba(168,85,247,0.1), rgba(236,72,153,0.05))' };
+    return {};
+  };
+
+
   return (
     <>
       <Helmet>
         <title>AddMenu Pricing | Digital Menu QR Code Subscription Plans</title>
-        <meta name="description" content="Choose the perfect AddMenu subscription plan. Affordable pricing for restaurants. 7-day money-back guarantee. Start your digital menu today!" />
-        <meta name="keywords" content="addmenu pricing, digital menu pricing, QR menu cost, restaurant menu pricing, addmenu subscription" />
+        <meta name="description" content="Choose the perfect AddMenu subscription plan. From Basic to Premium with ordering system. 7-day money-back guarantee." />
         <link rel="canonical" href="https://addmenu.in/pricing" />
       </Helmet>
       
@@ -152,19 +242,37 @@ const Pricing = () => {
             </div>
             
             <div className="container mx-auto max-w-4xl text-center relative z-10">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6"
+              >
                 <Sparkles className="w-4 h-4" />
                 Simple & Transparent Pricing
-              </div>
-              <h1 className="text-3xl md:text-4xl font-bold mb-4">
-                Choose Your <span className="text-primary">Plan</span>
-              </h1>
-              <p className="text-lg text-muted-foreground mb-8 max-w-xl mx-auto">
-                Start with any plan. 7-day money-back guarantee. Cancel anytime.
-              </p>
+              </motion.div>
+              <motion.h1 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="text-3xl md:text-4xl font-bold mb-4"
+              >
+                Choose Your <span className="text-primary">Perfect Plan</span>
+              </motion.h1>
+              <motion.p 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="text-lg text-muted-foreground mb-8 max-w-xl mx-auto"
+              >
+                From simple QR menus to complete ordering systems. 7-day money-back guarantee.
+              </motion.p>
 
-              {/* Billing Toggle */}
-              <div className="inline-flex items-center bg-muted rounded-full p-1">
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="inline-flex items-center bg-muted rounded-full p-1"
+              >
                 <button
                   onClick={() => setBillingCycle('monthly')}
                   className={`px-5 py-2 rounded-full text-sm font-medium transition-all ${
@@ -186,165 +294,169 @@ const Pricing = () => {
                   Yearly
                   <Badge variant="secondary" className="text-xs bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-100">Save 17%</Badge>
                 </button>
-              </div>
+              </motion.div>
             </div>
           </section>
 
           {/* Pricing Cards */}
           <section className="py-12 px-4 relative">
-            <div className="container mx-auto max-w-4xl">
-              {loadingPlans ? (
-                <div className="flex justify-center py-12">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                </div>
-              ) : (
-                <div className="grid md:grid-cols-2 gap-6">
-                  {plans.map((plan) => {
-                    const isBasicPlus = plan.name.toLowerCase().includes('plus') || plan.plan_tier === 2;
-                    const price = billingCycle === 'yearly' ? plan.price_yearly : plan.price_monthly;
-                    const isSelected = selectedPlan === plan.id;
-                    const features = (plan.features as string[]) || [];
+            <div className="container mx-auto max-w-6xl">
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
+                {ALL_PLANS.map((plan, index) => {
+                  const price = billingCycle === 'yearly' ? plan.price_yearly : plan.price_monthly;
+                  const isSelected = selectedPlan === plan.id;
 
-                    return (
+                  return (
+                    <motion.div
+                      key={plan.id}
+                      initial={{ opacity: 0, y: 30 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                    >
                       <Card
-                        key={plan.id}
-                        className={`p-6 border-2 relative overflow-hidden rounded-2xl transition-all duration-300 hover:shadow-lg ${
-                          isBasicPlus
-                            ? 'border-primary bg-gradient-to-br from-primary/5 via-background to-accent/5'
-                            : 'border-border hover:border-primary/30'
+                        className={`p-5 h-full flex flex-col border-2 relative overflow-hidden rounded-2xl transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${
+                          plan.highlight ? 'border-transparent' : 'border-border hover:border-primary/30'
                         }`}
+                        style={plan.highlight ? getGradientStyle(plan.gradientClass) : {}}
                       >
-                        {isBasicPlus && (
+                        {plan.highlight && (
                           <div className="absolute top-3 right-3">
-                            <Badge className="bg-gradient-to-r from-primary to-accent text-white text-xs">
-                              <Crown className="w-3 h-3 mr-1" />
-                              Bell Feature
+                            <Badge className={`text-xs text-white border-0 ${
+                              plan.gradientClass?.includes("purple") 
+                                ? 'bg-gradient-to-r from-purple-500 to-pink-500'
+                                : 'bg-gradient-to-r from-amber-500 to-orange-500'
+                            }`}>
+                              {plan.plan_tier === 4 ? <Rocket className="w-3 h-3 mr-1" /> : <Crown className="w-3 h-3 mr-1" />}
+                              {plan.plan_tier === 4 ? 'Best Value' : 'Popular'}
                             </Badge>
                           </div>
                         )}
 
-                        <div className="relative">
-                          <div className="flex items-center gap-3 mb-4">
+                        {plan.isExternal && (
+                          <div className="absolute top-3 left-3">
+                            <Badge variant="outline" className="text-xs">
+                              <ExternalLink className="w-3 h-3 mr-1" />
+                              Pro
+                            </Badge>
+                          </div>
+                        )}
+
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-4 mt-2">
                             <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                              isBasicPlus ? 'bg-gradient-to-br from-primary to-accent' : 'bg-primary/10'
+                              plan.gradientClass 
+                                ? `bg-gradient-to-br ${plan.gradientClass} text-white`
+                                : 'bg-primary/10 text-primary'
                             }`}>
-                              {isBasicPlus ? (
-                                <Crown className="w-5 h-5 text-white" />
-                              ) : (
-                                <Star className="w-5 h-5 text-primary" />
-                              )}
+                              {getIcon(plan.icon, "w-5 h-5")}
                             </div>
                             <div>
-                              <h3 className="text-xl font-bold">{plan.name}</h3>
-                              <p className="text-sm text-muted-foreground">{plan.max_images} images{plan.bell_feature_enabled ? ' + Bell Calling' : ''}</p>
+                              <h3 className="text-lg font-bold">{plan.name}</h3>
+                              <p className="text-xs text-muted-foreground">{plan.description}</p>
                             </div>
                           </div>
 
-                          <div className="mb-6">
+                          <div className="mb-5">
                             <div className="flex items-baseline gap-1">
-                              <span className="text-4xl font-bold">{formatPrice(price || 0)}</span>
-                              <span className="text-muted-foreground">
-                                /{billingCycle === 'yearly' ? 'year' : 'month'}
-                              </span>
+                              <span className="text-3xl font-bold">{formatPrice(price || 0)}</span>
+                              <span className="text-muted-foreground text-sm">/{billingCycle === 'yearly' ? 'yr' : 'mo'}</span>
                             </div>
-                            {billingCycle === 'yearly' && plan.price_yearly && plan.price_monthly && (
-                              <p className="text-sm text-green-600 mt-1">
-                                Save {formatPrice((plan.price_monthly * 12) - plan.price_yearly)} per year
+                            {billingCycle === 'yearly' && plan.price_yearly && (
+                              <p className="text-xs text-green-600 mt-1">
+                                Save {formatPrice((plan.price_monthly * 12) - plan.price_yearly)}/year
                               </p>
                             )}
                           </div>
 
-                          <div className="space-y-3 mb-6">
-                            {features.map((feature, i) => (
-                              <div key={i} className="flex items-center gap-2">
-                                <div className={`w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 ${
-                                  isBasicPlus ? 'bg-primary/10' : 'bg-green-500/10'
-                                }`}>
-                                  <Check className={`w-2.5 h-2.5 ${isBasicPlus ? 'text-primary' : 'text-green-500'}`} />
+                          <div className="space-y-2 mb-5">
+                            {plan.features.map((feature, i) => (
+                              <div key={i} className="flex items-start gap-2">
+                                <div className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 bg-green-500/10">
+                                  <Check className="w-2.5 h-2.5 text-green-500" />
                                 </div>
-                                <span className="text-sm">{feature}</span>
+                                <span className="text-xs text-muted-foreground">{feature}</span>
                               </div>
                             ))}
                           </div>
-
-                          <Button
-                            onClick={() => handleSubscribe(plan.id)}
-                            disabled={loading}
-                            className={`w-full rounded-full h-11 shadow-md transition-all duration-300 ${
-                              isBasicPlus
-                                ? 'bg-gradient-to-r from-primary to-accent hover:opacity-90'
-                                : 'bg-primary hover:bg-primary/90'
-                            }`}
-                          >
-                            {isSelected && loading ? (
-                              <>
-                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                Processing...
-                              </>
-                            ) : (
-                              <>
-                                Get Started
-                                <ArrowRight className="w-4 h-4 ml-2" />
-                              </>
-                            )}
-                          </Button>
                         </div>
+
+                        <Button
+                          onClick={() => handleSubscribe(plan)}
+                          disabled={loading && isSelected}
+                          className={`w-full rounded-xl h-10 text-sm font-medium shadow-md transition-all duration-300 ${
+                            plan.gradientClass
+                              ? `bg-gradient-to-r ${plan.gradientClass} hover:opacity-90 text-white`
+                              : 'bg-primary hover:bg-primary/90'
+                          }`}
+                        >
+                          {isSelected && loading ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Processing...
+                            </>
+                          ) : plan.isExternal ? (
+                            <>
+                              Get {plan.name}
+                              <ExternalLink className="w-3.5 h-3.5 ml-2" />
+                            </>
+                          ) : (
+                            <>
+                              Get Started
+                              <ArrowRight className="w-3.5 h-3.5 ml-2" />
+                            </>
+                          )}
+                        </Button>
                       </Card>
-                    );
-                  })}
-                </div>
-              )}
+                    </motion.div>
+                  );
+                })}
+              </div>
             </div>
           </section>
 
           {/* Features Comparison */}
           <section className="py-12 px-4 bg-muted/30">
-            <div className="container mx-auto max-w-3xl">
+            <div className="container mx-auto max-w-5xl">
               <h2 className="text-2xl font-bold text-center mb-8">
-                Compare <span className="text-primary">Features</span>
+                Compare <span className="text-primary">All Plans</span>
               </h2>
               
-              <div className="bg-card rounded-2xl border overflow-hidden">
-                <div className="grid grid-cols-3 gap-4 p-3 bg-muted/50 font-semibold text-sm">
-                  <div>Feature</div>
-                  <div className="text-center">Basic</div>
-                  <div className="text-center text-primary">Basic Plus</div>
-                </div>
-                
-                {[
-                  { feature: "Digital QR Menu", basic: true, basicPlus: true },
-                  { feature: "Menu Image Uploads", basic: "5", basicPlus: "10" },
-                  { feature: "Basic Analytics", basic: true, basicPlus: true },
-                  { feature: "Customer Feedback", basic: true, basicPlus: true },
-                  { feature: "Social Media Links", basic: true, basicPlus: true },
-                  { feature: "Unlimited Updates", basic: true, basicPlus: true },
-                  { feature: "Bell Calling Feature", basic: false, basicPlus: true },
-                  { feature: "Advanced Analytics", basic: false, basicPlus: true },
-                  { feature: "Custom Branding", basic: false, basicPlus: true },
-                  { feature: "Priority Support", basic: false, basicPlus: true },
-                ].map((row, i) => (
-                  <div key={i} className={`grid grid-cols-3 gap-4 p-3 text-sm ${i % 2 === 0 ? 'bg-background' : 'bg-muted/20'}`}>
-                    <div>{row.feature}</div>
-                    <div className="text-center">
-                      {typeof row.basic === 'string' ? (
-                        <span className="font-medium">{row.basic}</span>
-                      ) : row.basic ? (
-                        <Check className="w-4 h-4 text-green-500 mx-auto" />
-                      ) : (
-                        <span className="text-muted-foreground">—</span>
-                      )}
-                    </div>
-                    <div className="text-center">
-                      {typeof row.basicPlus === 'string' ? (
-                        <span className="font-medium text-primary">{row.basicPlus}</span>
-                      ) : row.basicPlus ? (
-                        <Check className="w-4 h-4 text-primary mx-auto" />
-                      ) : (
-                        <span className="text-muted-foreground">—</span>
-                      )}
-                    </div>
+              <div className="bg-card rounded-2xl border overflow-hidden overflow-x-auto">
+                <div className="min-w-[600px]">
+                  <div className="grid grid-cols-5 gap-2 p-3 bg-muted/50 font-semibold text-sm">
+                    <div>Feature</div>
+                    <div className="text-center">Basic</div>
+                    <div className="text-center text-amber-600">Standard</div>
+                    <div className="text-center text-blue-600">Advanced</div>
+                    <div className="text-center text-purple-600">Premium</div>
                   </div>
-                ))}
+                  
+                  {[
+                    { feature: "Digital QR Menu", basic: true, standard: true, advanced: true, premium: true },
+                    { feature: "Menu Images", basic: "5", standard: "10", advanced: "50", premium: "∞" },
+                    { feature: "Analytics", basic: true, standard: true, advanced: true, premium: true },
+                    { feature: "Feedback", basic: true, standard: true, advanced: true, premium: true },
+                    { feature: "Bell Calling", basic: false, standard: true, advanced: true, premium: true },
+                    { feature: "Categories", basic: false, standard: false, advanced: true, premium: true },
+                    { feature: "Order Management", basic: false, standard: false, advanced: false, premium: true },
+                    { feature: "Priority Support", basic: false, standard: true, advanced: true, premium: true },
+                  ].map((row, i) => (
+                    <div key={i} className={`grid grid-cols-5 gap-2 p-3 text-sm ${i % 2 === 0 ? 'bg-background' : 'bg-muted/20'}`}>
+                      <div className="font-medium">{row.feature}</div>
+                      {(['basic', 'standard', 'advanced', 'premium'] as const).map((tier) => (
+                        <div key={tier} className="text-center">
+                          {typeof row[tier] === 'string' ? (
+                            <span className="font-medium">{row[tier]}</span>
+                          ) : row[tier] ? (
+                            <Check className="w-4 h-4 text-green-500 mx-auto" />
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </section>
@@ -363,13 +475,21 @@ const Pricing = () => {
                   { icon: Users, title: "Support", desc: "Local assistance" },
                   { icon: Star, title: "Guarantee", desc: "7-day refund" },
                 ].map((item, i) => (
-                  <Card key={i} className="p-4 text-center hover:shadow-lg transition-all duration-300 rounded-xl">
-                    <div className="w-10 h-10 bg-primary/10 rounded-xl mx-auto mb-3 flex items-center justify-center">
-                      <item.icon className="w-5 h-5 text-primary" />
-                    </div>
-                    <h3 className="font-semibold text-sm mb-1">{item.title}</h3>
-                    <p className="text-xs text-muted-foreground">{item.desc}</p>
-                  </Card>
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.1 }}
+                    viewport={{ once: true }}
+                  >
+                    <Card className="p-4 text-center hover:shadow-lg transition-all duration-300 rounded-xl">
+                      <div className="w-10 h-10 bg-primary/10 rounded-xl mx-auto mb-3 flex items-center justify-center">
+                        <item.icon className="w-5 h-5 text-primary" />
+                      </div>
+                      <h3 className="font-semibold text-sm mb-1">{item.title}</h3>
+                      <p className="text-xs text-muted-foreground">{item.desc}</p>
+                    </Card>
+                  </motion.div>
                 ))}
               </div>
             </div>
@@ -379,9 +499,7 @@ const Pricing = () => {
           <section className="py-12 px-4 mx-4 bg-gradient-to-r from-primary to-accent rounded-2xl my-6">
             <div className="container mx-auto max-w-xl text-center">
               <h2 className="text-2xl font-bold mb-4 text-white">Ready to Get Started?</h2>
-              <p className="text-white/80 mb-6">
-                Join restaurants using AddMenu
-              </p>
+              <p className="text-white/80 mb-6">Join restaurants using AddMenu</p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <Button 
                   size="lg" 

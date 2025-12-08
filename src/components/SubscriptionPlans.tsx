@@ -3,64 +3,168 @@ import { supabase } from '@/integrations/supabase/client';
 import { useRazorpay } from '@/hooks/useRazorpay';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Check, Loader2, Bell, Image, Sparkles } from 'lucide-react';
+import { Check, Loader2, Bell, Sparkles, Zap, Rocket, ExternalLink, Crown, Star, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
+import { Card } from '@/components/ui/card';
+import { useNavigate } from 'react-router-dom';
 
 interface Plan {
   id: string;
   name: string;
-  description: string | null;
+  description: string;
   price_monthly: number;
   price_yearly: number | null;
-  features: unknown;
-  is_active: boolean | null;
+  features: string[];
   max_images: number | null;
-  bell_feature_enabled: boolean | null;
-  plan_tier: number | null;
+  bell_feature_enabled: boolean;
+  plan_tier: number;
+  isExternal?: boolean;
+  externalUrl?: string;
+  highlight?: boolean;
+  icon: "star" | "zap" | "bell" | "rocket";
+  gradientClass?: string;
 }
 
+const ALL_PLANS: Plan[] = [
+  {
+    id: "basic",
+    name: "Basic",
+    description: "Perfect for small restaurants",
+    price_monthly: 24900,
+    price_yearly: 249000,
+    features: ["Digital Menu with QR Code", "5 Menu Image Uploads", "Basic Analytics", "Customer Feedback", "Social Media Links"],
+    max_images: 5,
+    bell_feature_enabled: false,
+    plan_tier: 1,
+    icon: "star"
+  },
+  {
+    id: "standard",
+    name: "Standard",
+    description: "With bell service",
+    price_monthly: 36900,
+    price_yearly: 369000,
+    features: ["Everything in Basic", "10 Menu Images", "Bell Calling Feature", "Priority Support", "Advanced Analytics"],
+    max_images: 10,
+    bell_feature_enabled: true,
+    plan_tier: 2,
+    highlight: true,
+    icon: "bell",
+    gradientClass: "from-amber-500 to-orange-500"
+  },
+  {
+    id: "advanced",
+    name: "Advanced",
+    description: "Menu with categories",
+    price_monthly: 59900,
+    price_yearly: 599000,
+    features: ["Menu categories", "50 menu items", "Toggle availability", "Advanced Bell", "Dark/Light mode"],
+    max_images: 50,
+    bell_feature_enabled: true,
+    plan_tier: 3,
+    isExternal: true,
+    externalUrl: "https://addmenu.site/?mode=signup&plan=advanced",
+    icon: "zap",
+    gradientClass: "from-blue-500 to-cyan-500"
+  },
+  {
+    id: "premium",
+    name: "Premium",
+    description: "Complete ordering system",
+    price_monthly: 99900,
+    price_yearly: 999000,
+    features: ["Everything in Advanced", "Unlimited items", "Order management", "Order notifications", "Priority support"],
+    max_images: null,
+    bell_feature_enabled: true,
+    plan_tier: 4,
+    isExternal: true,
+    externalUrl: "https://addmenu.site/?mode=signup&plan=premium",
+    highlight: true,
+    icon: "rocket",
+    gradientClass: "from-purple-500 to-pink-500"
+  }
+];
+
 interface SubscriptionPlansProps {
-  onSubscriptionSuccess?: () => void;
+  showTitle?: boolean;
   compact?: boolean;
 }
 
-export const SubscriptionPlans = ({ onSubscriptionSuccess, compact = false }: SubscriptionPlansProps) => {
-  const [plans, setPlans] = useState<Plan[]>([]);
+export const SubscriptionPlans = ({ showTitle = true, compact = false }: SubscriptionPlansProps) => {
+  const navigate = useNavigate();
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
-  const [loadingPlans, setLoadingPlans] = useState(true);
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+  const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
+  const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
+  const [dbPlans, setDbPlans] = useState<Map<string, string>>(new Map());
   const { initiatePayment, loading } = useRazorpay();
 
   useEffect(() => {
-    fetchPlans();
+    checkUser();
+    fetchDbPlans();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const fetchPlans = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('subscription_plans')
+  const checkUser = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    setUser(session?.user || null);
+    if (session?.user) {
+      const { data: subscription } = await supabase
+        .from('user_subscriptions')
         .select('*')
-        .eq('is_active', true)
-        .order('plan_tier', { ascending: true });
-
-      if (error) throw error;
-      setPlans(data || []);
-    } catch (err) {
-      console.error('Error fetching plans:', err);
-      toast.error('Failed to load subscription plans');
-    } finally {
-      setLoadingPlans(false);
+        .eq('user_id', session.user.id)
+        .eq('status', 'active')
+        .single();
+      setHasActiveSubscription(!!subscription);
     }
   };
 
-  const handleSubscribe = async (planId: string) => {
-    setSelectedPlan(planId);
+  const fetchDbPlans = async () => {
+    try {
+      const { data } = await supabase
+        .from('subscription_plans')
+        .select('id, name')
+        .eq('is_active', true);
+      if (data) {
+        const planMap = new Map<string, string>();
+        data.forEach(p => {
+          if (p.name.toLowerCase() === 'basic') planMap.set('basic', p.id);
+          else if (p.name.toLowerCase().includes('plus')) planMap.set('standard', p.id);
+        });
+        setDbPlans(planMap);
+      }
+    } catch (err) {
+      console.error('Error fetching plans:', err);
+    }
+  };
+
+  const handleSubscribe = async (plan: Plan) => {
+    if (plan.isExternal && plan.externalUrl) {
+      window.open(plan.externalUrl, '_blank');
+      return;
+    }
+    const dbPlanId = dbPlans.get(plan.id);
+    if (!dbPlanId) {
+      toast.error('Plan not available');
+      return;
+    }
+    if (!user) {
+      navigate(`/auth?plan=${dbPlanId}&cycle=${billingCycle}`);
+      return;
+    }
+    if (hasActiveSubscription) {
+      toast.info('You already have an active subscription');
+      navigate('/dashboard');
+      return;
+    }
+    setSelectedPlan(plan.id);
     await initiatePayment(
-      { planId, billingCycle },
+      { planId: dbPlanId, billingCycle },
       () => {
         setSelectedPlan(null);
-        onSubscriptionSuccess?.();
+        toast.success('Subscription activated!');
+        setTimeout(() => navigate('/dashboard'), 1500);
       },
       () => setSelectedPlan(null)
     );
@@ -74,24 +178,46 @@ export const SubscriptionPlans = ({ onSubscriptionSuccess, compact = false }: Su
     }).format(paise / 100);
   };
 
-  if (loadingPlans) {
-    return (
-      <div className="flex justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
+  const getIcon = (icon: string, className: string) => {
+    switch (icon) {
+      case "star": return <Star className={className} />;
+      case "bell": return <Bell className={className} />;
+      case "zap": return <Zap className={className} />;
+      case "rocket": return <Rocket className={className} />;
+      default: return <Star className={className} />;
+    }
+  };
+
+  const getGradientStyle = (gradientClass?: string) => {
+    if (!gradientClass) return {};
+    if (gradientClass.includes("amber")) return { background: 'linear-gradient(135deg, rgba(245,158,11,0.1), rgba(249,115,22,0.05))' };
+    if (gradientClass.includes("blue")) return { background: 'linear-gradient(135deg, rgba(59,130,246,0.1), rgba(6,182,212,0.05))' };
+    if (gradientClass.includes("purple")) return { background: 'linear-gradient(135deg, rgba(168,85,247,0.1), rgba(236,72,153,0.05))' };
+    return {};
+  };
 
   return (
-    <div className="space-y-8">
-      {/* Billing Toggle */}
-      <div className="flex justify-center">
-        <div className="inline-flex items-center p-1 bg-muted/80 backdrop-blur rounded-full border border-border/50">
+    <div className="w-full">
+      {showTitle && (
+        <div className="text-center mb-8">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4"
+          >
+            <Sparkles className="w-4 h-4" />
+            Choose Your Plan
+          </motion.div>
+        </div>
+      )}
+
+      <div className="flex justify-center mb-6">
+        <div className="inline-flex items-center bg-muted rounded-full p-1">
           <button
             onClick={() => setBillingCycle('monthly')}
-            className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
               billingCycle === 'monthly'
-                ? 'bg-background text-foreground shadow-sm'
+                ? 'bg-primary text-primary-foreground shadow-sm'
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
@@ -99,149 +225,122 @@ export const SubscriptionPlans = ({ onSubscriptionSuccess, compact = false }: Su
           </button>
           <button
             onClick={() => setBillingCycle('yearly')}
-            className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2 ${
               billingCycle === 'yearly'
-                ? 'bg-background text-foreground shadow-sm'
+                ? 'bg-primary text-primary-foreground shadow-sm'
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
             Yearly
-            <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-              -17%
-            </Badge>
+            <Badge variant="secondary" className="text-xs bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-100">Save 17%</Badge>
           </button>
         </div>
       </div>
 
-      {/* Plans Grid */}
-      <div className={`grid gap-6 ${compact ? 'md:grid-cols-2' : 'md:grid-cols-2 max-w-3xl mx-auto'}`}>
-        {plans.map((plan, index) => {
-          const isBasicPlus = plan.bell_feature_enabled || plan.plan_tier === 2;
+      <div className={`grid gap-4 ${compact ? 'md:grid-cols-2' : 'md:grid-cols-2 lg:grid-cols-4'}`}>
+        {ALL_PLANS.map((plan, index) => {
           const price = billingCycle === 'yearly' ? plan.price_yearly : plan.price_monthly;
           const isSelected = selectedPlan === plan.id;
-          const monthlyEquivalent = billingCycle === 'yearly' && plan.price_yearly 
-            ? Math.round(plan.price_yearly / 12) 
-            : null;
 
           return (
             <motion.div
               key={plan.id}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
-              className={`relative rounded-2xl p-6 transition-all duration-300 ${
-                isBasicPlus
-                  ? 'bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 dark:from-amber-950/40 dark:via-orange-950/30 dark:to-rose-950/20 border-2 border-amber-200/60 dark:border-amber-800/40 shadow-lg shadow-amber-500/10'
-                  : 'bg-card border border-border hover:border-primary/30 hover:shadow-md'
-              }`}
             >
-              {/* Popular Badge */}
-              {isBasicPlus && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 shadow-md px-3">
-                    <Sparkles className="w-3 h-3 mr-1" />
-                    Popular
-                  </Badge>
-                </div>
-              )}
-
-              {/* Plan Header */}
-              <div className="mb-6">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                    isBasicPlus 
-                      ? 'bg-gradient-to-br from-amber-500 to-orange-500 text-white' 
-                      : 'bg-primary/10 text-primary'
-                  }`}>
-                    {isBasicPlus ? <Bell className="w-5 h-5" /> : <Image className="w-5 h-5" />}
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-semibold">{plan.name}</h3>
-                    <p className="text-xs text-muted-foreground">
-                      {plan.max_images} images{plan.bell_feature_enabled ? ' + Bell' : ''}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Price */}
-              <div className="mb-6">
-                <div className="flex items-baseline gap-1">
-                  <span className="text-3xl font-bold">{formatPrice(price)}</span>
-                  <span className="text-muted-foreground text-sm">
-                    /{billingCycle === 'yearly' ? 'year' : 'month'}
-                  </span>
-                </div>
-                {monthlyEquivalent && (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    ≈ {formatPrice(monthlyEquivalent)}/month
-                  </p>
-                )}
-                {billingCycle === 'yearly' && plan.price_yearly && (
-                  <p className="text-xs text-green-600 dark:text-green-400 mt-1 font-medium">
-                    Save {formatPrice((plan.price_monthly * 12) - plan.price_yearly)}/year
-                  </p>
-                )}
-              </div>
-
-              {/* Features */}
-              <div className="space-y-3 mb-6">
-                {(plan.features as string[])?.map((feature, i) => (
-                  <div key={i} className="flex items-start gap-2.5">
-                    <div className={`w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${
-                      isBasicPlus ? 'bg-amber-500/20' : 'bg-primary/10'
-                    }`}>
-                      <Check className={`w-2.5 h-2.5 ${isBasicPlus ? 'text-amber-600 dark:text-amber-400' : 'text-primary'}`} />
-                    </div>
-                    <span className="text-sm text-muted-foreground">{feature}</span>
-                  </div>
-                ))}
-              </div>
-
-              {/* CTA Button */}
-              <Button
-                onClick={() => handleSubscribe(plan.id)}
-                disabled={loading}
-                className={`w-full h-11 rounded-xl font-medium transition-all ${
-                  isBasicPlus
-                    ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-md shadow-amber-500/20'
-                    : 'bg-primary hover:bg-primary/90'
+              <Card
+                className={`p-5 h-full flex flex-col border-2 relative overflow-hidden rounded-2xl transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${
+                  plan.highlight ? 'border-transparent' : 'border-border hover:border-primary/30'
                 }`}
+                style={plan.highlight ? getGradientStyle(plan.gradientClass) : {}}
               >
-                {isSelected && loading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  `Get ${plan.name}`
+                {plan.highlight && (
+                  <div className="absolute top-3 right-3">
+                    <Badge className={`text-xs text-white border-0 ${
+                      plan.gradientClass?.includes("purple") 
+                        ? 'bg-gradient-to-r from-purple-500 to-pink-500'
+                        : 'bg-gradient-to-r from-amber-500 to-orange-500'
+                    }`}>
+                      {plan.plan_tier === 4 ? <Rocket className="w-3 h-3 mr-1" /> : <Crown className="w-3 h-3 mr-1" />}
+                      {plan.plan_tier === 4 ? 'Best Value' : 'Popular'}
+                    </Badge>
+                  </div>
                 )}
-              </Button>
+
+                {plan.isExternal && (
+                  <div className="absolute top-3 left-3">
+                    <Badge variant="outline" className="text-xs">
+                      <ExternalLink className="w-3 h-3 mr-1" />
+                      Pro
+                    </Badge>
+                  </div>
+                )}
+
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-4 mt-2">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                      plan.gradientClass 
+                        ? `bg-gradient-to-br ${plan.gradientClass} text-white`
+                        : 'bg-primary/10 text-primary'
+                    }`}>
+                      {getIcon(plan.icon, "w-5 h-5")}
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold">{plan.name}</h3>
+                      <p className="text-xs text-muted-foreground">{plan.description}</p>
+                    </div>
+                  </div>
+
+                  <div className="mb-5">
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-3xl font-bold">{formatPrice(price || 0)}</span>
+                      <span className="text-muted-foreground text-sm">/{billingCycle === 'yearly' ? 'yr' : 'mo'}</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 mb-5">
+                    {plan.features.map((feature, i) => (
+                      <div key={i} className="flex items-start gap-2">
+                        <div className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 bg-green-500/10">
+                          <Check className="w-2.5 h-2.5 text-green-500" />
+                        </div>
+                        <span className="text-xs text-muted-foreground">{feature}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <Button
+                  onClick={() => handleSubscribe(plan)}
+                  disabled={loading && isSelected}
+                  className={`w-full rounded-xl h-10 text-sm font-medium shadow-md transition-all duration-300 ${
+                    plan.gradientClass
+                      ? `bg-gradient-to-r ${plan.gradientClass} hover:opacity-90 text-white`
+                      : 'bg-primary hover:bg-primary/90'
+                  }`}
+                >
+                  {isSelected && loading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Processing...
+                    </>
+                  ) : plan.isExternal ? (
+                    <>
+                      Get {plan.name}
+                      <ExternalLink className="w-3.5 h-3.5 ml-2" />
+                    </>
+                  ) : (
+                    <>
+                      Get Started
+                      <ArrowRight className="w-3.5 h-3.5 ml-2" />
+                    </>
+                  )}
+                </Button>
+              </Card>
             </motion.div>
           );
         })}
-      </div>
-
-      {/* Trust Badges */}
-      <div className="flex flex-wrap justify-center gap-6 pt-4 text-xs text-muted-foreground">
-        <div className="flex items-center gap-1.5">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-          </svg>
-          Secure Payment
-        </div>
-        <div className="flex items-center gap-1.5">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
-          Cancel Anytime
-        </div>
-        <div className="flex items-center gap-1.5">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-          </svg>
-          Razorpay Powered
-        </div>
       </div>
     </div>
   );
