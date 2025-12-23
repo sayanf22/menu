@@ -51,27 +51,26 @@ SnowflakeIcon.displayName = "SnowflakeIcon";
 
 // Winter Scene Background with Snow, Trees, and Decorations
 const WinterBackground = memo(() => {
-  const snowflakes = Array.from({ length: 25 }, (_, i) => ({
+  const snowflakes = Array.from({ length: 30 }, (_, i) => ({
     id: i,
     delay: Math.random() * 10,
-    duration: 8 + Math.random() * 12,
+    duration: 10 + Math.random() * 15,
     left: `${Math.random() * 100}%`,
-    size: 8 + Math.random() * 16,
-    opacity: 0.3 + Math.random() * 0.4
+    size: 10 + Math.random() * 18,
   }));
 
   return (
     <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-      {/* Falling snowflakes */}
+      {/* Falling snowflakes - visible in both modes */}
       {snowflakes.map((flake) => (
         <motion.div
           key={flake.id}
-          className="absolute text-white/60 dark:text-sky-200/40"
-          style={{ left: flake.left, top: -30, opacity: flake.opacity }}
+          className="absolute text-sky-400/50 dark:text-sky-200/30"
+          style={{ left: flake.left, top: -30 }}
           animate={{ 
             y: ["0vh", "105vh"],
             rotate: [0, 360],
-            x: [0, Math.sin(flake.id) * 30, 0]
+            x: [0, Math.sin(flake.id) * 40, 0]
           }}
           transition={{ 
             duration: flake.duration, 
@@ -84,16 +83,27 @@ const WinterBackground = memo(() => {
         </motion.div>
       ))}
       
-      {/* Corner Christmas trees */}
-      <div className="absolute bottom-0 left-2 opacity-20 dark:opacity-15">
-        <ChristmasTree size={40} className="text-green-600 dark:text-green-500" />
+      {/* Big Christmas trees on left side */}
+      <div className="absolute bottom-0 left-0 opacity-15 dark:opacity-10">
+        <ChristmasTree size={180} className="text-green-600 dark:text-green-500" />
       </div>
-      <div className="absolute bottom-0 right-2 opacity-20 dark:opacity-15">
-        <ChristmasTree size={32} className="text-green-600 dark:text-green-500" />
+      <div className="absolute bottom-0 left-16 opacity-10 dark:opacity-8">
+        <ChristmasTree size={120} className="text-green-700 dark:text-green-600" />
+      </div>
+      
+      {/* Big Christmas trees on right side */}
+      <div className="absolute bottom-0 right-0 opacity-15 dark:opacity-10">
+        <ChristmasTree size={150} className="text-green-600 dark:text-green-500" />
+      </div>
+      <div className="absolute bottom-0 right-20 opacity-10 dark:opacity-8">
+        <ChristmasTree size={100} className="text-green-700 dark:text-green-600" />
       </div>
       
       {/* Frost overlay at top */}
-      <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-sky-100/30 via-transparent to-transparent dark:from-sky-900/20" />
+      <div className="absolute top-0 left-0 right-0 h-40 bg-gradient-to-b from-sky-200/40 via-sky-100/20 to-transparent dark:from-sky-900/30 dark:via-sky-950/15" />
+      
+      {/* Snow ground effect at bottom */}
+      <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-white/30 via-sky-50/20 to-transparent dark:from-sky-950/20 dark:via-transparent" />
     </div>
   );
 });
@@ -519,11 +529,11 @@ const handleSubmitFeedback = async (e: React.FormEvent) => {
         <WinterBackground />
         
         {/* Decorative Christmas trees on sides */}
-        <div className="absolute bottom-4 left-4 opacity-30 dark:opacity-20">
-          <ChristmasTree size={60} className="text-green-600 dark:text-green-500" />
+        <div className="absolute bottom-0 left-0 opacity-20 dark:opacity-15">
+          <ChristmasTree size={140} className="text-green-600 dark:text-green-500" />
         </div>
-        <div className="absolute bottom-4 right-4 opacity-25 dark:opacity-15">
-          <ChristmasTree size={45} className="text-green-600 dark:text-green-500" />
+        <div className="absolute bottom-0 right-0 opacity-20 dark:opacity-15">
+          <ChristmasTree size={110} className="text-green-600 dark:text-green-500" />
         </div>
         
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6 }} className="relative z-10 text-center px-6 max-w-sm mx-auto">
