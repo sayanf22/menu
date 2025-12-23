@@ -8,56 +8,135 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { toast } from "sonner";
-import { Star, Loader2, X, ChevronDown, Send, MessageSquare, Snowflake } from "lucide-react";
+import { Star, Loader2, X, ChevronDown, Send, MessageSquare } from "lucide-react";
 import { generateDeviceFingerprint } from "@/lib/deviceFingerprint";
 import { motion, useInView, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import { BellButton } from "@/components/BellButton";
 import { CallButton } from "@/components/CallButton";
 import SessionExpired from "./SessionExpired";
 
-// Floating Snowflake Component
-const FloatingSnowflake = memo(({ delay, duration, left, size }: { delay: number; duration: number; left: string; size: number }) => (
-  <motion.div
-    className="absolute pointer-events-none text-sky-200/40 dark:text-sky-300/20"
-    style={{ left, top: -20 }}
-    initial={{ y: -20, opacity: 0, rotate: 0 }}
-    animate={{ 
-      y: "100vh", 
-      opacity: [0, 1, 1, 0],
-      rotate: 360
-    }}
-    transition={{ 
-      duration, 
-      delay, 
-      repeat: Infinity, 
-      ease: "linear",
-      opacity: { duration: duration, times: [0, 0.1, 0.9, 1] }
-    }}
-  >
-    <Snowflake style={{ width: size, height: size }} />
-  </motion.div>
+// Christmas Tree SVG Component
+const ChristmasTree = memo(({ className = "", size = 24 }: { className?: string; size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
+    <path d="M12 2L8 8H10L6 14H9L5 20H19L15 14H18L14 8H16L12 2Z" fill="currentColor" />
+    <rect x="10.5" y="20" width="3" height="2" fill="#8B4513" />
+    <circle cx="12" cy="6" r="0.8" fill="#FFD700" />
+    <circle cx="10" cy="10" r="0.6" fill="#FF0000" />
+    <circle cx="14" cy="12" r="0.6" fill="#FF0000" />
+    <circle cx="9" cy="15" r="0.6" fill="#FFD700" />
+    <circle cx="15" cy="16" r="0.6" fill="#FF0000" />
+    <circle cx="11" cy="18" r="0.6" fill="#FFD700" />
+  </svg>
 ));
-FloatingSnowflake.displayName = "FloatingSnowflake";
+ChristmasTree.displayName = "ChristmasTree";
 
-// Snow Background Component
-const SnowBackground = memo(() => {
-  const snowflakes = Array.from({ length: 15 }, (_, i) => ({
+// Snowflake SVG Component
+const SnowflakeIcon = memo(({ className = "", size = 16 }: { className?: string; size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={className}>
+    <line x1="12" y1="2" x2="12" y2="22" />
+    <line x1="2" y1="12" x2="22" y2="12" />
+    <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+    <line x1="19.07" y1="4.93" x2="4.93" y2="19.07" />
+    <line x1="12" y1="2" x2="9" y2="5" />
+    <line x1="12" y1="2" x2="15" y2="5" />
+    <line x1="12" y1="22" x2="9" y2="19" />
+    <line x1="12" y1="22" x2="15" y2="19" />
+    <line x1="2" y1="12" x2="5" y2="9" />
+    <line x1="2" y1="12" x2="5" y2="15" />
+    <line x1="22" y1="12" x2="19" y2="9" />
+    <line x1="22" y1="12" x2="19" y2="15" />
+  </svg>
+));
+SnowflakeIcon.displayName = "SnowflakeIcon";
+
+// Winter Scene Background with Snow, Trees, and Decorations
+const WinterBackground = memo(() => {
+  const snowflakes = Array.from({ length: 25 }, (_, i) => ({
     id: i,
-    delay: Math.random() * 8,
-    duration: 10 + Math.random() * 10,
+    delay: Math.random() * 10,
+    duration: 8 + Math.random() * 12,
     left: `${Math.random() * 100}%`,
-    size: 12 + Math.random() * 12
+    size: 8 + Math.random() * 16,
+    opacity: 0.3 + Math.random() * 0.4
   }));
 
   return (
     <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+      {/* Falling snowflakes */}
       {snowflakes.map((flake) => (
-        <FloatingSnowflake key={flake.id} {...flake} />
+        <motion.div
+          key={flake.id}
+          className="absolute text-white/60 dark:text-sky-200/40"
+          style={{ left: flake.left, top: -30, opacity: flake.opacity }}
+          animate={{ 
+            y: ["0vh", "105vh"],
+            rotate: [0, 360],
+            x: [0, Math.sin(flake.id) * 30, 0]
+          }}
+          transition={{ 
+            duration: flake.duration, 
+            delay: flake.delay, 
+            repeat: Infinity, 
+            ease: "linear"
+          }}
+        >
+          <SnowflakeIcon size={flake.size} />
+        </motion.div>
       ))}
+      
+      {/* Corner Christmas trees */}
+      <div className="absolute bottom-0 left-2 opacity-20 dark:opacity-15">
+        <ChristmasTree size={40} className="text-green-600 dark:text-green-500" />
+      </div>
+      <div className="absolute bottom-0 right-2 opacity-20 dark:opacity-15">
+        <ChristmasTree size={32} className="text-green-600 dark:text-green-500" />
+      </div>
+      
+      {/* Frost overlay at top */}
+      <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-sky-100/30 via-transparent to-transparent dark:from-sky-900/20" />
     </div>
   );
 });
-SnowBackground.displayName = "SnowBackground";
+WinterBackground.displayName = "WinterBackground";
+
+// Logo with Ice/Frost Effect
+const FrostedLogo = memo(({ src, alt, size = "lg" }: { src: string; alt: string; size?: "sm" | "md" | "lg" }) => {
+  const sizeClasses = {
+    sm: "w-8 h-8 sm:w-9 sm:h-9",
+    md: "w-16 h-16 sm:w-20 sm:h-20",
+    lg: "w-28 h-28 sm:w-32 sm:h-32"
+  };
+  
+  return (
+    <div className="relative inline-block">
+      {/* Ice glow effect */}
+      <div className="absolute inset-0 bg-gradient-to-br from-cyan-300/40 via-sky-400/30 to-blue-300/40 dark:from-cyan-400/20 dark:via-sky-500/15 dark:to-blue-400/20 rounded-full blur-xl scale-150" />
+      
+      {/* Frost ring */}
+      <div className="absolute -inset-1.5 bg-gradient-to-br from-white/80 via-sky-100/60 to-cyan-100/80 dark:from-sky-300/30 dark:via-sky-400/20 dark:to-cyan-300/30 rounded-full" />
+      
+      {/* Ice crystals decoration */}
+      <div className="absolute -top-2 -right-1 text-cyan-400/70 dark:text-cyan-300/50">
+        <SnowflakeIcon size={12} />
+      </div>
+      <div className="absolute -bottom-1 -left-2 text-sky-400/60 dark:text-sky-300/40">
+        <SnowflakeIcon size={10} />
+      </div>
+      
+      {/* Main image */}
+      <img 
+        src={src} 
+        alt={alt} 
+        className={`${sizeClasses[size]} object-cover rounded-full border-2 border-white/60 dark:border-sky-400/40 shadow-lg shadow-sky-300/40 dark:shadow-sky-800/50 relative z-10`}
+        loading="eager"
+      />
+      
+      {/* Frost overlay on image */}
+      <div className="absolute inset-0 rounded-full bg-gradient-to-t from-transparent via-transparent to-white/20 dark:to-sky-200/10 z-20 pointer-events-none" />
+    </div>
+  );
+});
+FrostedLogo.displayName = "FrostedLogo";
 
 // Lazy loaded image component with blur placeholder
 const LazyImage = memo(({ src, alt, className, onClick }: { src: string; alt: string; className?: string; onClick?: () => void }) => {
@@ -124,15 +203,15 @@ const ScrollRevealSection = memo(({ children, className = "", delay = 0 }: { chi
 });
 ScrollRevealSection.displayName = "ScrollRevealSection";
 
-// Winter-themed social icon
+// Winter-themed social icon with frost effect
 const SocialIcon = memo(({ href, children, label }: { href: string; children: React.ReactNode; label: string }) => (
   <motion.a
     href={href}
     target="_blank"
     rel="noopener noreferrer"
     aria-label={label}
-    className="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center rounded-full border border-sky-200/40 dark:border-sky-700/30 text-slate-500 dark:text-sky-300/70 hover:text-sky-600 dark:hover:text-sky-300 hover:border-sky-300/60 dark:hover:border-sky-600/50 hover:bg-sky-50/50 dark:hover:bg-sky-900/30 transition-all duration-300"
-    whileHover={{ scale: 1.08 }}
+    className="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center rounded-full bg-white/50 dark:bg-slate-800/50 border border-sky-200/50 dark:border-sky-700/40 text-slate-600 dark:text-sky-200/80 hover:text-emerald-600 dark:hover:text-emerald-400 hover:border-emerald-300/60 dark:hover:border-emerald-600/50 hover:bg-emerald-50/50 dark:hover:bg-emerald-900/20 transition-all duration-300 backdrop-blur-sm shadow-sm shadow-sky-100/50 dark:shadow-sky-900/30"
+    whileHover={{ scale: 1.1, y: -2 }}
     whileTap={{ scale: 0.95 }}
   >
     {children}
@@ -435,35 +514,33 @@ const handleSubmitFeedback = async (e: React.FormEvent) => {
   // Splash Screen - Christmas/Winter Theme
   if (showSplash) {
     return (
-      <div className="min-h-screen min-h-[100dvh] flex items-center justify-center bg-gradient-to-b from-sky-50 via-white to-sky-100/50 dark:from-slate-900 dark:via-slate-900 dark:to-sky-950/30 relative overflow-hidden">
-        {/* Snow Effect */}
-        <SnowBackground />
+      <div className="min-h-screen min-h-[100dvh] flex items-center justify-center bg-gradient-to-b from-sky-100 via-white to-sky-50 dark:from-slate-900 dark:via-slate-900 dark:to-sky-950/40 relative overflow-hidden">
+        {/* Winter Background */}
+        <WinterBackground />
         
-        {/* Subtle winter pattern */}
-        <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.02]" style={{ backgroundImage: "radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)", backgroundSize: "40px 40px" }} />
-        
-        {/* Frost glow effects */}
-        <div className="absolute top-0 left-1/4 w-64 h-64 bg-sky-300/20 dark:bg-sky-500/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-sky-200/20 dark:bg-sky-600/10 rounded-full blur-3xl" />
+        {/* Decorative Christmas trees on sides */}
+        <div className="absolute bottom-4 left-4 opacity-30 dark:opacity-20">
+          <ChristmasTree size={60} className="text-green-600 dark:text-green-500" />
+        </div>
+        <div className="absolute bottom-4 right-4 opacity-25 dark:opacity-15">
+          <ChristmasTree size={45} className="text-green-600 dark:text-green-500" />
+        </div>
         
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6 }} className="relative z-10 text-center px-6 max-w-sm mx-auto">
           {profile?.logo_url ? (
-            <motion.div initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring", stiffness: 100, damping: 18, delay: 0.15 }} className="relative mx-auto mb-6">
-              {/* Frost ring around logo */}
-              <div className="absolute inset-0 bg-gradient-to-br from-sky-300/30 to-sky-500/20 dark:from-sky-400/20 dark:to-sky-600/10 rounded-full blur-2xl scale-150" />
-              <div className="absolute -inset-1 bg-gradient-to-br from-sky-200/50 to-white/30 dark:from-sky-500/30 dark:to-sky-700/20 rounded-full" />
-              <img src={profile.logo_url} alt={profile.restaurant_name} className="w-28 h-28 sm:w-32 sm:h-32 mx-auto object-cover rounded-full border-2 border-sky-200/60 dark:border-sky-500/40 shadow-xl shadow-sky-200/30 dark:shadow-sky-900/50 relative z-10" loading="eager" />
+            <motion.div initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring", stiffness: 100, damping: 18, delay: 0.15 }} className="mb-6">
+              <FrostedLogo src={profile.logo_url} alt={profile.restaurant_name} size="lg" />
             </motion.div>
           ) : (
-            <motion.div initial={{ scale: 0.6 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 100, damping: 18 }} className="w-28 h-28 sm:w-32 sm:h-32 mx-auto mb-6 rounded-full bg-sky-100/50 dark:bg-sky-900/30 flex items-center justify-center border border-sky-200/50 dark:border-sky-700/30">
-              <Snowflake className="h-8 w-8 text-sky-400 dark:text-sky-500 animate-pulse" />
+            <motion.div initial={{ scale: 0.6 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 100, damping: 18 }} className="w-28 h-28 sm:w-32 sm:h-32 mx-auto mb-6 rounded-full bg-gradient-to-br from-sky-100 to-cyan-100 dark:from-sky-900/50 dark:to-cyan-900/30 flex items-center justify-center border-2 border-white/60 dark:border-sky-600/40 shadow-lg shadow-sky-200/50 dark:shadow-sky-900/50">
+              <ChristmasTree size={40} className="text-green-600 dark:text-green-500" />
             </motion.div>
           )}
           
-          {/* Christmas greeting */}
+          {/* Christmas greeting badge */}
           <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mb-3">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-500/10 dark:bg-red-500/20 text-red-600 dark:text-red-400 text-xs font-medium">
-              <span>❄️</span> Happy Holidays <span>🎄</span>
+            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-red-500/15 via-green-500/10 to-red-500/15 dark:from-red-500/25 dark:via-green-500/15 dark:to-red-500/25 border border-red-200/30 dark:border-red-500/20 text-red-700 dark:text-red-300 text-xs font-medium shadow-sm">
+              <span>🎄</span> Merry Christmas <span>❄️</span>
             </span>
           </motion.div>
           
@@ -472,7 +549,7 @@ const handleSubmitFeedback = async (e: React.FormEvent) => {
           
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7 }} className="mt-8">
             <motion.div animate={{ y: [0, 6, 0] }} transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}>
-              <ChevronDown className="w-5 h-5 mx-auto text-sky-400/60 dark:text-sky-500/60" />
+              <ChevronDown className="w-5 h-5 mx-auto text-emerald-500/60 dark:text-emerald-400/50" />
             </motion.div>
           </motion.div>
         </motion.div>
@@ -482,10 +559,15 @@ const handleSubmitFeedback = async (e: React.FormEvent) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen min-h-[100dvh] flex items-center justify-center bg-gradient-to-b from-sky-50 to-white dark:from-slate-900 dark:to-slate-900">
-        <SnowBackground />
+      <div className="min-h-screen min-h-[100dvh] flex items-center justify-center bg-gradient-to-b from-sky-100 via-white to-sky-50 dark:from-slate-900 dark:via-slate-900 dark:to-sky-950/40">
+        <WinterBackground />
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center relative z-10">
-          <Snowflake className="h-8 w-8 text-sky-400 dark:text-sky-500 mx-auto animate-spin" style={{ animationDuration: '3s' }} />
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+          >
+            <SnowflakeIcon size={32} className="text-sky-500 dark:text-sky-400 mx-auto" />
+          </motion.div>
           <p className="text-sm text-slate-600 dark:text-sky-200/70 mt-3">Loading menu...</p>
         </motion.div>
       </div>
@@ -494,15 +576,17 @@ const handleSubmitFeedback = async (e: React.FormEvent) => {
 
   if (profile?.disabled) {
     return (
-      <div className="min-h-screen min-h-[100dvh] flex items-center justify-center p-4 bg-gradient-to-b from-sky-50 to-white dark:from-slate-900 dark:to-slate-900">
-        <SnowBackground />
+      <div className="min-h-screen min-h-[100dvh] flex items-center justify-center p-4 bg-gradient-to-b from-sky-100 via-white to-sky-50 dark:from-slate-900 dark:via-slate-900 dark:to-sky-950/40">
+        <WinterBackground />
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ type: "spring", stiffness: 100, damping: 18 }} className="relative z-10">
-          <Card className="max-w-sm w-full text-center p-6 sm:p-8 border-sky-200/50 dark:border-sky-800/30 shadow-lg bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm">
+          <Card className="max-w-sm w-full text-center p-6 sm:p-8 border-sky-200/50 dark:border-sky-800/30 shadow-lg bg-white/90 dark:bg-slate-900/90 backdrop-blur-md">
             {profile?.logo_url && (
-              <img src={profile.logo_url} alt={profile.restaurant_name} className="w-16 h-16 mx-auto mb-4 object-cover rounded-full border border-sky-200/50 dark:border-sky-700/30" />
+              <div className="mb-4">
+                <FrostedLogo src={profile.logo_url} alt={profile.restaurant_name} size="md" />
+              </div>
             )}
             <h2 className="text-lg sm:text-xl font-semibold mb-2 text-slate-800 dark:text-white">{profile?.restaurant_name || 'Menu Unavailable'}</h2>
-            <div className="w-12 h-1 bg-primary/20 mx-auto mb-4 rounded-full" />
+            <div className="w-12 h-1 bg-gradient-to-r from-red-400 to-green-400 mx-auto mb-4 rounded-full" />
             <p className="text-muted-foreground text-sm mb-4">
               {profile?.subscriptionExpired 
                 ? "This restaurant's subscription has expired. Please contact the restaurant directly."
@@ -519,7 +603,11 @@ const handleSubmitFeedback = async (e: React.FormEvent) => {
                 Contact Restaurant
               </a>
             )}
-            <p className="text-xs text-slate-500 dark:text-sky-300/50 mt-4">Powered by AddMenu</p>
+            <p className="text-xs text-slate-500 dark:text-sky-300/50 mt-4 flex items-center justify-center gap-1">
+              <SnowflakeIcon size={10} className="text-sky-400" />
+              Powered by AddMenu
+              <SnowflakeIcon size={10} className="text-sky-400" />
+            </p>
           </Card>
         </motion.div>
       </div>
@@ -528,9 +616,9 @@ const handleSubmitFeedback = async (e: React.FormEvent) => {
 
 
   return (
-    <div ref={containerRef} className="min-h-screen min-h-[100dvh] bg-gradient-to-b from-sky-50 via-white to-sky-50/50 dark:from-slate-900 dark:via-slate-900 dark:to-sky-950/20">
-      {/* Snow Background */}
-      <SnowBackground />
+    <div ref={containerRef} className="min-h-screen min-h-[100dvh] bg-gradient-to-b from-sky-100 via-white to-sky-50 dark:from-slate-900 dark:via-slate-900 dark:to-sky-950/40">
+      {/* Winter Background */}
+      <WinterBackground />
       
       {/* Theme Toggle */}
       <motion.div initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="fixed top-3 right-3 sm:top-4 sm:right-4 z-50">
@@ -538,13 +626,13 @@ const handleSubmitFeedback = async (e: React.FormEvent) => {
       </motion.div>
 
       {/* Sticky Header - Winter Theme */}
-      <motion.header style={{ opacity: headerOpacity }} className="fixed top-0 left-0 right-0 z-40 bg-white/85 dark:bg-slate-900/85 backdrop-blur-xl border-b border-sky-200/40 dark:border-sky-800/30">
+      <motion.header style={{ opacity: headerOpacity }} className="fixed top-0 left-0 right-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-b border-sky-200/50 dark:border-sky-800/30">
         <div className="max-w-2xl mx-auto px-3 sm:px-4 py-2.5 sm:py-3">
           <div className="flex items-center gap-2.5 sm:gap-3">
-            {profile?.logo_url && <img src={profile.logo_url} alt={profile.restaurant_name} className="w-8 h-8 sm:w-9 sm:h-9 object-cover rounded-full border border-sky-200/50 dark:border-sky-700/30" loading="eager" />}
+            {profile?.logo_url && <FrostedLogo src={profile.logo_url} alt={profile.restaurant_name} size="sm" />}
             <div className="flex-1 min-w-0"><h1 className="text-sm sm:text-base font-medium truncate text-slate-800 dark:text-white">{profile?.restaurant_name}</h1></div>
-            {/* Small snowflake indicator */}
-            <Snowflake className="w-4 h-4 text-sky-400/60 dark:text-sky-500/50" />
+            {/* Christmas tree indicator */}
+            <ChristmasTree size={18} className="text-green-600/70 dark:text-green-500/60" />
           </div>
         </div>
       </motion.header>
@@ -554,15 +642,16 @@ const handleSubmitFeedback = async (e: React.FormEvent) => {
         <div className="max-w-2xl mx-auto text-center relative z-10">
           {/* Holiday badge */}
           <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="mb-3">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-500/10 dark:bg-red-500/20 text-red-600 dark:text-red-400 text-xs font-medium">
-              <span>🎄</span> Season's Greetings <span>❄️</span>
+            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-red-500/15 via-green-500/10 to-red-500/15 dark:from-red-500/25 dark:via-green-500/15 dark:to-red-500/25 border border-red-200/30 dark:border-red-500/20 text-red-700 dark:text-red-300 text-xs font-medium shadow-sm">
+              <ChristmasTree size={14} className="text-green-600 dark:text-green-400" />
+              Season's Greetings
+              <SnowflakeIcon size={12} className="text-sky-500 dark:text-sky-400" />
             </span>
           </motion.div>
           
           {profile?.logo_url && (
-            <motion.div initial={{ scale: 0.85, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring", stiffness: 100, damping: 18, delay: 0.1 }} className="relative inline-block mb-3 sm:mb-4">
-              <div className="absolute -inset-1 bg-gradient-to-br from-sky-200/50 to-sky-300/30 dark:from-sky-500/30 dark:to-sky-700/20 rounded-full blur-sm" />
-              <img src={profile.logo_url} alt={profile.restaurant_name} className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-full border-2 border-sky-200/60 dark:border-sky-600/40 shadow-lg shadow-sky-200/30 dark:shadow-sky-900/50 relative" loading="eager" />
+            <motion.div initial={{ scale: 0.85, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring", stiffness: 100, damping: 18, delay: 0.1 }} className="mb-3 sm:mb-4">
+              <FrostedLogo src={profile.logo_url} alt={profile.restaurant_name} size="md" />
             </motion.div>
           )}
           <motion.h1 initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="text-xl sm:text-2xl font-semibold tracking-tight mb-1.5 sm:mb-2 text-slate-800 dark:text-white">{profile?.restaurant_name}</motion.h1>
@@ -576,14 +665,14 @@ const handleSubmitFeedback = async (e: React.FormEvent) => {
         <div className="space-y-3 sm:space-y-4">
           {menuImages.length > 0 ? menuImages.map((image, index) => (
             <ScrollRevealSection key={image.id} delay={Math.min(index * 0.06, 0.3)}>
-              <motion.div className="overflow-hidden rounded-xl sm:rounded-2xl bg-white/80 dark:bg-slate-800/50 border border-sky-200/40 dark:border-sky-800/30 shadow-sm shadow-sky-100/50 dark:shadow-sky-900/20 hover:shadow-md hover:shadow-sky-200/50 dark:hover:shadow-sky-800/30 transition-shadow duration-400 backdrop-blur-sm" whileHover={{ y: -2 }} transition={{ duration: 0.25 }}>
+              <motion.div className="overflow-hidden rounded-xl sm:rounded-2xl bg-white/90 dark:bg-slate-800/60 border border-sky-200/50 dark:border-sky-800/40 shadow-md shadow-sky-100/60 dark:shadow-sky-900/30 hover:shadow-lg hover:shadow-sky-200/60 dark:hover:shadow-sky-800/40 transition-shadow duration-400 backdrop-blur-sm" whileHover={{ y: -2 }} transition={{ duration: 0.25 }}>
                 <LazyImage src={image.image_url} alt={`Menu page ${index + 1}`} className="w-full h-auto cursor-zoom-in" onClick={() => openZoom(image.image_url, index)} />
               </motion.div>
             </ScrollRevealSection>
           )) : (
             <ScrollRevealSection>
-              <div className="py-12 sm:py-16 text-center border-2 border-dashed border-sky-200/50 dark:border-sky-800/30 rounded-xl sm:rounded-2xl bg-white/50 dark:bg-slate-800/30">
-                <Snowflake className="w-8 h-8 mx-auto mb-3 text-sky-300 dark:text-sky-600" />
+              <div className="py-12 sm:py-16 text-center border-2 border-dashed border-sky-200/60 dark:border-sky-800/40 rounded-xl sm:rounded-2xl bg-white/60 dark:bg-slate-800/40 backdrop-blur-sm">
+                <ChristmasTree size={40} className="mx-auto mb-3 text-green-500/60 dark:text-green-500/40" />
                 <p className="text-slate-600 dark:text-sky-200/70 text-sm">No menu available yet</p>
                 <p className="text-xs text-slate-500 dark:text-sky-300/50 mt-1">Check back soon!</p>
               </div>
@@ -607,27 +696,30 @@ const handleSubmitFeedback = async (e: React.FormEvent) => {
         )}
 
     
-    {/* Feedback Section - Winter Theme */}
+    {/* Feedback Section - Christmas Theme */}
         <ScrollRevealSection delay={0.2} className="mt-8 sm:mt-10">
           <AnimatePresence mode="wait">
             {!showFeedback ? (
               <motion.div key="btn" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }}>
                 <motion.button
                   onClick={() => setShowFeedback(true)}
-                  className="w-full group flex items-center justify-center gap-2.5 h-11 sm:h-12 px-4 rounded-xl border border-sky-200/40 dark:border-sky-800/30 bg-white/60 dark:bg-slate-800/40 hover:bg-sky-50/50 dark:hover:bg-sky-900/30 hover:border-sky-300/50 dark:hover:border-sky-700/40 transition-all duration-300 backdrop-blur-sm"
+                  className="w-full group flex items-center justify-center gap-2.5 h-11 sm:h-12 px-4 rounded-xl border border-sky-200/50 dark:border-sky-800/40 bg-white/70 dark:bg-slate-800/50 hover:bg-emerald-50/50 dark:hover:bg-emerald-900/20 hover:border-emerald-300/50 dark:hover:border-emerald-700/40 transition-all duration-300 backdrop-blur-sm shadow-sm"
                   whileHover={{ scale: 1.01 }}
                   whileTap={{ scale: 0.99 }}
                 >
-                  <MessageSquare className="w-4 h-4 text-slate-500 dark:text-sky-300/70 group-hover:text-sky-600 dark:group-hover:text-sky-300 transition-colors" />
+                  <MessageSquare className="w-4 h-4 text-slate-500 dark:text-sky-300/70 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors" />
                   <span className="text-sm font-medium text-slate-600 dark:text-sky-200/70 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">Leave Feedback</span>
                 </motion.button>
               </motion.div>
             ) : (
               <motion.div key="form" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }} transition={{ type: "spring", stiffness: 100, damping: 18 }}>
-                <Card className="border-sky-200/40 dark:border-sky-800/30 shadow-sm shadow-sky-100/50 dark:shadow-sky-900/20 overflow-hidden bg-white/80 dark:bg-slate-800/50 backdrop-blur-sm">
+                <Card className="border-sky-200/50 dark:border-sky-800/40 shadow-md shadow-sky-100/60 dark:shadow-sky-900/30 overflow-hidden bg-white/90 dark:bg-slate-800/60 backdrop-blur-md">
                   <CardContent className="p-4 sm:p-5">
                     <div className="flex justify-between items-center mb-4 sm:mb-5">
-                      <h2 className="text-sm sm:text-base font-medium text-slate-800 dark:text-white">Share Your Experience</h2>
+                      <h2 className="text-sm sm:text-base font-medium text-slate-800 dark:text-white flex items-center gap-2">
+                        Share Your Experience
+                        <SnowflakeIcon size={14} className="text-sky-400/60" />
+                      </h2>
                       <Button variant="ghost" size="icon" className="h-7 w-7 sm:h-8 sm:w-8 rounded-full -mr-1 hover:bg-sky-100/50 dark:hover:bg-sky-900/30" onClick={() => setShowFeedback(false)}><X className="h-4 w-4" /></Button>
                     </div>
                     <form onSubmit={handleSubmitFeedback} className="space-y-4 sm:space-y-5">
@@ -636,20 +728,20 @@ const handleSubmitFeedback = async (e: React.FormEvent) => {
                         <div className="flex gap-1 justify-center py-1.5 sm:py-2">
                           {[1, 2, 3, 4, 5].map((star) => (
                             <motion.button key={star} type="button" onClick={() => setFeedback({ ...feedback, rating: star })} whileHover={{ scale: 1.12 }} whileTap={{ scale: 0.92 }} className="p-0.5 sm:p-1">
-                              <Star className={`h-7 w-7 sm:h-8 sm:w-8 transition-all duration-200 ${star <= feedback.rating ? "fill-amber-400 text-amber-400 drop-shadow-sm" : "text-sky-200/60 dark:text-sky-700/60 hover:text-sky-300 dark:hover:text-sky-600"}`} />
+                              <Star className={`h-7 w-7 sm:h-8 sm:w-8 transition-all duration-200 ${star <= feedback.rating ? "fill-amber-400 text-amber-400 drop-shadow-sm" : "text-sky-200/70 dark:text-sky-700/70 hover:text-amber-300 dark:hover:text-amber-400/60"}`} />
                             </motion.button>
                           ))}
                         </div>
                       </div>
                       <div className="space-y-1.5 sm:space-y-2">
                         <Label htmlFor="name" className="text-xs sm:text-sm text-slate-600 dark:text-sky-200/70">Name <span className="text-slate-400 dark:text-sky-400/50">(optional)</span></Label>
-                        <Input id="name" placeholder="Your name" value={feedback.name} onChange={(e) => setFeedback({ ...feedback, name: e.target.value })} className="h-9 sm:h-10 rounded-lg sm:rounded-xl border-sky-200/40 dark:border-sky-800/30 bg-white/50 dark:bg-slate-900/30 text-sm focus:border-sky-300 dark:focus:border-sky-700" />
+                        <Input id="name" placeholder="Your name" value={feedback.name} onChange={(e) => setFeedback({ ...feedback, name: e.target.value })} className="h-9 sm:h-10 rounded-lg sm:rounded-xl border-sky-200/50 dark:border-sky-800/40 bg-white/60 dark:bg-slate-900/40 text-sm focus:border-emerald-400 dark:focus:border-emerald-600" />
                       </div>
                       <div className="space-y-1.5 sm:space-y-2">
                         <Label htmlFor="comment" className="text-xs sm:text-sm text-slate-600 dark:text-sky-200/70">Comment</Label>
-                        <Textarea id="comment" placeholder="Tell us about your experience..." value={feedback.comment} onChange={(e) => setFeedback({ ...feedback, comment: e.target.value })} rows={3} className="rounded-lg sm:rounded-xl border-sky-200/40 dark:border-sky-800/30 bg-white/50 dark:bg-slate-900/30 resize-none text-sm min-h-[80px] focus:border-sky-300 dark:focus:border-sky-700" />
+                        <Textarea id="comment" placeholder="Tell us about your experience..." value={feedback.comment} onChange={(e) => setFeedback({ ...feedback, comment: e.target.value })} rows={3} className="rounded-lg sm:rounded-xl border-sky-200/50 dark:border-sky-800/40 bg-white/60 dark:bg-slate-900/40 resize-none text-sm min-h-[80px] focus:border-emerald-400 dark:focus:border-emerald-600" />
                       </div>
-                      <Button type="submit" className="w-full h-10 sm:h-11 rounded-lg sm:rounded-xl text-sm bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 dark:from-sky-600 dark:to-sky-700 dark:hover:from-sky-500 dark:hover:to-sky-600 text-white shadow-sm shadow-sky-200/50 dark:shadow-sky-900/50" disabled={submitting || !canSubmitFeedback}>
+                      <Button type="submit" className="w-full h-10 sm:h-11 rounded-lg sm:rounded-xl text-sm bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 dark:from-emerald-600 dark:to-green-700 dark:hover:from-emerald-500 dark:hover:to-green-600 text-white shadow-md shadow-emerald-200/50 dark:shadow-emerald-900/50" disabled={submitting || !canSubmitFeedback}>
                         {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />}
                         {canSubmitFeedback ? "Submit Feedback" : "Already Submitted"}
                       </Button>
@@ -661,14 +753,14 @@ const handleSubmitFeedback = async (e: React.FormEvent) => {
           </AnimatePresence>
         </ScrollRevealSection>
 
-        {/* Footer - Winter Theme */}
+        {/* Footer - Christmas Theme */}
         <ScrollRevealSection delay={0.25} className="mt-10 sm:mt-12">
           <div className="text-center">
             <p className="text-[10px] sm:text-xs text-slate-400 dark:text-sky-400/40">
-              <span className="inline-flex items-center gap-1">
-                <Snowflake className="w-3 h-3" />
-                Powered by <a href="https://addmenu.in" className="text-slate-500 dark:text-sky-300/50 hover:text-sky-600 dark:hover:text-sky-300 transition-colors">AddMenu</a>
-                <Snowflake className="w-3 h-3" />
+              <span className="inline-flex items-center gap-1.5">
+                <ChristmasTree size={12} className="text-green-500/60" />
+                Powered by <a href="https://addmenu.in" className="text-slate-500 dark:text-sky-300/50 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">AddMenu</a>
+                <SnowflakeIcon size={10} className="text-sky-400/60" />
               </span>
             </p>
           </div>
@@ -676,27 +768,27 @@ const handleSubmitFeedback = async (e: React.FormEvent) => {
       </main>
 
 
-      {/* Image Zoom Modal - Winter Theme */}
+      {/* Image Zoom Modal - Christmas Theme */}
       <AnimatePresence>
         {zoomedImage && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }} className="fixed inset-0 z-[100] bg-slate-950/95 dark:bg-black/95 flex items-center justify-center touch-none" onClick={() => setZoomedImage(null)}>
             {/* Subtle snow effect in modal */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-30">
-              {Array.from({ length: 8 }).map((_, i) => (
+            <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-20">
+              {Array.from({ length: 10 }).map((_, i) => (
                 <motion.div
                   key={i}
-                  className="absolute text-sky-300/30"
-                  style={{ left: `${Math.random() * 100}%`, top: -20 }}
-                  animate={{ y: "100vh", rotate: 360 }}
-                  transition={{ duration: 15 + Math.random() * 10, delay: i * 0.5, repeat: Infinity, ease: "linear" }}
+                  className="absolute text-white/40"
+                  style={{ left: `${(i * 10) + 5}%`, top: -20 }}
+                  animate={{ y: "105vh", rotate: 360 }}
+                  transition={{ duration: 12 + i * 2, delay: i * 0.8, repeat: Infinity, ease: "linear" }}
                 >
-                  <Snowflake style={{ width: 10 + Math.random() * 8, height: 10 + Math.random() * 8 }} />
+                  <SnowflakeIcon size={10 + (i % 3) * 4} />
                 </motion.div>
               ))}
             </div>
             
             {/* Close button */}
-            <motion.button initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ delay: 0.08 }} className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10 w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-sky-500/10 hover:bg-sky-500/20 text-sky-100 transition-colors border border-sky-500/20" onClick={() => setZoomedImage(null)}>
+            <motion.button initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ delay: 0.08 }} className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10 w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors border border-white/20" onClick={() => setZoomedImage(null)}>
               <X className="h-4 w-4 sm:h-5 sm:w-5" />
             </motion.button>
             
@@ -704,12 +796,12 @@ const handleSubmitFeedback = async (e: React.FormEvent) => {
             {menuImages.length > 1 && (
               <>
                 {zoomedIndex > 0 && (
-                  <motion.button initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} className="hidden sm:flex absolute left-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 items-center justify-center rounded-full bg-sky-500/10 hover:bg-sky-500/20 text-sky-100 transition-colors border border-sky-500/20" onClick={(e) => { e.stopPropagation(); setZoomedIndex(zoomedIndex - 1); setZoomedImage(menuImages[zoomedIndex - 1].image_url); }}>
+                  <motion.button initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} className="hidden sm:flex absolute left-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors border border-white/20" onClick={(e) => { e.stopPropagation(); setZoomedIndex(zoomedIndex - 1); setZoomedImage(menuImages[zoomedIndex - 1].image_url); }}>
                     <ChevronDown className="h-5 w-5 rotate-90" />
                   </motion.button>
                 )}
                 {zoomedIndex < menuImages.length - 1 && (
-                  <motion.button initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} className="hidden sm:flex absolute right-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 items-center justify-center rounded-full bg-sky-500/10 hover:bg-sky-500/20 text-sky-100 transition-colors border border-sky-500/20" onClick={(e) => { e.stopPropagation(); setZoomedIndex(zoomedIndex + 1); setZoomedImage(menuImages[zoomedIndex + 1].image_url); }}>
+                  <motion.button initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} className="hidden sm:flex absolute right-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors border border-white/20" onClick={(e) => { e.stopPropagation(); setZoomedIndex(zoomedIndex + 1); setZoomedImage(menuImages[zoomedIndex + 1].image_url); }}>
                     <ChevronDown className="h-5 w-5 -rotate-90" />
                   </motion.button>
                 )}
@@ -718,14 +810,14 @@ const handleSubmitFeedback = async (e: React.FormEvent) => {
             
             {/* Image counter */}
             {menuImages.length > 1 && (
-              <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 z-10 px-3 py-1.5 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-100 text-xs sm:text-sm">
+              <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 z-10 px-3 py-1.5 rounded-full bg-white/10 border border-white/20 text-white text-xs sm:text-sm">
                 {zoomedIndex + 1} / {menuImages.length}
               </motion.div>
             )}
             
             {/* Zoomed Image */}
             <motion.div initial={{ scale: 0.92, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.92, opacity: 0 }} transition={{ type: "spring", stiffness: 120, damping: 20 }} className="w-full max-w-4xl px-3 sm:px-4 relative z-10" onClick={(e) => e.stopPropagation()}>
-              <img src={zoomedImage} alt="Menu" className="w-full h-auto max-h-[85vh] sm:max-h-[90vh] object-contain rounded-lg select-none shadow-2xl shadow-sky-900/30" draggable={false} />
+              <img src={zoomedImage} alt="Menu" className="w-full h-auto max-h-[85vh] sm:max-h-[90vh] object-contain rounded-lg select-none shadow-2xl" draggable={false} />
             </motion.div>
           </motion.div>
         )}
