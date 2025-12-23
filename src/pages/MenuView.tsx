@@ -8,10 +8,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { toast } from "sonner";
-import { Star, Loader2, X, ChevronDown, Send, MessageSquare } from "lucide-react";
+import { Star, Loader2, X, ChevronDown, Send, MessageSquare, Phone } from "lucide-react";
 import { generateDeviceFingerprint } from "@/lib/deviceFingerprint";
 import { motion, useInView, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import { BellButton } from "@/components/BellButton";
+import { CallButton } from "@/components/CallButton";
 import SessionExpired from "./SessionExpired";
 
 // Lazy loaded image component with blur placeholder
@@ -102,6 +103,8 @@ interface RestaurantProfile {
   logo_url?: string;
   is_disabled?: boolean;
   bell_service_enabled?: boolean;
+  call_service_enabled?: boolean;
+  call_phone_number?: string;
   disabled?: boolean;
   subscriptionExpired?: boolean;
   subscriptionReason?: string;
@@ -295,7 +298,7 @@ const MenuView = () => {
       setBellFeatureEnabled(bellAccess === true);
       
       const [profileResult, imagesResult, socialResult] = await Promise.all([
-        supabase.from("profiles").select("restaurant_name, restaurant_description, logo_url, is_disabled, bell_service_enabled").eq("id", restaurantId).maybeSingle(),
+        supabase.from("profiles").select("restaurant_name, restaurant_description, logo_url, is_disabled, bell_service_enabled, call_service_enabled, call_phone_number").eq("id", restaurantId).maybeSingle(),
         supabase.from("menu_images").select("*").eq("restaurant_id", restaurantId).order("display_order", { ascending: true }),
         supabase.from("social_links").select("*").eq("restaurant_id", restaurantId).maybeSingle()
       ]);
@@ -329,7 +332,7 @@ const MenuView = () => {
       setBellFeatureEnabled(bellAccess === true);
       
       const [profileResult, imagesResult, socialResult] = await Promise.all([
-        supabase.from("profiles").select("restaurant_name, restaurant_description, logo_url, is_disabled, bell_service_enabled").eq("id", restId).maybeSingle(),
+        supabase.from("profiles").select("restaurant_name, restaurant_description, logo_url, is_disabled, bell_service_enabled, call_service_enabled, call_phone_number").eq("id", restId).maybeSingle(),
         supabase.from("menu_images").select("*").eq("restaurant_id", restId).order("display_order", { ascending: true }),
         supabase.from("social_links").select("*").eq("restaurant_id", restId).maybeSingle()
       ]);
@@ -623,6 +626,9 @@ const handleSubmitFeedback = async (e: React.FormEvent) => {
 
       {/* Bell Button - Call Waiter (only show if bell feature is enabled in subscription AND profile) */}
       {effectiveRestaurantId && bellFeatureEnabled && profile?.bell_service_enabled !== false && <BellButton restaurantId={effectiveRestaurantId} />}
+      
+      {/* Call Button - Direct call to restaurant (only show if call service is enabled AND phone number exists) */}
+      {profile?.call_service_enabled && profile?.call_phone_number && <CallButton phoneNumber={profile.call_phone_number} />}
     </div>
   );
 };

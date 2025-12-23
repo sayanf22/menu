@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Loader2, Save, Edit, Upload, X, Bell, BellOff, Crown, Lock, KeyRound, Eye, EyeOff, Settings as SettingsIcon, User, Shield } from "lucide-react";
+import { Loader2, Save, Edit, Upload, X, Bell, BellOff, Crown, Lock, KeyRound, Eye, EyeOff, Phone, PhoneOff, User, Shield } from "lucide-react";
 import { compressImage, COMPRESSION_PRESETS, getCompressionStats } from "@/lib/image-compression";
 import { useRazorpay } from "@/hooks/useRazorpay";
 import { checkRateLimit, RATE_LIMITS, validatePasswordStrength } from "@/lib/security";
@@ -18,12 +18,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
 
 interface SettingsProps {
   restaurantId: string;
@@ -51,13 +45,21 @@ const Settings = ({ restaurantId, onProfileUpdate }: SettingsProps) => {
   const [basicPlusPlan, setBasicPlusPlan] = useState<BasicPlusPlan | null>(null);
   const { initiatePayment, loading: paymentLoading } = useRazorpay();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
   const [profile, setProfile] = useState({
     restaurant_name: "",
     restaurant_description: "",
     logo_url: "",
     bell_service_enabled: true,
+    call_service_enabled: false,
+    call_phone_number: "",
   });
+  
   const [bellServiceSaving, setBellServiceSaving] = useState(false);
+  const [callServiceSaving, setCallServiceSaving] = useState(false);
+  const [phoneNumberSaving, setPhoneNumberSaving] = useState(false);
+  const [editingPhone, setEditingPhone] = useState(false);
+  const [tempPhoneNumber, setTempPhoneNumber] = useState("");
 
   // Password change states
   const [currentPassword, setCurrentPassword] = useState("");
@@ -129,7 +131,7 @@ const Settings = ({ restaurantId, onProfileUpdate }: SettingsProps) => {
     try {
       const { data, error } = await supabase
         .from("profiles")
-        .select("restaurant_name, restaurant_description, logo_url, bell_service_enabled")
+        .select("restaurant_name, restaurant_description, logo_url, bell_service_enabled, call_service_enabled, call_phone_number")
         .eq("id", restaurantId)
         .single();
 
@@ -142,10 +144,13 @@ const Settings = ({ restaurantId, onProfileUpdate }: SettingsProps) => {
           restaurant_description: profileData.restaurant_description as string || "",
           logo_url: profileData.logo_url as string || "",
           bell_service_enabled: profileData.bell_service_enabled !== false,
+          call_service_enabled: profileData.call_service_enabled === true,
+          call_phone_number: profileData.call_phone_number as string || "",
         });
         if (profileData.logo_url) {
           setLogoPreview(profileData.logo_url as string);
         }
+        setTempPhoneNumber(profileData.call_phone_number as string || "");
       }
     } catch (error) {
       console.error("Error fetching profile:", error);
@@ -323,6 +328,70 @@ const Settings = ({ restaurantId, onProfileUpdate }: SettingsProps) => {
     }
   };
 
+  const handleCallServiceToggle = async (enabled: boolean) => {
+    // If enabling, check if phone number exists
+    if (enabled && !profile.call_phone_number) {
+      toast.error("Please add a phone number first");
+      setEditingPhone(true);
+      return;
+    }
+    
+    setCallServiceSaving(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ call_service_enabled: enabled })
+        .eq("id", restaurantId);
+
+      if (error) throw error;
+
+      setProfile(prev => ({ ...prev, call_service_enabled: enabled }));
+      toast.success(enabled ? "Call service enabled" : "Call service disabled");
+      
+      if (onProfileUpdate) {
+        onProfileUpdate({ ...profile, call_service_enabled: enabled });
+      }
+    } catch (error) {
+      console.error("Error updating call service:", error);
+      toast.error("Failed to update call service setting");
+    } finally {
+      setCallServiceSaving(false);
+    }
+  };
+
+  const handleSavePhoneNumber = async () => {
+    // Validate phone number (basic validation)
+    const cleanedNumber = tempPhoneNumber.replace(/\s/g, '');
+    if (cleanedNumber && !/^\+?[0-9]{10,15}$/.test(cleanedNumber)) {
+      toast.error("Please enter a valid phone number (10-15 digits)");
+      return;
+    }
+    
+    setPhoneNumberSaving(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ call_phone_number: cleanedNumber || null })
+        .eq("id", restaurantId);
+
+      if (error) throw error;
+
+      setProfile(prev => ({ ...prev, call_phone_number: cleanedNumber }));
+      setEditingPhone(false);
+      toast.success("Phone number saved");
+      
+      // If phone number is removed, disable call service
+      if (!cleanedNumber && profile.call_service_enabled) {
+        await handleCallServiceToggle(false);
+      }
+    } catch (error) {
+      console.error("Error saving phone number:", error);
+      toast.error("Failed to save phone number");
+    } finally {
+      setPhoneNumberSaving(false);
+    }
+  };
+
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -418,316 +487,385 @@ const Settings = ({ restaurantId, onProfileUpdate }: SettingsProps) => {
 
   return (
     <div className="space-y-6">
-      <Tabs defaultValue="profile" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 mb-6">
-          <TabsTrigger value="profile" className="flex items-center gap-2">
-            <User className="h-4 w-4" />
-            Profile
-          </TabsTrigger>
-          <TabsTrigger value="bell" className="flex items-center gap-2">
-            <Bell className="h-4 w-4" />
-            Bell Service
-          </TabsTrigger>
-          <TabsTrigger value="security" className="flex items-center gap-2">
-            <Shield className="h-4 w-4" />
-            Security
-          </TabsTrigger>
-        </TabsList>
-
-        {/* Profile Tab */}
-        <TabsContent value="profile">
-          <Card>
-            <CardHeader className="pb-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>Restaurant Profile</CardTitle>
-                  <CardDescription>
-                    Manage your restaurant information that appears on your menu
-                  </CardDescription>
+      {/* Restaurant Profile Section */}
+      <Card>
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <User className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <CardTitle>Restaurant Profile</CardTitle>
+                <CardDescription>Your restaurant information</CardDescription>
+              </div>
+            </div>
+            {!editing && (
+              <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
+                <Edit className="mr-2 h-4 w-4" />
+                Edit
+              </Button>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          {editing ? (
+            <form onSubmit={handleSave} className="space-y-5">
+              <div className="space-y-2">
+                <Label>Restaurant Logo</Label>
+                <div className="flex items-center gap-4">
+                  {logoPreview && (
+                    <div className="relative">
+                      <img src={logoPreview} alt="Logo preview" className="w-20 h-20 object-cover rounded-xl border-2" />
+                      <Button type="button" variant="destructive" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full" onClick={handleRemoveLogo}>
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    <Input ref={fileInputRef} type="file" accept="image/*" onChange={handleLogoChange} className="hidden" id="logo-upload" />
+                    <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+                      <Upload className="mr-2 h-4 w-4" />
+                      {logoPreview ? "Change Logo" : "Upload Logo"}
+                    </Button>
+                    <p className="text-xs text-muted-foreground mt-2">Max 2MB</p>
+                  </div>
                 </div>
-                {!editing && (
-                  <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
-                    <Edit className="mr-2 h-4 w-4" />
-                    Edit
-                  </Button>
+                {compressing && (
+                  <div className="p-3 bg-muted/50 rounded-lg border">
+                    <div className="flex items-center justify-between text-sm mb-2">
+                      <span>Compressing...</span>
+                      <span>{compressionProgress}%</span>
+                    </div>
+                    <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                      <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${compressionProgress}%` }} />
+                    </div>
+                  </div>
                 )}
               </div>
-            </CardHeader>
-            <CardContent>
-              {editing ? (
-                <form onSubmit={handleSave} className="space-y-5">
-                  {/* Logo Upload */}
-                  <div className="space-y-2">
-                    <Label>Restaurant Logo</Label>
-                    <div className="flex items-center gap-4">
-                      {logoPreview && (
-                        <div className="relative">
-                          <img src={logoPreview} alt="Logo preview" className="w-20 h-20 object-cover rounded-xl border-2" />
-                          <Button type="button" variant="destructive" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full" onClick={handleRemoveLogo}>
-                            <X className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      )}
-                      <div className="flex-1">
-                        <Input ref={fileInputRef} type="file" accept="image/*" onChange={handleLogoChange} className="hidden" id="logo-upload" />
-                        <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
-                          <Upload className="mr-2 h-4 w-4" />
-                          {logoPreview ? "Change Logo" : "Upload Logo"}
-                        </Button>
-                        <p className="text-xs text-muted-foreground mt-2">Max 2MB, auto-compressed</p>
-                      </div>
-                    </div>
-                    {compressing && (
-                      <div className="p-3 bg-muted/50 rounded-lg border">
-                        <div className="flex items-center justify-between text-sm mb-2">
-                          <span>Compressing...</span>
-                          <span>{compressionProgress}%</span>
-                        </div>
-                        <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                          <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${compressionProgress}%` }} />
-                        </div>
-                      </div>
-                    )}
-                  </div>
 
-                  {/* Restaurant Name */}
-                  <div className="space-y-2">
-                    <Label htmlFor="restaurant_name">Restaurant Name <span className="text-destructive">*</span></Label>
-                    <Input id="restaurant_name" placeholder="Your Restaurant Name" value={profile.restaurant_name} onChange={(e) => setProfile({ ...profile, restaurant_name: e.target.value })} required />
-                  </div>
-
-                  {/* Description */}
-                  <div className="space-y-2">
-                    <Label htmlFor="restaurant_description">Description</Label>
-                    <Textarea id="restaurant_description" placeholder="Brief description (optional)" value={profile.restaurant_description} onChange={(e) => setProfile({ ...profile, restaurant_description: e.target.value })} rows={3} />
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex gap-3 pt-2">
-                    <Button type="button" variant="outline" onClick={handleCancel} className="flex-1">Cancel</Button>
-                    <Button type="submit" disabled={saving || uploading} className="flex-1">
-                      {(saving || uploading) ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                      {uploading ? "Uploading..." : "Save"}
-                    </Button>
-                  </div>
-                </form>
-              ) : (
-                <div className="space-y-4">
-                  <div className="grid gap-4">
-                    {profile.logo_url && (
-                      <div className="flex items-center gap-4">
-                        <img src={profile.logo_url} alt="Logo" className="w-16 h-16 object-cover rounded-xl border" />
-                        <div>
-                          <p className="text-xs text-muted-foreground">Restaurant Logo</p>
-                          <p className="font-medium">Uploaded</p>
-                        </div>
-                      </div>
-                    )}
-                    <div className="grid sm:grid-cols-2 gap-4">
-                      <div className="p-4 bg-muted/30 rounded-xl">
-                        <p className="text-xs text-muted-foreground mb-1">Restaurant Name</p>
-                        <p className="font-semibold text-lg">{profile.restaurant_name}</p>
-                      </div>
-                      <div className="p-4 bg-muted/30 rounded-xl">
-                        <p className="text-xs text-muted-foreground mb-1">Description</p>
-                        <p className="text-sm">{profile.restaurant_description || "Not provided"}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Bell Service Tab */}
-        <TabsContent value="bell">
-          <Card>
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center gap-2">
-                <Bell className="h-5 w-5" />
-                Bell Service Settings
-              </CardTitle>
-              <CardDescription>
-                Allow customers to call for service from their table
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {hasBellAccess ? (
-                <div className={`p-5 rounded-xl border-2 transition-all ${
-                  profile.bell_service_enabled 
-                    ? "bg-primary/5 border-primary/30" 
-                    : "bg-muted/30 border-muted"
-                }`}>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${
-                        profile.bell_service_enabled 
-                          ? "bg-primary text-primary-foreground" 
-                          : "bg-muted text-muted-foreground"
-                      }`}>
-                        {profile.bell_service_enabled ? <Bell className="h-6 w-6" /> : <BellOff className="h-6 w-6" />}
-                      </div>
-                      <div>
-                        <p className="font-semibold flex items-center gap-2">
-                          {profile.bell_service_enabled ? "Enabled" : "Disabled"}
-                          {profile.bell_service_enabled && (
-                            <span className="text-xs px-2 py-0.5 rounded-full bg-green-500/20 text-green-600 font-medium">Active</span>
-                          )}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {profile.bell_service_enabled 
-                            ? "Customers can tap the bell icon to call you" 
-                            : "Bell button is hidden from customers"}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {bellServiceSaving && <Loader2 className="h-4 w-4 animate-spin" />}
-                      <Switch 
-                        checked={profile.bell_service_enabled}
-                        onCheckedChange={handleBellServiceToggle}
-                        disabled={bellServiceSaving}
-                      />
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="p-5 rounded-xl border-2 border-dashed border-amber-300 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 dark:border-amber-700">
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center flex-shrink-0">
-                      <Lock className="h-6 w-6 text-white" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h4 className="font-semibold">Upgrade Required</h4>
-                        <Crown className="h-4 w-4 text-amber-500" />
-                      </div>
-                      <p className="text-sm text-muted-foreground mb-4">
-                        Bell Service is available with Basic Plus plan. Let customers call for service directly from their table.
-                      </p>
-                      <Button 
-                        onClick={() => setShowUpgradeDialog(true)}
-                        className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white"
-                      >
-                        <Crown className="mr-2 h-4 w-4" />
-                        Upgrade to Basic Plus
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Security Tab */}
-        <TabsContent value="security">
-          <Card>
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center gap-2">
-                <Shield className="h-5 w-5" />
-                Security Settings
-              </CardTitle>
-              <CardDescription>
-                Manage your account security and password
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Change Password Section */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <KeyRound className="h-5 w-5 text-muted-foreground" />
-                  <h3 className="font-semibold">Change Password</h3>
-                </div>
-                
-                <form onSubmit={handleChangePassword} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="currentPassword">Current Password</Label>
-                    <div className="relative">
-                      <Input
-                        id="currentPassword"
-                        type={showCurrentPassword ? "text" : "password"}
-                        value={currentPassword}
-                        onChange={(e) => setCurrentPassword(e.target.value)}
-                        placeholder="Enter current password"
-                        required
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8"
-                        onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                      >
-                        {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="newPassword">New Password</Label>
-                    <div className="relative">
-                      <Input
-                        id="newPassword"
-                        type={showNewPassword ? "text" : "password"}
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                        placeholder="Enter new password"
-                        required
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8"
-                        onClick={() => setShowNewPassword(!showNewPassword)}
-                      >
-                        {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </Button>
-                    </div>
-                    <p className="text-xs text-muted-foreground">Min 8 characters with uppercase, lowercase, number</p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="confirmNewPassword">Confirm New Password</Label>
-                    <div className="relative">
-                      <Input
-                        id="confirmNewPassword"
-                        type={showConfirmNewPassword ? "text" : "password"}
-                        value={confirmNewPassword}
-                        onChange={(e) => setConfirmNewPassword(e.target.value)}
-                        placeholder="Confirm new password"
-                        required
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8"
-                        onClick={() => setShowConfirmNewPassword(!showConfirmNewPassword)}
-                      >
-                        {showConfirmNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-3">
-                    <Button type="submit" disabled={changingPassword}>
-                      {changingPassword ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <KeyRound className="mr-2 h-4 w-4" />}
-                      Change Password
-                    </Button>
-                    <Button type="button" variant="outline" onClick={handleSendResetEmail} disabled={sendingResetEmail}>
-                      {sendingResetEmail ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                      Send Reset Email
-                    </Button>
-                  </div>
-                </form>
+              <div className="space-y-2">
+                <Label htmlFor="restaurant_name">Restaurant Name <span className="text-destructive">*</span></Label>
+                <Input id="restaurant_name" placeholder="Your Restaurant Name" value={profile.restaurant_name} onChange={(e) => setProfile({ ...profile, restaurant_name: e.target.value })} required />
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+
+              <div className="space-y-2">
+                <Label htmlFor="restaurant_description">Description</Label>
+                <Textarea id="restaurant_description" placeholder="Brief description (optional)" value={profile.restaurant_description} onChange={(e) => setProfile({ ...profile, restaurant_description: e.target.value })} rows={3} />
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <Button type="button" variant="outline" onClick={handleCancel} className="flex-1">Cancel</Button>
+                <Button type="submit" disabled={saving || uploading} className="flex-1">
+                  {(saving || uploading) ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                  Save
+                </Button>
+              </div>
+            </form>
+          ) : (
+            <div className="grid gap-4">
+              {profile.logo_url && (
+                <div className="flex items-center gap-4">
+                  <img src={profile.logo_url} alt="Logo" className="w-16 h-16 object-cover rounded-xl border" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Restaurant Logo</p>
+                    <p className="font-medium">Uploaded</p>
+                  </div>
+                </div>
+              )}
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div className="p-4 bg-muted/30 rounded-xl">
+                  <p className="text-xs text-muted-foreground mb-1">Restaurant Name</p>
+                  <p className="font-semibold">{profile.restaurant_name}</p>
+                </div>
+                <div className="p-4 bg-muted/30 rounded-xl">
+                  <p className="text-xs text-muted-foreground mb-1">Description</p>
+                  <p className="text-sm">{profile.restaurant_description || "Not provided"}</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Bell Service Section */}
+      <Card>
+        <CardHeader className="pb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
+              <Bell className="h-5 w-5 text-amber-500" />
+            </div>
+            <div>
+              <CardTitle>Bell Service</CardTitle>
+              <CardDescription>Let customers call for service</CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {hasBellAccess ? (
+            <div className={`p-4 rounded-xl border-2 transition-all ${
+              profile.bell_service_enabled 
+                ? "bg-amber-500/5 border-amber-500/30" 
+                : "bg-muted/30 border-muted"
+            }`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all ${
+                    profile.bell_service_enabled 
+                      ? "bg-amber-500 text-white" 
+                      : "bg-muted text-muted-foreground"
+                  }`}>
+                    {profile.bell_service_enabled ? <Bell className="h-5 w-5" /> : <BellOff className="h-5 w-5" />}
+                  </div>
+                  <div>
+                    <p className="font-medium flex items-center gap-2">
+                      {profile.bell_service_enabled ? "Enabled" : "Disabled"}
+                      {profile.bell_service_enabled && (
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-green-500/20 text-green-600">Active</span>
+                      )}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {profile.bell_service_enabled 
+                        ? "Customers can tap bell to call you" 
+                        : "Bell button hidden from menu"}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {bellServiceSaving && <Loader2 className="h-4 w-4 animate-spin" />}
+                  <Switch 
+                    checked={profile.bell_service_enabled}
+                    onCheckedChange={handleBellServiceToggle}
+                    disabled={bellServiceSaving}
+                  />
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="p-4 rounded-xl border-2 border-dashed border-amber-300 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 dark:border-amber-700">
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center flex-shrink-0">
+                  <Lock className="h-5 w-5 text-white" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h4 className="font-medium">Upgrade Required</h4>
+                    <Crown className="h-4 w-4 text-amber-500" />
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Bell Service is available with Basic Plus plan.
+                  </p>
+                  <Button 
+                    size="sm"
+                    onClick={() => setShowUpgradeDialog(true)}
+                    className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white"
+                  >
+                    <Crown className="mr-2 h-4 w-4" />
+                    Upgrade
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Call Service Section */}
+      <Card>
+        <CardHeader className="pb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center">
+              <Phone className="h-5 w-5 text-green-500" />
+            </div>
+            <div>
+              <CardTitle>Call Service</CardTitle>
+              <CardDescription>Let customers call your restaurant directly</CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Phone Number Input */}
+          <div className="p-4 rounded-xl bg-muted/30 border">
+            <div className="flex items-center justify-between mb-3">
+              <Label className="text-sm font-medium">Phone Number</Label>
+              {!editingPhone && profile.call_phone_number && (
+                <Button variant="ghost" size="sm" onClick={() => { setEditingPhone(true); setTempPhoneNumber(profile.call_phone_number); }}>
+                  <Edit className="h-3 w-3 mr-1" />
+                  Edit
+                </Button>
+              )}
+            </div>
+            
+            {editingPhone || !profile.call_phone_number ? (
+              <div className="space-y-3">
+                <Input
+                  type="tel"
+                  placeholder="+91 9876543210"
+                  value={tempPhoneNumber}
+                  onChange={(e) => setTempPhoneNumber(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">Include country code (e.g., +91 for India)</p>
+                <div className="flex gap-2">
+                  {profile.call_phone_number && (
+                    <Button variant="outline" size="sm" onClick={() => { setEditingPhone(false); setTempPhoneNumber(profile.call_phone_number); }}>
+                      Cancel
+                    </Button>
+                  )}
+                  <Button size="sm" onClick={handleSavePhoneNumber} disabled={phoneNumberSaving}>
+                    {phoneNumberSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+                    Save
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <p className="font-medium">{profile.call_phone_number}</p>
+            )}
+          </div>
+
+          {/* Enable/Disable Toggle */}
+          <div className={`p-4 rounded-xl border-2 transition-all ${
+            profile.call_service_enabled 
+              ? "bg-green-500/5 border-green-500/30" 
+              : "bg-muted/30 border-muted"
+          }`}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all ${
+                  profile.call_service_enabled 
+                    ? "bg-green-500 text-white" 
+                    : "bg-muted text-muted-foreground"
+                }`}>
+                  {profile.call_service_enabled ? <Phone className="h-5 w-5" /> : <PhoneOff className="h-5 w-5" />}
+                </div>
+                <div>
+                  <p className="font-medium flex items-center gap-2">
+                    {profile.call_service_enabled ? "Enabled" : "Disabled"}
+                    {profile.call_service_enabled && (
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-green-500/20 text-green-600">Active</span>
+                    )}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {profile.call_service_enabled 
+                      ? "Call icon visible on menu" 
+                      : "Call icon hidden from menu"}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                {callServiceSaving && <Loader2 className="h-4 w-4 animate-spin" />}
+                <Switch 
+                  checked={profile.call_service_enabled}
+                  onCheckedChange={handleCallServiceToggle}
+                  disabled={callServiceSaving || !profile.call_phone_number}
+                />
+              </div>
+            </div>
+          </div>
+          
+          {!profile.call_phone_number && (
+            <p className="text-xs text-muted-foreground text-center">Add a phone number to enable call service</p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Security Section */}
+      <Card>
+        <CardHeader className="pb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
+              <Shield className="h-5 w-5 text-blue-500" />
+            </div>
+            <div>
+              <CardTitle>Security</CardTitle>
+              <CardDescription>Manage your password</CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleChangePassword} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="currentPassword">Current Password</Label>
+              <div className="relative">
+                <Input
+                  id="currentPassword"
+                  type={showCurrentPassword ? "text" : "password"}
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  placeholder="Enter current password"
+                  required
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8"
+                  onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                >
+                  {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="newPassword">New Password</Label>
+              <div className="relative">
+                <Input
+                  id="newPassword"
+                  type={showNewPassword ? "text" : "password"}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Enter new password"
+                  required
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                >
+                  {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">Min 8 chars with uppercase, lowercase, number</p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="confirmNewPassword">Confirm New Password</Label>
+              <div className="relative">
+                <Input
+                  id="confirmNewPassword"
+                  type={showConfirmNewPassword ? "text" : "password"}
+                  value={confirmNewPassword}
+                  onChange={(e) => setConfirmNewPassword(e.target.value)}
+                  placeholder="Confirm new password"
+                  required
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8"
+                  onClick={() => setShowConfirmNewPassword(!showConfirmNewPassword)}
+                >
+                  {showConfirmNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+              </div>
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <Button type="submit" disabled={changingPassword}>
+                {changingPassword ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <KeyRound className="mr-2 h-4 w-4" />}
+                Change Password
+              </Button>
+              <Button type="button" variant="outline" onClick={handleSendResetEmail} disabled={sendingResetEmail}>
+                {sendingResetEmail && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Reset via Email
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
 
       {/* Upgrade Dialog */}
       <Dialog open={showUpgradeDialog} onOpenChange={setShowUpgradeDialog}>
@@ -748,7 +886,7 @@ const Settings = ({ restaurantId, onProfileUpdate }: SettingsProps) => {
                 <span>Bell Calling Feature</span>
               </div>
               <div className="flex items-center gap-2 text-sm">
-                <span className="h-4 w-4 flex items-center justify-center text-primary">10</span>
+                <span className="h-4 w-4 flex items-center justify-center text-primary font-medium">10</span>
                 <span>Menu Image Uploads</span>
               </div>
               <div className="flex items-center gap-2 text-sm">
