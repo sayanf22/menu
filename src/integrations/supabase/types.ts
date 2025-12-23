@@ -679,6 +679,22 @@ export type Database = {
           p_password: string
           p_restaurant_name: string
           p_restaurant_description?: string
+          p_admin_session_token?: string
+        }
+        Returns: Json
+      }
+      verify_admin_login: {
+        Args: {
+          p_email: string
+          p_password: string
+        }
+        Returns: Json
+      }
+      update_admin_password: {
+        Args: {
+          p_email: string
+          p_old_password: string
+          p_new_password: string
         }
         Returns: Json
       }

@@ -19,47 +19,31 @@ const AdminLogin = () => {
     setLoading(true);
 
     try {
-      const { data: adminData, error } = await supabase
-        .from("admin_credentials")
-        .select("*")
-        .eq("email", email)
-        .eq("password_hash", password)
-        .single();
+      // Use secure server-side password verification
+      const { data, error } = await supabase.rpc("verify_admin_login", {
+        p_email: email.toLowerCase().trim(),
+        p_password: password,
+      });
 
-      if (error || !adminData) {
-        toast.error("Invalid email or password");
+      if (error) {
+        toast.error("Login failed. Please try again.");
         setLoading(false);
         return;
       }
 
-      const sessionToken = crypto.randomUUID();
-      const expiresAt = new Date();
-      expiresAt.setHours(expiresAt.getHours() + 24);
+      const result = data as { success?: boolean; error?: string; session_token?: string; email?: string } | null;
 
-      const { error: sessionError } = await supabase
-        .from("admin_sessions")
-        .insert({
-          admin_id: adminData.id,
-          session_token: sessionToken,
-          expires_at: expiresAt.toISOString(),
-        });
-
-      if (sessionError) {
-        toast.error("Failed to create session");
+      if (!result?.success) {
+        toast.error(result?.error || "Invalid email or password");
         setLoading(false);
         return;
       }
 
-      await supabase
-        .from("admin_credentials")
-        .update({ last_login: new Date().toISOString() })
-        .eq("id", adminData.id);
-
-      localStorage.setItem("admin_session_token", sessionToken);
-      localStorage.setItem("admin_email", adminData.email);
+      // Store session securely
+      localStorage.setItem("admin_session_token", result.session_token!);
+      localStorage.setItem("admin_email", result.email!);
 
       toast.success("Logged in successfully");
-
       navigate("/admindashboard");
     } catch (error) {
       console.error("Login error:", error);

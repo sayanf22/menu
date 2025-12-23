@@ -239,11 +239,21 @@ const AdminDashboard = () => {
     setCreateLoading(true);
 
     try {
+      // Get admin session token for authorization
+      const adminSessionToken = localStorage.getItem("admin_session_token");
+      
+      if (!adminSessionToken) {
+        toast.error("Admin session expired. Please login again.");
+        navigate("/adminlogin");
+        return;
+      }
+
       const { data, error } = await supabase.rpc("admin_create_user_account", {
         p_email: newAccount.email.toLowerCase().trim(),
         p_password: newAccount.password,
         p_restaurant_name: newAccount.restaurantName.trim(),
         p_restaurant_description: newAccount.restaurantDescription.trim() || null,
+        p_admin_session_token: adminSessionToken,
       });
 
       if (error) throw error;
