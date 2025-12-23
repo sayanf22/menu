@@ -7,12 +7,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { 
   Loader2, LogOut, Ban, CheckCircle, Shield, Users, CreditCard, 
-  Calendar, Search, RefreshCw, Gift, XCircle
+  Search, RefreshCw, Gift, XCircle, UserPlus, Eye, EyeOff
 } from "lucide-react";
 import {
   AlertDialog,
@@ -24,6 +24,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface Profile {
   id: string;
@@ -63,6 +71,17 @@ const AdminDashboard = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [actionLoading, setActionLoading] = useState(false);
+  
+  // Create Account states
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [createLoading, setCreateLoading] = useState(false);
+  const [newAccount, setNewAccount] = useState({
+    email: "",
+    password: "",
+    restaurantName: "",
+    restaurantDescription: "",
+  });
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     checkAdminSession();
@@ -168,7 +187,7 @@ const AdminDashboard = () => {
         }
         toast.success(`Subscription granted for ${grantMonths} month(s)`);
       } else if (actionType === "revoke") {
-        const { data, error } = await supabase.rpc("admin_revoke_subscription", {
+        const { error } = await supabase.rpc("admin_revoke_subscription", {
           p_user_id: selectedProfile.id,
           p_admin_email: adminEmail,
         });
@@ -197,6 +216,55 @@ const AdminDashboard = () => {
     localStorage.removeItem("admin_email");
     toast.success("Logged out successfully");
     navigate("/adminlogin");
+  };
+
+  const handleCreateAccount = async () => {
+    // Validation
+    if (!newAccount.email || !newAccount.password || !newAccount.restaurantName) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    if (newAccount.password.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(newAccount.email)) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+
+    setCreateLoading(true);
+
+    try {
+      const { data, error } = await supabase.rpc("admin_create_user_account", {
+        p_email: newAccount.email.toLowerCase().trim(),
+        p_password: newAccount.password,
+        p_restaurant_name: newAccount.restaurantName.trim(),
+        p_restaurant_description: newAccount.restaurantDescription.trim() || null,
+      });
+
+      if (error) throw error;
+
+      const result = data as { success?: boolean; error?: string; user_id?: string } | null;
+      
+      if (result && !result.success) {
+        toast.error(result.error || "Failed to create account");
+        return;
+      }
+
+      toast.success("Account created successfully!");
+      setShowCreateDialog(false);
+      setNewAccount({ email: "", password: "", restaurantName: "", restaurantDescription: "" });
+      await loadProfiles();
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      toast.error(`Failed to create account: ${errorMessage}`);
+    } finally {
+      setCreateLoading(false);
+    }
   };
 
   const getSubscriptionBadge = (profile: Profile) => {
@@ -280,10 +348,16 @@ const AdminDashboard = () => {
               <p className="text-sm text-muted-foreground">Manage users & subscriptions</p>
             </div>
           </div>
-          <Button onClick={handleLogout} variant="outline" size="sm">
-            <LogOut className="mr-2 h-4 w-4" />
-            Logout
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => setShowCreateDialog(true)} variant="default" size="sm">
+              <UserPlus className="mr-2 h-4 w-4" />
+              Create Account
+            </Button>
+            <Button onClick={handleLogout} variant="outline" size="sm">
+              <LogOut className="mr-2 h-4 w-4" />
+              Logout
+            </Button>
+          </div>
         </div>
 
         {/* Stats Cards */}
@@ -548,6 +622,100 @@ const AdminDashboard = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Create Account Dialog */}
+      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <UserPlus className="h-5 w-5 text-primary" />
+              Create New Account
+            </DialogTitle>
+            <DialogDescription>
+              Create a new restaurant account. The user can login with these credentials.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email <span className="text-red-500">*</span></Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="restaurant@example.com"
+                value={newAccount.email}
+                onChange={(e) => setNewAccount({ ...newAccount, email: e.target.value })}
+                disabled={createLoading}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="password">Password <span className="text-red-500">*</span></Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Min 6 characters"
+                  value={newAccount.password}
+                  onChange={(e) => setNewAccount({ ...newAccount, password: e.target.value })}
+                  disabled={createLoading}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="restaurantName">Restaurant Name <span className="text-red-500">*</span></Label>
+              <Input
+                id="restaurantName"
+                placeholder="My Restaurant"
+                value={newAccount.restaurantName}
+                onChange={(e) => setNewAccount({ ...newAccount, restaurantName: e.target.value })}
+                disabled={createLoading}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="restaurantDescription">Description (Optional)</Label>
+              <Textarea
+                id="restaurantDescription"
+                placeholder="Brief description of the restaurant..."
+                value={newAccount.restaurantDescription}
+                onChange={(e) => setNewAccount({ ...newAccount, restaurantDescription: e.target.value })}
+                disabled={createLoading}
+                rows={3}
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCreateDialog(false)} disabled={createLoading}>
+              Cancel
+            </Button>
+            <Button onClick={handleCreateAccount} disabled={createLoading}>
+              {createLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Creating...
+                </>
+              ) : (
+                <>
+                  <UserPlus className="mr-2 h-4 w-4" />
+                  Create Account
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

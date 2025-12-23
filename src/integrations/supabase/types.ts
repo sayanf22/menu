@@ -673,6 +673,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_create_user_account: {
+        Args: {
+          p_email: string
+          p_password: string
+          p_restaurant_name: string
+          p_restaurant_description?: string
+        }
+        Returns: Json
+      }
       admin_get_profiles: {
         Args: Record<PropertyKey, never>
         Returns: {
