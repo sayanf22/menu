@@ -439,12 +439,19 @@ const MenuView = () => {
       if (profileResult.data) {
         // Mark as disabled if no active subscription or already disabled
         const isDisabled = profileResult.data.is_disabled || !subscriptionCheck.active;
-        setProfile(isDisabled ? { 
-          ...profileResult.data, 
-          disabled: true, 
-          subscriptionExpired: !subscriptionCheck.active,
-          subscriptionReason: subscriptionCheck.reason 
-        } : profileResult.data);
+        const profileData: RestaurantProfile = {
+          restaurant_name: profileResult.data.restaurant_name,
+          restaurant_description: profileResult.data.restaurant_description,
+          logo_url: profileResult.data.logo_url,
+          is_disabled: profileResult.data.is_disabled,
+          bell_service_enabled: profileResult.data.bell_service_enabled,
+          call_service_enabled: profileResult.data.call_service_enabled,
+          call_phone_number: profileResult.data.call_phone_number,
+          disabled: isDisabled,
+          subscriptionExpired: isDisabled ? !subscriptionCheck.active : undefined,
+          subscriptionReason: isDisabled ? subscriptionCheck.reason : undefined,
+        };
+        setProfile(profileData);
       }
       if (imagesResult.data) setMenuImages(imagesResult.data);
       if (socialResult.data) setSocialLinks(socialResult.data);
