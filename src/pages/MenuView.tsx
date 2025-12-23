@@ -8,12 +8,56 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { toast } from "sonner";
-import { Star, Loader2, X, ChevronDown, Send, MessageSquare, Phone } from "lucide-react";
+import { Star, Loader2, X, ChevronDown, Send, MessageSquare, Snowflake } from "lucide-react";
 import { generateDeviceFingerprint } from "@/lib/deviceFingerprint";
 import { motion, useInView, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import { BellButton } from "@/components/BellButton";
 import { CallButton } from "@/components/CallButton";
 import SessionExpired from "./SessionExpired";
+
+// Floating Snowflake Component
+const FloatingSnowflake = memo(({ delay, duration, left, size }: { delay: number; duration: number; left: string; size: number }) => (
+  <motion.div
+    className="absolute pointer-events-none text-sky-200/40 dark:text-sky-300/20"
+    style={{ left, top: -20 }}
+    initial={{ y: -20, opacity: 0, rotate: 0 }}
+    animate={{ 
+      y: "100vh", 
+      opacity: [0, 1, 1, 0],
+      rotate: 360
+    }}
+    transition={{ 
+      duration, 
+      delay, 
+      repeat: Infinity, 
+      ease: "linear",
+      opacity: { duration: duration, times: [0, 0.1, 0.9, 1] }
+    }}
+  >
+    <Snowflake style={{ width: size, height: size }} />
+  </motion.div>
+));
+FloatingSnowflake.displayName = "FloatingSnowflake";
+
+// Snow Background Component
+const SnowBackground = memo(() => {
+  const snowflakes = Array.from({ length: 15 }, (_, i) => ({
+    id: i,
+    delay: Math.random() * 8,
+    duration: 10 + Math.random() * 10,
+    left: `${Math.random() * 100}%`,
+    size: 12 + Math.random() * 12
+  }));
+
+  return (
+    <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+      {snowflakes.map((flake) => (
+        <FloatingSnowflake key={flake.id} {...flake} />
+      ))}
+    </div>
+  );
+});
+SnowBackground.displayName = "SnowBackground";
 
 // Lazy loaded image component with blur placeholder
 const LazyImage = memo(({ src, alt, className, onClick }: { src: string; alt: string; className?: string; onClick?: () => void }) => {
@@ -80,14 +124,14 @@ const ScrollRevealSection = memo(({ children, className = "", delay = 0 }: { chi
 });
 ScrollRevealSection.displayName = "ScrollRevealSection";
 
-// Minimal social icon
+// Winter-themed social icon
 const SocialIcon = memo(({ href, children, label }: { href: string; children: React.ReactNode; label: string }) => (
   <motion.a
     href={href}
     target="_blank"
     rel="noopener noreferrer"
     aria-label={label}
-    className="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center rounded-full border border-border/40 text-muted-foreground hover:text-foreground hover:border-foreground/40 hover:bg-muted/50 transition-all duration-300"
+    className="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center rounded-full border border-sky-200/40 dark:border-sky-700/30 text-slate-500 dark:text-sky-300/70 hover:text-sky-600 dark:hover:text-sky-300 hover:border-sky-300/60 dark:hover:border-sky-600/50 hover:bg-sky-50/50 dark:hover:bg-sky-900/30 transition-all duration-300"
     whileHover={{ scale: 1.08 }}
     whileTap={{ scale: 0.95 }}
   >
@@ -388,26 +432,48 @@ const handleSubmitFeedback = async (e: React.FormEvent) => {
     );
   }
 
-  // Splash Screen
+  // Splash Screen - Christmas/Winter Theme
   if (showSplash) {
     return (
-      <div className="min-h-screen min-h-[100dvh] flex items-center justify-center bg-gradient-to-b from-background via-background to-muted/20 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-[0.015]" style={{ backgroundImage: "radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)", backgroundSize: "32px 32px" }} />
+      <div className="min-h-screen min-h-[100dvh] flex items-center justify-center bg-gradient-to-b from-sky-50 via-white to-sky-100/50 dark:from-slate-900 dark:via-slate-900 dark:to-sky-950/30 relative overflow-hidden">
+        {/* Snow Effect */}
+        <SnowBackground />
+        
+        {/* Subtle winter pattern */}
+        <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.02]" style={{ backgroundImage: "radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)", backgroundSize: "40px 40px" }} />
+        
+        {/* Frost glow effects */}
+        <div className="absolute top-0 left-1/4 w-64 h-64 bg-sky-300/20 dark:bg-sky-500/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-sky-200/20 dark:bg-sky-600/10 rounded-full blur-3xl" />
+        
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6 }} className="relative z-10 text-center px-6 max-w-sm mx-auto">
           {profile?.logo_url ? (
             <motion.div initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring", stiffness: 100, damping: 18, delay: 0.15 }} className="relative mx-auto mb-6">
-              <div className="absolute inset-0 bg-primary/10 rounded-full blur-2xl scale-150" />
-              <img src={profile.logo_url} alt={profile.restaurant_name} className="w-28 h-28 sm:w-32 sm:h-32 mx-auto object-cover rounded-full border-2 border-border/40 shadow-xl relative z-10" loading="eager" />
+              {/* Frost ring around logo */}
+              <div className="absolute inset-0 bg-gradient-to-br from-sky-300/30 to-sky-500/20 dark:from-sky-400/20 dark:to-sky-600/10 rounded-full blur-2xl scale-150" />
+              <div className="absolute -inset-1 bg-gradient-to-br from-sky-200/50 to-white/30 dark:from-sky-500/30 dark:to-sky-700/20 rounded-full" />
+              <img src={profile.logo_url} alt={profile.restaurant_name} className="w-28 h-28 sm:w-32 sm:h-32 mx-auto object-cover rounded-full border-2 border-sky-200/60 dark:border-sky-500/40 shadow-xl shadow-sky-200/30 dark:shadow-sky-900/50 relative z-10" loading="eager" />
             </motion.div>
           ) : (
-            <motion.div initial={{ scale: 0.6 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 100, damping: 18 }} className="w-28 h-28 sm:w-32 sm:h-32 mx-auto mb-6 rounded-full bg-muted flex items-center justify-center">
-              <Loader2 className="h-7 w-7 animate-spin text-muted-foreground" />
+            <motion.div initial={{ scale: 0.6 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 100, damping: 18 }} className="w-28 h-28 sm:w-32 sm:h-32 mx-auto mb-6 rounded-full bg-sky-100/50 dark:bg-sky-900/30 flex items-center justify-center border border-sky-200/50 dark:border-sky-700/30">
+              <Snowflake className="h-8 w-8 text-sky-400 dark:text-sky-500 animate-pulse" />
             </motion.div>
           )}
-          <motion.h1 initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ type: "spring", stiffness: 100, damping: 18, delay: 0.3 }} className="text-xl sm:text-2xl font-semibold tracking-tight mb-2">{profile?.restaurant_name || "Loading..."}</motion.h1>
-          {profile?.restaurant_description && <motion.p initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ type: "spring", stiffness: 100, damping: 18, delay: 0.4 }} className="text-muted-foreground text-sm leading-relaxed line-clamp-2">{profile.restaurant_description}</motion.p>}
+          
+          {/* Christmas greeting */}
+          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mb-3">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-500/10 dark:bg-red-500/20 text-red-600 dark:text-red-400 text-xs font-medium">
+              <span>❄️</span> Happy Holidays <span>🎄</span>
+            </span>
+          </motion.div>
+          
+          <motion.h1 initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ type: "spring", stiffness: 100, damping: 18, delay: 0.3 }} className="text-xl sm:text-2xl font-semibold tracking-tight mb-2 text-slate-800 dark:text-white">{profile?.restaurant_name || "Loading..."}</motion.h1>
+          {profile?.restaurant_description && <motion.p initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ type: "spring", stiffness: 100, damping: 18, delay: 0.4 }} className="text-slate-600 dark:text-sky-200/70 text-sm leading-relaxed line-clamp-2">{profile.restaurant_description}</motion.p>}
+          
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7 }} className="mt-8">
-            <motion.div animate={{ y: [0, 6, 0] }} transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}><ChevronDown className="w-5 h-5 mx-auto text-muted-foreground/60" /></motion.div>
+            <motion.div animate={{ y: [0, 6, 0] }} transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}>
+              <ChevronDown className="w-5 h-5 mx-auto text-sky-400/60 dark:text-sky-500/60" />
+            </motion.div>
           </motion.div>
         </motion.div>
       </div>
@@ -416,10 +482,11 @@ const handleSubmitFeedback = async (e: React.FormEvent) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen min-h-[100dvh] flex items-center justify-center bg-background">
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground mx-auto" />
-          <p className="text-sm text-muted-foreground mt-3">Loading menu...</p>
+      <div className="min-h-screen min-h-[100dvh] flex items-center justify-center bg-gradient-to-b from-sky-50 to-white dark:from-slate-900 dark:to-slate-900">
+        <SnowBackground />
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center relative z-10">
+          <Snowflake className="h-8 w-8 text-sky-400 dark:text-sky-500 mx-auto animate-spin" style={{ animationDuration: '3s' }} />
+          <p className="text-sm text-slate-600 dark:text-sky-200/70 mt-3">Loading menu...</p>
         </motion.div>
       </div>
     );
@@ -427,13 +494,14 @@ const handleSubmitFeedback = async (e: React.FormEvent) => {
 
   if (profile?.disabled) {
     return (
-      <div className="min-h-screen min-h-[100dvh] flex items-center justify-center p-4 bg-gradient-to-b from-background to-muted/20">
-        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ type: "spring", stiffness: 100, damping: 18 }}>
-          <Card className="max-w-sm w-full text-center p-6 sm:p-8 border-border/40 shadow-lg">
+      <div className="min-h-screen min-h-[100dvh] flex items-center justify-center p-4 bg-gradient-to-b from-sky-50 to-white dark:from-slate-900 dark:to-slate-900">
+        <SnowBackground />
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ type: "spring", stiffness: 100, damping: 18 }} className="relative z-10">
+          <Card className="max-w-sm w-full text-center p-6 sm:p-8 border-sky-200/50 dark:border-sky-800/30 shadow-lg bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm">
             {profile?.logo_url && (
-              <img src={profile.logo_url} alt={profile.restaurant_name} className="w-16 h-16 mx-auto mb-4 object-cover rounded-full border border-border/40" />
+              <img src={profile.logo_url} alt={profile.restaurant_name} className="w-16 h-16 mx-auto mb-4 object-cover rounded-full border border-sky-200/50 dark:border-sky-700/30" />
             )}
-            <h2 className="text-lg sm:text-xl font-semibold mb-2">{profile?.restaurant_name || 'Menu Unavailable'}</h2>
+            <h2 className="text-lg sm:text-xl font-semibold mb-2 text-slate-800 dark:text-white">{profile?.restaurant_name || 'Menu Unavailable'}</h2>
             <div className="w-12 h-1 bg-primary/20 mx-auto mb-4 rounded-full" />
             <p className="text-muted-foreground text-sm mb-4">
               {profile?.subscriptionExpired 
@@ -451,7 +519,7 @@ const handleSubmitFeedback = async (e: React.FormEvent) => {
                 Contact Restaurant
               </a>
             )}
-            <p className="text-xs text-muted-foreground/60 mt-4">Powered by AddMenu</p>
+            <p className="text-xs text-slate-500 dark:text-sky-300/50 mt-4">Powered by AddMenu</p>
           </Card>
         </motion.div>
       </div>
@@ -460,48 +528,64 @@ const handleSubmitFeedback = async (e: React.FormEvent) => {
 
 
   return (
-    <div ref={containerRef} className="min-h-screen min-h-[100dvh] bg-background">
+    <div ref={containerRef} className="min-h-screen min-h-[100dvh] bg-gradient-to-b from-sky-50 via-white to-sky-50/50 dark:from-slate-900 dark:via-slate-900 dark:to-sky-950/20">
+      {/* Snow Background */}
+      <SnowBackground />
+      
       {/* Theme Toggle */}
       <motion.div initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="fixed top-3 right-3 sm:top-4 sm:right-4 z-50">
         <ThemeToggle />
       </motion.div>
 
-      {/* Sticky Header */}
-      <motion.header style={{ opacity: headerOpacity }} className="fixed top-0 left-0 right-0 z-40 bg-background/85 backdrop-blur-xl border-b border-border/40">
+      {/* Sticky Header - Winter Theme */}
+      <motion.header style={{ opacity: headerOpacity }} className="fixed top-0 left-0 right-0 z-40 bg-white/85 dark:bg-slate-900/85 backdrop-blur-xl border-b border-sky-200/40 dark:border-sky-800/30">
         <div className="max-w-2xl mx-auto px-3 sm:px-4 py-2.5 sm:py-3">
           <div className="flex items-center gap-2.5 sm:gap-3">
-            {profile?.logo_url && <img src={profile.logo_url} alt={profile.restaurant_name} className="w-8 h-8 sm:w-9 sm:h-9 object-cover rounded-full border border-border/40" loading="eager" />}
-            <div className="flex-1 min-w-0"><h1 className="text-sm sm:text-base font-medium truncate">{profile?.restaurant_name}</h1></div>
+            {profile?.logo_url && <img src={profile.logo_url} alt={profile.restaurant_name} className="w-8 h-8 sm:w-9 sm:h-9 object-cover rounded-full border border-sky-200/50 dark:border-sky-700/30" loading="eager" />}
+            <div className="flex-1 min-w-0"><h1 className="text-sm sm:text-base font-medium truncate text-slate-800 dark:text-white">{profile?.restaurant_name}</h1></div>
+            {/* Small snowflake indicator */}
+            <Snowflake className="w-4 h-4 text-sky-400/60 dark:text-sky-500/50" />
           </div>
         </div>
       </motion.header>
 
-      {/* Hero Section */}
-      <motion.section initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }} className="pt-6 sm:pt-8 pb-4 sm:pb-6 px-3 sm:px-4">
-        <div className="max-w-2xl mx-auto text-center">
+      {/* Hero Section - Winter Theme */}
+      <motion.section initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }} className="pt-6 sm:pt-8 pb-4 sm:pb-6 px-3 sm:px-4 relative">
+        <div className="max-w-2xl mx-auto text-center relative z-10">
+          {/* Holiday badge */}
+          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="mb-3">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-500/10 dark:bg-red-500/20 text-red-600 dark:text-red-400 text-xs font-medium">
+              <span>🎄</span> Season's Greetings <span>❄️</span>
+            </span>
+          </motion.div>
+          
           {profile?.logo_url && (
-            <motion.img initial={{ scale: 0.85, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring", stiffness: 100, damping: 18, delay: 0.1 }} src={profile.logo_url} alt={profile.restaurant_name} className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-3 sm:mb-4 object-cover rounded-full border border-border/40 shadow-md" loading="eager" />
+            <motion.div initial={{ scale: 0.85, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring", stiffness: 100, damping: 18, delay: 0.1 }} className="relative inline-block mb-3 sm:mb-4">
+              <div className="absolute -inset-1 bg-gradient-to-br from-sky-200/50 to-sky-300/30 dark:from-sky-500/30 dark:to-sky-700/20 rounded-full blur-sm" />
+              <img src={profile.logo_url} alt={profile.restaurant_name} className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-full border-2 border-sky-200/60 dark:border-sky-600/40 shadow-lg shadow-sky-200/30 dark:shadow-sky-900/50 relative" loading="eager" />
+            </motion.div>
           )}
-          <motion.h1 initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="text-xl sm:text-2xl font-semibold tracking-tight mb-1.5 sm:mb-2">{profile?.restaurant_name}</motion.h1>
-          {profile?.restaurant_description && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.25 }} className="text-muted-foreground text-xs sm:text-sm max-w-md mx-auto line-clamp-2">{profile.restaurant_description}</motion.p>}
+          <motion.h1 initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="text-xl sm:text-2xl font-semibold tracking-tight mb-1.5 sm:mb-2 text-slate-800 dark:text-white">{profile?.restaurant_name}</motion.h1>
+          {profile?.restaurant_description && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.25 }} className="text-slate-600 dark:text-sky-200/70 text-xs sm:text-sm max-w-md mx-auto line-clamp-2">{profile.restaurant_description}</motion.p>}
         </div>
       </motion.section>
 
       {/* Main Content */}
-      <main className="max-w-2xl mx-auto px-3 sm:px-4 pb-6 sm:pb-8">
-        {/* Menu Images */}
+      <main className="max-w-2xl mx-auto px-3 sm:px-4 pb-6 sm:pb-8 relative z-10">
+        {/* Menu Images - Winter styled cards */}
         <div className="space-y-3 sm:space-y-4">
           {menuImages.length > 0 ? menuImages.map((image, index) => (
             <ScrollRevealSection key={image.id} delay={Math.min(index * 0.06, 0.3)}>
-              <motion.div className="overflow-hidden rounded-xl sm:rounded-2xl bg-card border border-border/25 shadow-sm hover:shadow-md transition-shadow duration-400" whileHover={{ y: -1 }} transition={{ duration: 0.25 }}>
+              <motion.div className="overflow-hidden rounded-xl sm:rounded-2xl bg-white/80 dark:bg-slate-800/50 border border-sky-200/40 dark:border-sky-800/30 shadow-sm shadow-sky-100/50 dark:shadow-sky-900/20 hover:shadow-md hover:shadow-sky-200/50 dark:hover:shadow-sky-800/30 transition-shadow duration-400 backdrop-blur-sm" whileHover={{ y: -2 }} transition={{ duration: 0.25 }}>
                 <LazyImage src={image.image_url} alt={`Menu page ${index + 1}`} className="w-full h-auto cursor-zoom-in" onClick={() => openZoom(image.image_url, index)} />
               </motion.div>
             </ScrollRevealSection>
           )) : (
             <ScrollRevealSection>
-              <div className="py-12 sm:py-16 text-center border-2 border-dashed border-border/40 rounded-xl sm:rounded-2xl">
-                <p className="text-muted-foreground text-sm">No menu available yet</p>
-                <p className="text-xs text-muted-foreground/60 mt-1">Check back soon!</p>
+              <div className="py-12 sm:py-16 text-center border-2 border-dashed border-sky-200/50 dark:border-sky-800/30 rounded-xl sm:rounded-2xl bg-white/50 dark:bg-slate-800/30">
+                <Snowflake className="w-8 h-8 mx-auto mb-3 text-sky-300 dark:text-sky-600" />
+                <p className="text-slate-600 dark:text-sky-200/70 text-sm">No menu available yet</p>
+                <p className="text-xs text-slate-500 dark:text-sky-300/50 mt-1">Check back soon!</p>
               </div>
             </ScrollRevealSection>
           )}
@@ -523,49 +607,49 @@ const handleSubmitFeedback = async (e: React.FormEvent) => {
         )}
 
     
-    {/* Feedback Section - Floating Button + Modal */}
+    {/* Feedback Section - Winter Theme */}
         <ScrollRevealSection delay={0.2} className="mt-8 sm:mt-10">
           <AnimatePresence mode="wait">
             {!showFeedback ? (
               <motion.div key="btn" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }}>
                 <motion.button
                   onClick={() => setShowFeedback(true)}
-                  className="w-full group flex items-center justify-center gap-2.5 h-11 sm:h-12 px-4 rounded-xl border border-border/40 bg-background hover:bg-muted/50 hover:border-primary/30 transition-all duration-300"
+                  className="w-full group flex items-center justify-center gap-2.5 h-11 sm:h-12 px-4 rounded-xl border border-sky-200/40 dark:border-sky-800/30 bg-white/60 dark:bg-slate-800/40 hover:bg-sky-50/50 dark:hover:bg-sky-900/30 hover:border-sky-300/50 dark:hover:border-sky-700/40 transition-all duration-300 backdrop-blur-sm"
                   whileHover={{ scale: 1.01 }}
                   whileTap={{ scale: 0.99 }}
                 >
-                  <MessageSquare className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                  <span className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">Leave Feedback</span>
+                  <MessageSquare className="w-4 h-4 text-slate-500 dark:text-sky-300/70 group-hover:text-sky-600 dark:group-hover:text-sky-300 transition-colors" />
+                  <span className="text-sm font-medium text-slate-600 dark:text-sky-200/70 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">Leave Feedback</span>
                 </motion.button>
               </motion.div>
             ) : (
               <motion.div key="form" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }} transition={{ type: "spring", stiffness: 100, damping: 18 }}>
-                <Card className="border-border/30 shadow-sm overflow-hidden">
+                <Card className="border-sky-200/40 dark:border-sky-800/30 shadow-sm shadow-sky-100/50 dark:shadow-sky-900/20 overflow-hidden bg-white/80 dark:bg-slate-800/50 backdrop-blur-sm">
                   <CardContent className="p-4 sm:p-5">
                     <div className="flex justify-between items-center mb-4 sm:mb-5">
-                      <h2 className="text-sm sm:text-base font-medium">Share Your Experience</h2>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 sm:h-8 sm:w-8 rounded-full -mr-1" onClick={() => setShowFeedback(false)}><X className="h-4 w-4" /></Button>
+                      <h2 className="text-sm sm:text-base font-medium text-slate-800 dark:text-white">Share Your Experience</h2>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 sm:h-8 sm:w-8 rounded-full -mr-1 hover:bg-sky-100/50 dark:hover:bg-sky-900/30" onClick={() => setShowFeedback(false)}><X className="h-4 w-4" /></Button>
                     </div>
                     <form onSubmit={handleSubmitFeedback} className="space-y-4 sm:space-y-5">
                       <div className="space-y-2">
-                        <Label className="text-xs sm:text-sm text-muted-foreground">How was your experience?</Label>
+                        <Label className="text-xs sm:text-sm text-slate-600 dark:text-sky-200/70">How was your experience?</Label>
                         <div className="flex gap-1 justify-center py-1.5 sm:py-2">
                           {[1, 2, 3, 4, 5].map((star) => (
                             <motion.button key={star} type="button" onClick={() => setFeedback({ ...feedback, rating: star })} whileHover={{ scale: 1.12 }} whileTap={{ scale: 0.92 }} className="p-0.5 sm:p-1">
-                              <Star className={`h-7 w-7 sm:h-8 sm:w-8 transition-all duration-200 ${star <= feedback.rating ? "fill-amber-400 text-amber-400 drop-shadow-sm" : "text-border/60 hover:text-muted-foreground"}`} />
+                              <Star className={`h-7 w-7 sm:h-8 sm:w-8 transition-all duration-200 ${star <= feedback.rating ? "fill-amber-400 text-amber-400 drop-shadow-sm" : "text-sky-200/60 dark:text-sky-700/60 hover:text-sky-300 dark:hover:text-sky-600"}`} />
                             </motion.button>
                           ))}
                         </div>
                       </div>
                       <div className="space-y-1.5 sm:space-y-2">
-                        <Label htmlFor="name" className="text-xs sm:text-sm text-muted-foreground">Name <span className="text-muted-foreground/50">(optional)</span></Label>
-                        <Input id="name" placeholder="Your name" value={feedback.name} onChange={(e) => setFeedback({ ...feedback, name: e.target.value })} className="h-9 sm:h-10 rounded-lg sm:rounded-xl border-border/40 text-sm" />
+                        <Label htmlFor="name" className="text-xs sm:text-sm text-slate-600 dark:text-sky-200/70">Name <span className="text-slate-400 dark:text-sky-400/50">(optional)</span></Label>
+                        <Input id="name" placeholder="Your name" value={feedback.name} onChange={(e) => setFeedback({ ...feedback, name: e.target.value })} className="h-9 sm:h-10 rounded-lg sm:rounded-xl border-sky-200/40 dark:border-sky-800/30 bg-white/50 dark:bg-slate-900/30 text-sm focus:border-sky-300 dark:focus:border-sky-700" />
                       </div>
                       <div className="space-y-1.5 sm:space-y-2">
-                        <Label htmlFor="comment" className="text-xs sm:text-sm text-muted-foreground">Comment</Label>
-                        <Textarea id="comment" placeholder="Tell us about your experience..." value={feedback.comment} onChange={(e) => setFeedback({ ...feedback, comment: e.target.value })} rows={3} className="rounded-lg sm:rounded-xl border-border/40 resize-none text-sm min-h-[80px]" />
+                        <Label htmlFor="comment" className="text-xs sm:text-sm text-slate-600 dark:text-sky-200/70">Comment</Label>
+                        <Textarea id="comment" placeholder="Tell us about your experience..." value={feedback.comment} onChange={(e) => setFeedback({ ...feedback, comment: e.target.value })} rows={3} className="rounded-lg sm:rounded-xl border-sky-200/40 dark:border-sky-800/30 bg-white/50 dark:bg-slate-900/30 resize-none text-sm min-h-[80px] focus:border-sky-300 dark:focus:border-sky-700" />
                       </div>
-                      <Button type="submit" className="w-full h-10 sm:h-11 rounded-lg sm:rounded-xl text-sm" disabled={submitting || !canSubmitFeedback}>
+                      <Button type="submit" className="w-full h-10 sm:h-11 rounded-lg sm:rounded-xl text-sm bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 dark:from-sky-600 dark:to-sky-700 dark:hover:from-sky-500 dark:hover:to-sky-600 text-white shadow-sm shadow-sky-200/50 dark:shadow-sky-900/50" disabled={submitting || !canSubmitFeedback}>
                         {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />}
                         {canSubmitFeedback ? "Submit Feedback" : "Already Submitted"}
                       </Button>
@@ -577,19 +661,42 @@ const handleSubmitFeedback = async (e: React.FormEvent) => {
           </AnimatePresence>
         </ScrollRevealSection>
 
-        {/* Footer */}
+        {/* Footer - Winter Theme */}
         <ScrollRevealSection delay={0.25} className="mt-10 sm:mt-12">
-          <p className="text-center text-[10px] sm:text-xs text-muted-foreground/50">Powered by <a href="https://addmenu.in" className="text-muted-foreground/70 hover:text-foreground transition-colors">AddMenu</a></p>
+          <div className="text-center">
+            <p className="text-[10px] sm:text-xs text-slate-400 dark:text-sky-400/40">
+              <span className="inline-flex items-center gap-1">
+                <Snowflake className="w-3 h-3" />
+                Powered by <a href="https://addmenu.in" className="text-slate-500 dark:text-sky-300/50 hover:text-sky-600 dark:hover:text-sky-300 transition-colors">AddMenu</a>
+                <Snowflake className="w-3 h-3" />
+              </span>
+            </p>
+          </div>
         </ScrollRevealSection>
       </main>
 
 
-      {/* Image Zoom Modal */}
+      {/* Image Zoom Modal - Winter Theme */}
       <AnimatePresence>
         {zoomedImage && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }} className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center touch-none" onClick={() => setZoomedImage(null)}>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }} className="fixed inset-0 z-[100] bg-slate-950/95 dark:bg-black/95 flex items-center justify-center touch-none" onClick={() => setZoomedImage(null)}>
+            {/* Subtle snow effect in modal */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-30">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <motion.div
+                  key={i}
+                  className="absolute text-sky-300/30"
+                  style={{ left: `${Math.random() * 100}%`, top: -20 }}
+                  animate={{ y: "100vh", rotate: 360 }}
+                  transition={{ duration: 15 + Math.random() * 10, delay: i * 0.5, repeat: Infinity, ease: "linear" }}
+                >
+                  <Snowflake style={{ width: 10 + Math.random() * 8, height: 10 + Math.random() * 8 }} />
+                </motion.div>
+              ))}
+            </div>
+            
             {/* Close button */}
-            <motion.button initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ delay: 0.08 }} className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10 w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors" onClick={() => setZoomedImage(null)}>
+            <motion.button initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ delay: 0.08 }} className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10 w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-sky-500/10 hover:bg-sky-500/20 text-sky-100 transition-colors border border-sky-500/20" onClick={() => setZoomedImage(null)}>
               <X className="h-4 w-4 sm:h-5 sm:w-5" />
             </motion.button>
             
@@ -597,12 +704,12 @@ const handleSubmitFeedback = async (e: React.FormEvent) => {
             {menuImages.length > 1 && (
               <>
                 {zoomedIndex > 0 && (
-                  <motion.button initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} className="hidden sm:flex absolute left-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors" onClick={(e) => { e.stopPropagation(); setZoomedIndex(zoomedIndex - 1); setZoomedImage(menuImages[zoomedIndex - 1].image_url); }}>
+                  <motion.button initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} className="hidden sm:flex absolute left-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 items-center justify-center rounded-full bg-sky-500/10 hover:bg-sky-500/20 text-sky-100 transition-colors border border-sky-500/20" onClick={(e) => { e.stopPropagation(); setZoomedIndex(zoomedIndex - 1); setZoomedImage(menuImages[zoomedIndex - 1].image_url); }}>
                     <ChevronDown className="h-5 w-5 rotate-90" />
                   </motion.button>
                 )}
                 {zoomedIndex < menuImages.length - 1 && (
-                  <motion.button initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} className="hidden sm:flex absolute right-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors" onClick={(e) => { e.stopPropagation(); setZoomedIndex(zoomedIndex + 1); setZoomedImage(menuImages[zoomedIndex + 1].image_url); }}>
+                  <motion.button initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} className="hidden sm:flex absolute right-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 items-center justify-center rounded-full bg-sky-500/10 hover:bg-sky-500/20 text-sky-100 transition-colors border border-sky-500/20" onClick={(e) => { e.stopPropagation(); setZoomedIndex(zoomedIndex + 1); setZoomedImage(menuImages[zoomedIndex + 1].image_url); }}>
                     <ChevronDown className="h-5 w-5 -rotate-90" />
                   </motion.button>
                 )}
@@ -611,14 +718,14 @@ const handleSubmitFeedback = async (e: React.FormEvent) => {
             
             {/* Image counter */}
             {menuImages.length > 1 && (
-              <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 z-10 px-3 py-1.5 rounded-full bg-white/10 text-white text-xs sm:text-sm">
+              <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 z-10 px-3 py-1.5 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-100 text-xs sm:text-sm">
                 {zoomedIndex + 1} / {menuImages.length}
               </motion.div>
             )}
             
             {/* Zoomed Image */}
-            <motion.div initial={{ scale: 0.92, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.92, opacity: 0 }} transition={{ type: "spring", stiffness: 120, damping: 20 }} className="w-full max-w-4xl px-3 sm:px-4" onClick={(e) => e.stopPropagation()}>
-              <img src={zoomedImage} alt="Menu" className="w-full h-auto max-h-[85vh] sm:max-h-[90vh] object-contain rounded-lg select-none" draggable={false} />
+            <motion.div initial={{ scale: 0.92, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.92, opacity: 0 }} transition={{ type: "spring", stiffness: 120, damping: 20 }} className="w-full max-w-4xl px-3 sm:px-4 relative z-10" onClick={(e) => e.stopPropagation()}>
+              <img src={zoomedImage} alt="Menu" className="w-full h-auto max-h-[85vh] sm:max-h-[90vh] object-contain rounded-lg select-none shadow-2xl shadow-sky-900/30" draggable={false} />
             </motion.div>
           </motion.div>
         )}
