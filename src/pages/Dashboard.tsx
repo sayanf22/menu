@@ -15,9 +15,9 @@ import {
   BarChart3,
   Share2,
   MessageSquare,
-  User,
   CreditCard,
-  AlertTriangle
+  AlertTriangle,
+  Settings as SettingsIcon
 } from "lucide-react";
 import { useRazorpay } from "@/hooks/useRazorpay";
 import {
@@ -43,7 +43,7 @@ const Analytics = lazy(() => import("@/components/dashboard/Analytics"));
 const SocialLinks = lazy(() => import("@/components/dashboard/SocialLinks"));
 const BellNotifications = lazy(() => import("@/components/dashboard/BellNotifications"));
 const FeedbackList = lazy(() => import("@/components/dashboard/FeedbackList"));
-const RestaurantProfile = lazy(() => import("@/components/dashboard/RestaurantProfile"));
+const Settings = lazy(() => import("@/components/dashboard/Settings"));
 const SubscriptionStatus = lazy(() => import("@/components/dashboard/SubscriptionStatus"));
 const SubscriptionPlans = lazy(() => import("@/components/SubscriptionPlans"));
 
@@ -72,7 +72,7 @@ const Dashboard = () => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [subscription, setSubscription] = useState<UserSubscription | null>(null);
   const [newFeedbackCount, setNewFeedbackCount] = useState(0);
-  const [activeTab, setActiveTab] = useState("profile");
+  const [activeTab, setActiveTab] = useState("menu");
   const { initiatePayment, loading: paymentLoading } = useRazorpay();
 
   useEffect(() => {
@@ -362,13 +362,13 @@ const Dashboard = () => {
   }
 
   const menuItems = [
-    { id: "profile", label: "Profile", icon: User },
-    { id: "subscription", label: "Subscription", icon: CreditCard },
     { id: "menu", label: "Menu", icon: Upload },
     { id: "qr", label: "QR Code", icon: QrCodeIcon },
     { id: "analytics", label: "Analytics", icon: BarChart3 },
     { id: "social", label: "Social", icon: Share2 },
     { id: "feedback", label: "Feedback", icon: MessageSquare },
+    { id: "subscription", label: "Subscription", icon: CreditCard },
+    { id: "settings", label: "Settings", icon: SettingsIcon },
   ];
 
   return (
@@ -502,10 +502,10 @@ const Dashboard = () => {
               </Card>
             )}
 
-            {activeTab === "profile" && (
+            {activeTab === "settings" && (
               <div className="space-y-6 animate-fade-in">
                 <Suspense fallback={<div className="flex justify-center py-8"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
-                  <RestaurantProfile
+                  <Settings
                     restaurantId={user?.id}
                     onProfileUpdate={(updatedProfile: Record<string, unknown>) => {
                       setProfile((prev) => prev ? { ...prev, ...updatedProfile } as UserProfile : null);
