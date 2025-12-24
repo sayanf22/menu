@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { 
   Loader2, LogOut, Ban, CheckCircle, Shield, Users, CreditCard, 
-  Search, RefreshCw, Gift, XCircle, UserPlus, Eye, EyeOff
+  Search, RefreshCw, Gift, XCircle, UserPlus, Eye, EyeOff, Trash2
 } from "lucide-react";
 import {
   AlertDialog,
@@ -56,7 +56,7 @@ interface SubscriptionPlan {
   bell_feature_enabled: boolean;
 }
 
-type ActionType = "disable" | "enable" | "grant" | "revoke" | null;
+type ActionType = "disable" | "enable" | "grant" | "revoke" | "delete" | null;
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -193,6 +193,26 @@ const AdminDashboard = () => {
         });
         if (error) throw error;
         toast.success("Subscription revoked successfully");
+      } else if (actionType === "delete") {
+        const adminSessionToken = localStorage.getItem("admin_session_token");
+        if (!adminSessionToken) {
+          toast.error("Admin session expired. Please login again.");
+          navigate("/adminlogin");
+          return;
+        }
+        
+        const { data, error } = await supabase.rpc("admin_delete_user_account", {
+          p_user_id: selectedProfile.id,
+          p_admin_session_token: adminSessionToken,
+        });
+        if (error) throw error;
+        
+        const result = data as { success?: boolean; error?: string; deleted_email?: string } | null;
+        if (result && !result.success) {
+          toast.error(result.error || "Failed to delete account");
+          return;
+        }
+        toast.success(`Account ${result?.deleted_email || ''} deleted permanently`);
       }
 
       await loadProfiles();
@@ -559,6 +579,20 @@ const AdminDashboard = () => {
                                 <Ban className="h-4 w-4 text-red-600" />
                               </Button>
                             )}
+                            
+                            {/* Delete Account */}
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-8 px-2 hover:bg-red-50 hover:border-red-300"
+                              onClick={() => {
+                                setSelectedProfile(profile);
+                                setActionType("delete");
+                              }}
+                              title="Delete Account Permanently"
+                            >
+                              <Trash2 className="h-4 w-4 text-red-600" />
+                            </Button>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -575,11 +609,12 @@ const AdminDashboard = () => {
       <AlertDialog open={!!selectedProfile && !!actionType} onOpenChange={() => { setSelectedProfile(null); setActionType(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>
+            <AlertDialogTitle className={actionType === "delete" ? "text-red-600" : ""}>
               {actionType === "disable" && "Disable Account"}
               {actionType === "enable" && "Enable Account"}
               {actionType === "grant" && "Grant Subscription"}
               {actionType === "revoke" && "Revoke Subscription"}
+              {actionType === "delete" && "⚠️ Delete Account Permanently"}
             </AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="space-y-4">
@@ -588,6 +623,11 @@ const AdminDashboard = () => {
                   {actionType === "enable" && `Enable ${selectedProfile?.restaurant_name}? They will regain access to their account.`}
                   {actionType === "grant" && `Grant a subscription to ${selectedProfile?.restaurant_name}.`}
                   {actionType === "revoke" && `Revoke subscription from ${selectedProfile?.restaurant_name}? This will also disable their account.`}
+                  {actionType === "delete" && (
+                    <span className="text-red-600 font-medium">
+                      This will PERMANENTLY delete {selectedProfile?.restaurant_name} ({selectedProfile?.email}) and ALL their data including menu images, feedback, subscriptions, and payment history. This action CANNOT be undone!
+                    </span>
+                  )}
                 </p>
                 
                 {actionType === "grant" && (
@@ -625,9 +665,13 @@ const AdminDashboard = () => {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={actionLoading}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleAccountAction} disabled={actionLoading}>
+            <AlertDialogAction 
+              onClick={handleAccountAction} 
+              disabled={actionLoading}
+              className={actionType === "delete" ? "bg-red-600 hover:bg-red-700" : ""}
+            >
               {actionLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-              Confirm
+              {actionType === "delete" ? "Delete Permanently" : "Confirm"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

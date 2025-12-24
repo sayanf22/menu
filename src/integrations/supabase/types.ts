@@ -683,6 +683,13 @@ export type Database = {
         }
         Returns: Json
       }
+      admin_delete_user_account: {
+        Args: {
+          p_user_id: string
+          p_admin_session_token: string
+        }
+        Returns: Json
+      }
       verify_admin_login: {
         Args: {
           p_email: string
