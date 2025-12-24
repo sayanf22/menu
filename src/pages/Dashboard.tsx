@@ -54,6 +54,7 @@ interface UserProfile {
   logo_url: string | null;
   bell_service_enabled: boolean;
   approval_status: string;
+  is_disabled: boolean | null;
 }
 
 interface UserSubscription {
@@ -62,6 +63,7 @@ interface UserSubscription {
   status: string;
   billing_cycle: string;
   current_period_end: string | null;
+  _is_active?: boolean;
 }
 
 const Dashboard = () => {
@@ -150,10 +152,13 @@ const Dashboard = () => {
       
       // Transform the response to match expected format
       if (response && response.has_subscription && response.subscription) {
-        const subscriptionData = {
-          ...response.subscription,
-          subscription_plans: response.plan,
-          // Add computed is_active from backend
+        const sub = response.subscription as Record<string, unknown>;
+        const subscriptionData: UserSubscription = {
+          id: sub.id as string,
+          plan_id: sub.plan_id as string | null,
+          status: sub.status as string,
+          billing_cycle: sub.billing_cycle as string,
+          current_period_end: sub.current_period_end as string | null,
           _is_active: response.is_active
         };
         setSubscription(subscriptionData);
@@ -179,7 +184,7 @@ const Dashboard = () => {
     await initiatePayment(
       { 
         planId: subscription.plan_id, 
-        billingCycle: subscription.billing_cycle || 'monthly' 
+        billingCycle: (subscription.billing_cycle || 'monthly') as 'monthly' | 'yearly'
       },
       () => {
         toast.success("Subscription renewed successfully!");
@@ -330,12 +335,7 @@ const Dashboard = () => {
                 Select a plan to reactivate your account and continue using all features.
               </p>
               <Suspense fallback={<div className="flex justify-center py-8"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
-                <SubscriptionPlans
-                  onSubscriptionSuccess={() => {
-                    toast.success("Subscription activated! Refreshing...");
-                    window.location.reload();
-                  }}
-                />
+                <SubscriptionPlans />
               </Suspense>
             </div>
 
