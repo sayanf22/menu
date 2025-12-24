@@ -3,11 +3,81 @@ import { supabase } from '@/integrations/supabase/client';
 import { useRazorpay } from '@/hooks/useRazorpay';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Check, Loader2, Bell, Sparkles, Zap, Rocket, ExternalLink, Crown, Star, ArrowRight } from 'lucide-react';
+import { Check, Loader2, Bell, Sparkles, Zap, Rocket, ExternalLink, Crown, Star, ArrowRight, CreditCard } from 'lucide-react';
 import { toast } from 'sonner';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Card } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
+
+// Full-screen loading overlay component for payment gateway
+const PaymentLoadingOverlay = ({ isVisible, planName }: { isVisible: boolean; planName: string }) => {
+  return (
+    <AnimatePresence>
+      {isVisible && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm"
+        >
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.8, opacity: 0 }}
+            transition={{ duration: 0.3, delay: 0.1 }}
+            className="bg-white dark:bg-gray-900 rounded-2xl p-8 shadow-2xl max-w-sm w-full mx-4 text-center"
+          >
+            {/* Animated payment icon */}
+            <div className="relative mb-6">
+              <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center shadow-lg">
+                <CreditCard className="w-10 h-10 text-white" />
+              </div>
+              {/* Pulsing ring animation */}
+              <div className="absolute inset-0 w-20 h-20 mx-auto rounded-full bg-orange-500/30 animate-ping" />
+            </div>
+
+            {/* Loading spinner */}
+            <div className="flex justify-center mb-4">
+              <Loader2 className="w-8 h-8 text-orange-500 animate-spin" />
+            </div>
+
+            {/* Text content */}
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+              Preparing Payment
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">
+              Loading secure payment gateway for <span className="font-semibold text-orange-500">{planName}</span> plan...
+            </p>
+
+            {/* Progress dots */}
+            <div className="flex justify-center gap-1.5">
+              <motion.div
+                animate={{ scale: [1, 1.3, 1] }}
+                transition={{ duration: 0.6, repeat: Infinity, delay: 0 }}
+                className="w-2 h-2 rounded-full bg-orange-500"
+              />
+              <motion.div
+                animate={{ scale: [1, 1.3, 1] }}
+                transition={{ duration: 0.6, repeat: Infinity, delay: 0.2 }}
+                className="w-2 h-2 rounded-full bg-orange-500"
+              />
+              <motion.div
+                animate={{ scale: [1, 1.3, 1] }}
+                transition={{ duration: 0.6, repeat: Infinity, delay: 0.4 }}
+                className="w-2 h-2 rounded-full bg-orange-500"
+              />
+            </div>
+
+            <p className="text-xs text-gray-500 dark:text-gray-500 mt-4">
+              Please wait, do not close this window
+            </p>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+};
 
 interface Plan {
   id: string;
@@ -196,8 +266,14 @@ export const SubscriptionPlans = ({ showTitle = true, compact = false }: Subscri
     return {};
   };
 
+  // Get the selected plan name for the loading overlay
+  const selectedPlanName = selectedPlan ? ALL_PLANS.find(p => p.id === selectedPlan)?.name || 'Selected' : '';
+
   return (
     <div className="w-full">
+      {/* Full-screen loading overlay for payment gateway */}
+      <PaymentLoadingOverlay isVisible={loading && !!selectedPlan} planName={selectedPlanName} />
+
       {showTitle && (
         <div className="text-center mb-8">
           <motion.div 
