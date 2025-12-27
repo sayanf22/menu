@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Upload, Loader2, Trash2, Eye, ImageIcon } from "lucide-react";
+import { Upload, Loader2, Trash2, Eye, ImageIcon, GripVertical } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import {
   AlertDialog,
@@ -21,7 +21,24 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { uploadToR2 } from "@/lib/r2-upload";
-import { compressImage, COMPRESSION_PRESETS, formatFileSize, getCompressionStats } from "@/lib/image-compression";
+import { compressImage, COMPRESSION_PRESETS, getCompressionStats } from "@/lib/image-compression";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 interface MenuUploadProps {
   restaurantId: string;
@@ -35,18 +52,117 @@ interface UploadLimit {
   remaining: number;
 }
 
+interface MenuImage {
+  id: string;
+  image_url: string;
+  display_order: number;
+}
+
+// Sortable Image Card Component
+const SortableImageCard = ({ 
+  image, 
+  index, 
+  onView, 
+  onDelete 
+}: { 
+  image: MenuImage; 
+  index: number;
+  onView: (url: string) => void;
+  onDelete: (id: string, url: string) => void;
+}) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: image.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 50 : 'auto',
+    opacity: isDragging ? 0.8 : 1,
+  };
+
+  return (
+    <Card
+      ref={setNodeRef}
+      style={style}
+      className={`overflow-hidden animate-slide-up transition-smooth hover:shadow-xl ${
+        isDragging ? 'shadow-2xl scale-[1.02] ring-2 ring-primary' : ''
+      }`}
+    >
+      <div className="relative group">
+        {/* Drag Handle */}
+        <div
+          {...attributes}
+          {...listeners}
+          className="absolute top-2 left-2 z-20 p-2 bg-black/60 rounded-lg cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity duration-200 touch-none"
+        >
+          <GripVertical className="h-5 w-5 text-white" />
+        </div>
+
+        {/* Order Badge */}
+        <div className="absolute top-2 right-2 z-20 w-7 h-7 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-bold shadow-lg">
+          {index + 1}
+        </div>
+
+        <img
+          src={image.image_url}
+          alt={`Menu ${index + 1}`}
+          className="w-full h-48 object-cover cursor-pointer transition-all duration-500 group-hover:scale-[1.03]"
+          onClick={() => onView(image.image_url)}
+        />
+        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center gap-2">
+          <Button
+            variant="secondary"
+            size="icon"
+            onClick={() => onView(image.image_url)}
+            className="bg-white/90 hover:bg-white transform translate-y-2 group-hover:translate-y-0 transition-all duration-300"
+          >
+            <Eye className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="destructive"
+            size="icon"
+            onClick={() => onDelete(image.id, image.image_url)}
+            className="transform translate-y-2 group-hover:translate-y-0 transition-all duration-300 delay-75"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+    </Card>
+  );
+};
+
 const MenuUpload = ({ restaurantId }: MenuUploadProps) => {
   const [uploading, setUploading] = useState(false);
   const [compressing, setCompressing] = useState(false);
   const [compressionProgress, setCompressionProgress] = useState(0);
   const [currentFileName, setCurrentFileName] = useState("");
-  const [menuImages, setMenuImages] = useState<{ id: string; image_url: string; display_order: number }[]>([]);
+  const [menuImages, setMenuImages] = useState<MenuImage[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [imageToDelete, setImageToDelete] = useState<{ id: string; url: string } | null>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [imageToView, setImageToView] = useState<string | null>(null);
   const [uploadLimit, setUploadLimit] = useState<UploadLimit | null>(null);
+  const [savingOrder, setSavingOrder] = useState(false);
+
+  // DnD Kit sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   useEffect(() => {
     fetchMenuImages();
@@ -60,7 +176,7 @@ const MenuUpload = ({ restaurantId }: MenuUploadProps) => {
         p_user_id: restaurantId
       });
       if (!error && data) {
-        setUploadLimit(data as UploadLimit);
+        setUploadLimit(data as unknown as UploadLimit);
       }
     } catch (error) {
       console.error("Error fetching upload limit:", error);
@@ -124,6 +240,47 @@ const MenuUpload = ({ restaurantId }: MenuUploadProps) => {
     });
   };
 
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = menuImages.findIndex((img) => img.id === active.id);
+      const newIndex = menuImages.findIndex((img) => img.id === over.id);
+
+      const newOrder = arrayMove(menuImages, oldIndex, newIndex);
+      setMenuImages(newOrder);
+
+      // Save new order to database
+      setSavingOrder(true);
+      try {
+        const updates = newOrder.map((img, index) => ({
+          id: img.id,
+          restaurant_id: restaurantId,
+          image_url: img.image_url,
+          display_order: index,
+        }));
+
+        for (const update of updates) {
+          const { error } = await supabase
+            .from("menu_images")
+            .update({ display_order: update.display_order })
+            .eq("id", update.id);
+
+          if (error) throw error;
+        }
+
+        toast.success("Menu order updated!");
+      } catch (error) {
+        console.error("Error updating order:", error);
+        toast.error("Failed to save order");
+        // Revert on error
+        await fetchMenuImages();
+      } finally {
+        setSavingOrder(false);
+      }
+    }
+  };
+
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     try {
       setUploading(true);
@@ -135,7 +292,7 @@ const MenuUpload = ({ restaurantId }: MenuUploadProps) => {
         p_user_id: restaurantId
       });
       
-      const limit = limitCheck as UploadLimit;
+      const limit = limitCheck as unknown as UploadLimit;
       if (!limit?.can_upload) {
         toast.error(`You've reached your upload limit (${limit?.max_allowed || 5} images). Upgrade to Basic Plus for more uploads!`);
         setUploading(false);
@@ -262,11 +419,8 @@ const MenuUpload = ({ restaurantId }: MenuUploadProps) => {
 
         if (storageError) {
           console.warn('Storage delete warning:', storageError);
-          // Continue anyway - file might already be deleted
         }
       }
-      // Note: R2 files are not deleted automatically to save on API calls
-      // They can be cleaned up via Cloudflare dashboard or a scheduled job
 
       // Delete from database
       const { error: dbError } = await supabase
@@ -278,7 +432,7 @@ const MenuUpload = ({ restaurantId }: MenuUploadProps) => {
 
       toast.success("Image deleted successfully!");
       await fetchMenuImages();
-      await fetchUploadLimit(); // Refresh limit after delete
+      await fetchUploadLimit();
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Error deleting image";
       toast.error(errorMessage);
@@ -364,6 +518,19 @@ const MenuUpload = ({ restaurantId }: MenuUploadProps) => {
         </p>
       </div>
 
+      {/* Drag & Drop Instructions */}
+      {menuImages.length > 1 && (
+        <div className="flex items-center gap-2 p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg animate-fade-in">
+          <GripVertical className="h-4 w-4 text-blue-500" />
+          <p className="text-sm text-blue-700 dark:text-blue-300">
+            <span className="font-medium">Tip:</span> Drag and drop images to reorder them. The order will be saved automatically.
+          </p>
+          {savingOrder && (
+            <Loader2 className="h-4 w-4 animate-spin text-blue-500 ml-auto" />
+          )}
+        </div>
+      )}
+
       {/* Compression Progress Bar */}
       {compressing && (
         <div className="space-y-2 p-4 bg-muted/50 rounded-lg border animate-fade-in">
@@ -387,45 +554,28 @@ const MenuUpload = ({ restaurantId }: MenuUploadProps) => {
       )}
 
       {menuImages.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {menuImages.map((image, index) => (
-            <Card 
-              key={image.id} 
-              className="overflow-hidden animate-slide-up transition-smooth hover:shadow-xl hover:scale-[1.02]"
-              style={{ 
-                animationDelay: `${index * 0.1}s`,
-                animationFillMode: 'backwards'
-              }}
-            >
-              <div className="relative group">
-                <img
-                  src={image.image_url}
-                  alt="Menu"
-                  className="w-full h-48 object-cover cursor-pointer transition-all duration-500 group-hover:scale-[1.03]"
-                  onClick={() => openViewDialog(image.image_url)}
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={menuImages.map(img => img.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {menuImages.map((image, index) => (
+                <SortableImageCard
+                  key={image.id}
+                  image={image}
+                  index={index}
+                  onView={openViewDialog}
+                  onDelete={openDeleteDialog}
                 />
-                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center gap-2">
-                  <Button
-                    variant="secondary"
-                    size="icon"
-                    onClick={() => openViewDialog(image.image_url)}
-                    className="bg-white/90 hover:bg-white transform translate-y-2 group-hover:translate-y-0 transition-all duration-300"
-                  >
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    size="icon"
-                    onClick={() => openDeleteDialog(image.id, image.image_url)}
-                    className="transform translate-y-2 group-hover:translate-y-0 transition-all duration-300 delay-75"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          ))}
-        </div>
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
       )}
 
       {/* Delete Confirmation Dialog */}
