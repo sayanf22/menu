@@ -141,7 +141,7 @@ const Auth = () => {
           name: 'Basic',
           description: 'Perfect for small restaurants',
           price_monthly: 24900,
-          price_yearly: 249000,
+          price_yearly: 273900,
           features: ["Digital Menu with QR Code", "5 Menu Image Uploads", "Basic Analytics", "Email Support"],
           max_images: 5,
           bell_feature_enabled: false,
@@ -151,10 +151,10 @@ const Auth = () => {
           id: 'basic-plus',
           name: 'Basic Plus',
           description: 'For growing restaurants with bell service',
-          price_monthly: 36900,
-          price_yearly: 369000,
-          features: ["Everything in Basic", "10 Menu Image Uploads", "Bell Calling Feature", "Priority Support"],
-          max_images: 10,
+          price_monthly: 39900,
+          price_yearly: 438900,
+          features: ["Everything in Basic", "15 Menu Image Uploads", "Bell Calling Feature", "Priority Support"],
+          max_images: 15,
           bell_feature_enabled: true,
           plan_tier: 2
         }
