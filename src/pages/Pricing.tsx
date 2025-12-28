@@ -4,7 +4,7 @@ import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Check, Crown, ArrowRight, MessageCircle, Sparkles, Star, Zap, Shield, Users, Loader2, Bell, ExternalLink, Rocket } from "lucide-react";
+import { Check, Crown, ArrowRight, MessageCircle, Sparkles, Star, Zap, Shield, Users, Loader2, Bell, ExternalLink, Rocket, X } from "lucide-react";
 import { Helmet } from "react-helmet";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -27,6 +27,7 @@ interface Plan {
   highlight?: boolean;
   icon: "star" | "zap" | "bell" | "rocket";
   gradientClass?: string;
+  tagline?: string;
 }
 
 const ALL_PLANS: Plan[] = [
@@ -34,15 +35,16 @@ const ALL_PLANS: Plan[] = [
     id: "basic",
     name: "Basic",
     description: "Perfect for small restaurants",
+    tagline: "Get started",
     price_monthly: 24900,
-    price_yearly: 273900, // 11 months price (1 month free)
+    price_yearly: 273900,
     features: [
       "Digital Menu with QR Code",
       "5 Menu Image Uploads",
-      "Basic Analytics Dashboard",
-      "Customer Feedback Collection",
-      "Social Media Links",
-      "Email Support"
+      "Drag & Drop Ordering",
+      "Basic Analytics",
+      "Customer Feedback",
+      "Social Media Links"
     ],
     max_images: 5,
     bell_feature_enabled: false,
@@ -52,18 +54,19 @@ const ALL_PLANS: Plan[] = [
   {
     id: "standard",
     name: "Standard",
-    description: "Growing restaurants with bell service",
-    price_monthly: 36900,
-    price_yearly: 405900, // 11 months price (1 month free)
+    description: "Most popular choice",
+    tagline: "Best for growing",
+    price_monthly: 39900,
+    price_yearly: 438900,
     features: [
       "Everything in Basic",
-      "10 Menu Image Uploads",
+      "15 Menu Image Uploads",
       "Bell Calling Feature",
+      "Call Service Button",
       "Priority Support",
-      "Advanced Analytics",
-      "Custom Branding"
+      "Advanced Analytics"
     ],
-    max_images: 10,
+    max_images: 15,
     bell_feature_enabled: true,
     plan_tier: 2,
     highlight: true,
@@ -73,18 +76,19 @@ const ALL_PLANS: Plan[] = [
   {
     id: "advanced",
     name: "Advanced",
-    description: "Digital menu with categories",
+    description: "Menu with categories",
+    tagline: "Full control",
     price_monthly: 59900,
-    price_yearly: 658900, // 11 months price (1 month free)
+    price_yearly: 658900,
     features: [
-      "Digital menu with categories",
-      "Up to 50 menu items",
-      "Toggle item availability",
-      "QR code generation",
-      "Advanced Bell Feature",
-      "Dark/Light mode"
+      "Menu Categories",
+      "100 Menu Items",
+      "Toggle Availability",
+      "Advanced Bell",
+      "Dark/Light Mode",
+      "Custom Branding"
     ],
-    max_images: 50,
+    max_images: 100,
     bell_feature_enabled: true,
     plan_tier: 3,
     isExternal: true,
@@ -96,15 +100,16 @@ const ALL_PLANS: Plan[] = [
     id: "premium",
     name: "Premium",
     description: "Complete ordering system",
+    tagline: "Enterprise ready",
     price_monthly: 99900,
-    price_yearly: 1098900, // 11 months price (1 month free)
+    price_yearly: 1098900,
     features: [
       "Everything in Advanced",
-      "Unlimited menu items",
-      "Real-time order management",
-      "Order notifications",
-      "Order status tracking",
-      "Priority support"
+      "Unlimited Items",
+      "Order Management",
+      "Order Notifications",
+      "Status Tracking",
+      "24/7 Priority Support"
     ],
     max_images: null,
     bell_feature_enabled: true,
@@ -213,15 +218,6 @@ const Pricing = () => {
     }
   };
 
-  const getGradientStyle = (gradientClass?: string) => {
-    if (!gradientClass) return {};
-    if (gradientClass.includes("amber")) return { background: 'linear-gradient(135deg, rgba(245,158,11,0.1), rgba(249,115,22,0.05))' };
-    if (gradientClass.includes("blue")) return { background: 'linear-gradient(135deg, rgba(59,130,246,0.1), rgba(6,182,212,0.05))' };
-    if (gradientClass.includes("purple")) return { background: 'linear-gradient(135deg, rgba(168,85,247,0.1), rgba(236,72,153,0.05))' };
-    return {};
-  };
-
-
   return (
     <>
       <Helmet>
@@ -230,54 +226,61 @@ const Pricing = () => {
         <link rel="canonical" href="https://addmenu.in/pricing" />
       </Helmet>
       
-      <div className="min-h-screen flex flex-col bg-background">
+      <div className="min-h-screen flex flex-col bg-gradient-to-b from-background via-background to-muted/20">
         <Header />
         
         <main className="flex-1">
           {/* Hero Section */}
-          <section className="py-16 px-4 relative overflow-hidden">
-            <div className="absolute inset-0">
-              <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-br from-primary/10 to-accent/5 rounded-full blur-3xl -translate-y-1/3 translate-x-1/4" />
-              <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-accent/10 to-primary/5 rounded-full blur-3xl translate-y-1/3 -translate-x-1/4" />
+          <section className="pt-20 pb-12 px-4 relative overflow-hidden">
+            {/* Background decorations */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+              <div className="absolute top-20 left-1/4 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
+              <div className="absolute top-40 right-1/4 w-96 h-96 bg-accent/5 rounded-full blur-3xl" />
             </div>
             
             <div className="container mx-auto max-w-4xl text-center relative z-10">
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 text-primary text-sm font-medium mb-6"
               >
                 <Sparkles className="w-4 h-4" />
-                Simple & Transparent Pricing
+                Simple, Transparent Pricing
               </motion.div>
+              
               <motion.h1 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-                className="text-3xl md:text-4xl font-bold mb-4"
+                className="text-4xl md:text-5xl font-bold mb-4 tracking-tight"
               >
-                Choose Your <span className="text-primary">Perfect Plan</span>
+                Choose Your{" "}
+                <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                  Perfect Plan
+                </span>
               </motion.h1>
+              
               <motion.p 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="text-lg text-muted-foreground mb-8 max-w-xl mx-auto"
+                className="text-lg text-muted-foreground mb-10 max-w-2xl mx-auto"
               >
-                From simple QR menus to complete ordering systems. 7-day money-back guarantee.
+                From simple QR menus to complete ordering systems. Start free trial with 7-day money-back guarantee.
               </motion.p>
 
+              {/* Billing Toggle */}
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                className="inline-flex items-center bg-muted rounded-full p-1"
+                className="inline-flex items-center bg-muted/80 backdrop-blur-sm rounded-full p-1.5 border border-border/50"
               >
                 <button
                   onClick={() => setBillingCycle('monthly')}
-                  className={`px-5 py-2 rounded-full text-sm font-medium transition-all ${
+                  className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300 ${
                     billingCycle === 'monthly'
-                      ? 'bg-primary text-primary-foreground shadow-sm'
+                      ? 'bg-white dark:bg-gray-800 text-foreground shadow-md'
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
@@ -285,26 +288,29 @@ const Pricing = () => {
                 </button>
                 <button
                   onClick={() => setBillingCycle('yearly')}
-                  className={`px-5 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2 ${
+                  className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300 flex items-center gap-2 ${
                     billingCycle === 'yearly'
-                      ? 'bg-primary text-primary-foreground shadow-sm'
+                      ? 'bg-white dark:bg-gray-800 text-foreground shadow-md'
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
                   Yearly
-                  <Badge variant="secondary" className="text-xs bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-100">1 Month Free</Badge>
+                  <Badge className="text-[10px] bg-green-500 text-white border-0 px-2">
+                    Save 17%
+                  </Badge>
                 </button>
               </motion.div>
             </div>
           </section>
 
           {/* Pricing Cards */}
-          <section className="py-12 px-4 relative">
+          <section className="py-8 px-4">
             <div className="container mx-auto max-w-6xl">
-              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {ALL_PLANS.map((plan, index) => {
                   const price = billingCycle === 'yearly' ? plan.price_yearly : plan.price_monthly;
                   const isSelected = selectedPlan === plan.id;
+                  const isHighlighted = plan.highlight;
 
                   return (
                     <motion.div
@@ -312,80 +318,93 @@ const Pricing = () => {
                       initial={{ opacity: 0, y: 30 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.1 }}
+                      className="relative"
                     >
-                      <Card
-                        className={`p-5 h-full flex flex-col border-2 relative overflow-hidden rounded-2xl transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${
-                          plan.highlight ? 'border-transparent' : 'border-border hover:border-primary/30'
-                        }`}
-                        style={plan.highlight ? getGradientStyle(plan.gradientClass) : {}}
-                      >
-                        {plan.highlight && (
-                          <div className="absolute top-3 right-3">
-                            <Badge className={`text-xs text-white border-0 ${
-                              plan.gradientClass?.includes("purple") 
-                                ? 'bg-gradient-to-r from-purple-500 to-pink-500'
-                                : 'bg-gradient-to-r from-amber-500 to-orange-500'
-                            }`}>
-                              {plan.plan_tier === 4 ? <Rocket className="w-3 h-3 mr-1" /> : <Crown className="w-3 h-3 mr-1" />}
-                              {plan.plan_tier === 4 ? 'Best Value' : 'Popular'}
-                            </Badge>
-                          </div>
-                        )}
+                      {/* Popular/Best Value Badge */}
+                      {isHighlighted && (
+                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
+                          <Badge className={`px-4 py-1 text-xs font-semibold text-white border-0 shadow-lg ${
+                            plan.gradientClass?.includes("purple") 
+                              ? 'bg-gradient-to-r from-purple-500 to-pink-500'
+                              : 'bg-gradient-to-r from-amber-500 to-orange-500'
+                          }`}>
+                            {plan.plan_tier === 4 ? '🚀 Best Value' : '⭐ Most Popular'}
+                          </Badge>
+                        </div>
+                      )}
 
+                      <Card
+                        className={`p-6 h-full flex flex-col relative overflow-hidden rounded-2xl transition-all duration-300 hover:shadow-2xl ${
+                          isHighlighted 
+                            ? 'border-2 border-primary/50 shadow-xl scale-[1.02] bg-gradient-to-b from-background to-primary/5' 
+                            : 'border border-border/50 hover:border-primary/30 hover:-translate-y-1'
+                        }`}
+                      >
+                        {/* External Badge */}
                         {plan.isExternal && (
-                          <div className="absolute top-3 left-3">
-                            <Badge variant="outline" className="text-xs">
+                          <div className="absolute top-4 right-4">
+                            <Badge variant="secondary" className="text-[10px] bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
                               <ExternalLink className="w-3 h-3 mr-1" />
                               Pro
                             </Badge>
                           </div>
                         )}
 
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-4 mt-2">
-                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                              plan.gradientClass 
-                                ? `bg-gradient-to-br ${plan.gradientClass} text-white`
-                                : 'bg-primary/10 text-primary'
-                            }`}>
-                              {getIcon(plan.icon, "w-5 h-5")}
-                            </div>
-                            <div>
-                              <h3 className="text-lg font-bold">{plan.name}</h3>
-                              <p className="text-xs text-muted-foreground">{plan.description}</p>
-                            </div>
+                        {/* Plan Header */}
+                        <div className="mb-6">
+                          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-4 ${
+                            plan.gradientClass 
+                              ? `bg-gradient-to-br ${plan.gradientClass} text-white shadow-lg`
+                              : 'bg-primary/10 text-primary'
+                          }`}>
+                            {getIcon(plan.icon, "w-6 h-6")}
                           </div>
-
-                          <div className="mb-5">
-                            <div className="flex items-baseline gap-1">
-                              <span className="text-3xl font-bold">{formatPrice(price || 0)}</span>
-                              <span className="text-muted-foreground text-sm">/{billingCycle === 'yearly' ? 'yr' : 'mo'}</span>
-                            </div>
-                            {billingCycle === 'yearly' && plan.price_yearly && (
-                              <p className="text-xs text-green-600 mt-1 font-medium">
-                                🎉 1 month free! Pay for 11, get 12
-                              </p>
-                            )}
-                          </div>
-
-                          <div className="space-y-2 mb-5">
-                            {plan.features.map((feature, i) => (
-                              <div key={i} className="flex items-start gap-2">
-                                <div className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 bg-green-500/10">
-                                  <Check className="w-2.5 h-2.5 text-green-500" />
-                                </div>
-                                <span className="text-xs text-muted-foreground">{feature}</span>
-                              </div>
-                            ))}
-                          </div>
+                          
+                          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
+                            {plan.tagline}
+                          </p>
+                          <h3 className="text-xl font-bold mb-1">{plan.name}</h3>
+                          <p className="text-sm text-muted-foreground">{plan.description}</p>
                         </div>
 
+                        {/* Price */}
+                        <div className="mb-6">
+                          <div className="flex items-baseline gap-1">
+                            <span className="text-4xl font-bold tracking-tight">{formatPrice(price || 0)}</span>
+                            <span className="text-muted-foreground text-sm font-medium">
+                              /{billingCycle === 'yearly' ? 'year' : 'month'}
+                            </span>
+                          </div>
+                          {billingCycle === 'yearly' && plan.price_yearly && (
+                            <p className="text-xs text-green-600 dark:text-green-400 mt-2 font-medium flex items-center gap-1">
+                              <Check className="w-3 h-3" />
+                              1 month free! Pay for 11, get 12
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Features */}
+                        <div className="flex-1 space-y-3 mb-6">
+                          {plan.features.map((feature, i) => (
+                            <div key={i} className="flex items-start gap-3">
+                              <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${
+                                isHighlighted ? 'bg-primary/20' : 'bg-green-500/10'
+                              }`}>
+                                <Check className={`w-3 h-3 ${isHighlighted ? 'text-primary' : 'text-green-500'}`} />
+                              </div>
+                              <span className="text-sm text-muted-foreground">{feature}</span>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* CTA Button */}
                         <Button
                           onClick={() => handleSubscribe(plan)}
                           disabled={loading && isSelected}
-                          className={`w-full rounded-xl h-10 text-sm font-medium shadow-md transition-all duration-300 ${
-                            plan.gradientClass
-                              ? `bg-gradient-to-r ${plan.gradientClass} hover:opacity-90 text-white`
+                          size="lg"
+                          className={`w-full rounded-xl h-12 text-sm font-semibold transition-all duration-300 ${
+                            isHighlighted
+                              ? `bg-gradient-to-r ${plan.gradientClass} hover:opacity-90 text-white shadow-lg hover:shadow-xl`
                               : 'bg-primary hover:bg-primary/90'
                           }`}
                         >
@@ -397,12 +416,12 @@ const Pricing = () => {
                           ) : plan.isExternal ? (
                             <>
                               Get {plan.name}
-                              <ExternalLink className="w-3.5 h-3.5 ml-2" />
+                              <ExternalLink className="w-4 h-4 ml-2" />
                             </>
                           ) : (
                             <>
                               Get Started
-                              <ArrowRight className="w-3.5 h-3.5 ml-2" />
+                              <ArrowRight className="w-4 h-4 ml-2" />
                             </>
                           )}
                         </Button>
@@ -415,65 +434,94 @@ const Pricing = () => {
           </section>
 
           {/* Features Comparison */}
-          <section className="py-12 px-4 bg-muted/30">
+          <section className="py-16 px-4">
             <div className="container mx-auto max-w-5xl">
-              <h2 className="text-2xl font-bold text-center mb-8">
-                Compare <span className="text-primary">All Plans</span>
-              </h2>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                className="text-center mb-10"
+              >
+                <h2 className="text-3xl font-bold mb-3">
+                  Compare All Features
+                </h2>
+                <p className="text-muted-foreground">See what's included in each plan</p>
+              </motion.div>
               
-              <div className="bg-card rounded-2xl border overflow-hidden overflow-x-auto">
-                <div className="min-w-[600px]">
-                  <div className="grid grid-cols-5 gap-2 p-3 bg-muted/50 font-semibold text-sm">
-                    <div>Feature</div>
-                    <div className="text-center">Basic</div>
-                    <div className="text-center text-amber-600">Standard</div>
-                    <div className="text-center text-blue-600">Advanced</div>
-                    <div className="text-center text-purple-600">Premium</div>
-                  </div>
-                  
-                  {[
-                    { feature: "Digital QR Menu", basic: true, standard: true, advanced: true, premium: true },
-                    { feature: "Menu Images", basic: "5", standard: "10", advanced: "50", premium: "∞" },
-                    { feature: "Analytics", basic: true, standard: true, advanced: true, premium: true },
-                    { feature: "Feedback", basic: true, standard: true, advanced: true, premium: true },
-                    { feature: "Bell Calling", basic: false, standard: true, advanced: true, premium: true },
-                    { feature: "Categories", basic: false, standard: false, advanced: true, premium: true },
-                    { feature: "Order Management", basic: false, standard: false, advanced: false, premium: true },
-                    { feature: "Priority Support", basic: false, standard: true, advanced: true, premium: true },
-                  ].map((row, i) => (
-                    <div key={i} className={`grid grid-cols-5 gap-2 p-3 text-sm ${i % 2 === 0 ? 'bg-background' : 'bg-muted/20'}`}>
-                      <div className="font-medium">{row.feature}</div>
-                      {(['basic', 'standard', 'advanced', 'premium'] as const).map((tier) => (
-                        <div key={tier} className="text-center">
-                          {typeof row[tier] === 'string' ? (
-                            <span className="font-medium">{row[tier]}</span>
-                          ) : row[tier] ? (
-                            <Check className="w-4 h-4 text-green-500 mx-auto" />
-                          ) : (
-                            <span className="text-muted-foreground">—</span>
-                          )}
-                        </div>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                className="bg-card rounded-3xl border shadow-sm overflow-hidden"
+              >
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[640px]">
+                    <thead>
+                      <tr className="bg-muted/50">
+                        <th className="text-left p-4 font-semibold">Feature</th>
+                        <th className="text-center p-4 font-semibold">Basic</th>
+                        <th className="text-center p-4 font-semibold text-amber-600">Standard</th>
+                        <th className="text-center p-4 font-semibold text-blue-600">Advanced</th>
+                        <th className="text-center p-4 font-semibold text-purple-600">Premium</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[
+                        { feature: "Digital QR Menu", basic: true, standard: true, advanced: true, premium: true },
+                        { feature: "Menu Images", basic: "5", standard: "15", advanced: "100", premium: "∞" },
+                        { feature: "Drag & Drop Ordering", basic: true, standard: true, advanced: true, premium: true },
+                        { feature: "Analytics Dashboard", basic: "Basic", standard: "Advanced", advanced: "Advanced", premium: "Advanced" },
+                        { feature: "Customer Feedback", basic: true, standard: true, advanced: true, premium: true },
+                        { feature: "Bell Calling", basic: false, standard: true, advanced: true, premium: true },
+                        { feature: "Call Service", basic: false, standard: true, advanced: true, premium: true },
+                        { feature: "Menu Categories", basic: false, standard: false, advanced: true, premium: true },
+                        { feature: "Toggle Availability", basic: false, standard: false, advanced: true, premium: true },
+                        { feature: "Order Management", basic: false, standard: false, advanced: false, premium: true },
+                        { feature: "Priority Support", basic: false, standard: true, advanced: true, premium: "24/7" },
+                      ].map((row, i) => (
+                        <tr key={i} className={`border-t border-border/50 ${i % 2 === 0 ? '' : 'bg-muted/20'}`}>
+                          <td className="p-4 font-medium text-sm">{row.feature}</td>
+                          {(['basic', 'standard', 'advanced', 'premium'] as const).map((tier) => (
+                            <td key={tier} className="text-center p-4">
+                              {typeof row[tier] === 'string' ? (
+                                <span className="text-sm font-medium">{row[tier]}</span>
+                              ) : row[tier] ? (
+                                <Check className="w-5 h-5 text-green-500 mx-auto" />
+                              ) : (
+                                <X className="w-5 h-5 text-muted-foreground/30 mx-auto" />
+                              )}
+                            </td>
+                          ))}
+                        </tr>
                       ))}
-                    </div>
-                  ))}
+                    </tbody>
+                  </table>
                 </div>
-              </div>
+              </motion.div>
             </div>
           </section>
 
           {/* Why Choose Us */}
-          <section className="py-12 px-4">
+          <section className="py-16 px-4 bg-muted/30">
             <div className="container mx-auto max-w-4xl">
-              <h2 className="text-2xl font-bold text-center mb-8">
-                Why Choose <span className="text-primary">AddMenu</span>?
-              </h2>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                className="text-center mb-10"
+              >
+                <h2 className="text-3xl font-bold mb-3">
+                  Why Choose AddMenu?
+                </h2>
+                <p className="text-muted-foreground">Trusted by restaurants across Tripura</p>
+              </motion.div>
               
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {[
-                  { icon: Zap, title: "Quick Setup", desc: "Under 5 minutes" },
-                  { icon: Shield, title: "Secure", desc: "Razorpay powered" },
-                  { icon: Users, title: "Support", desc: "Local assistance" },
-                  { icon: Star, title: "Guarantee", desc: "7-day refund" },
+                  { icon: Zap, title: "Quick Setup", desc: "Under 5 minutes", color: "text-yellow-500" },
+                  { icon: Shield, title: "Secure Payments", desc: "Razorpay powered", color: "text-green-500" },
+                  { icon: Users, title: "Local Support", desc: "WhatsApp help", color: "text-blue-500" },
+                  { icon: Star, title: "Money Back", desc: "7-day guarantee", color: "text-purple-500" },
                 ].map((item, i) => (
                   <motion.div
                     key={i}
@@ -482,12 +530,12 @@ const Pricing = () => {
                     transition={{ delay: i * 0.1 }}
                     viewport={{ once: true }}
                   >
-                    <Card className="p-4 text-center hover:shadow-lg transition-all duration-300 rounded-xl">
-                      <div className="w-10 h-10 bg-primary/10 rounded-xl mx-auto mb-3 flex items-center justify-center">
-                        <item.icon className="w-5 h-5 text-primary" />
+                    <Card className="p-5 text-center hover:shadow-lg transition-all duration-300 rounded-2xl border-0 bg-background">
+                      <div className={`w-12 h-12 bg-muted rounded-2xl mx-auto mb-4 flex items-center justify-center`}>
+                        <item.icon className={`w-6 h-6 ${item.color}`} />
                       </div>
-                      <h3 className="font-semibold text-sm mb-1">{item.title}</h3>
-                      <p className="text-xs text-muted-foreground">{item.desc}</p>
+                      <h3 className="font-semibold mb-1">{item.title}</h3>
+                      <p className="text-sm text-muted-foreground">{item.desc}</p>
                     </Card>
                   </motion.div>
                 ))}
@@ -496,26 +544,49 @@ const Pricing = () => {
           </section>
 
           {/* CTA */}
-          <section className="py-12 px-4 mx-4 bg-gradient-to-r from-primary to-accent rounded-2xl my-6">
-            <div className="container mx-auto max-w-xl text-center">
-              <h2 className="text-2xl font-bold mb-4 text-white">Ready to Get Started?</h2>
-              <p className="text-white/80 mb-6">Join restaurants using AddMenu</p>
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Button 
-                  size="lg" 
-                  className="h-12 px-6 rounded-full bg-white text-primary hover:bg-white/90"
-                  onClick={() => window.open('https://wa.me/917005832798', '_blank')}
-                >
-                  <MessageCircle className="w-4 h-4 mr-2" />
-                  WhatsApp Us
-                </Button>
-                <Link to="/auth">
-                  <Button size="lg" variant="outline" className="h-12 px-6 rounded-full border-2 border-white text-white hover:bg-white/10">
-                    Get Started
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
-                </Link>
-              </div>
+          <section className="py-16 px-4">
+            <div className="container mx-auto max-w-3xl">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                className="bg-gradient-to-br from-primary via-primary to-accent rounded-3xl p-8 md:p-12 text-center relative overflow-hidden"
+              >
+                {/* Background decoration */}
+                <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                  <div className="absolute -top-20 -right-20 w-40 h-40 bg-white/10 rounded-full blur-2xl" />
+                  <div className="absolute -bottom-20 -left-20 w-60 h-60 bg-white/5 rounded-full blur-3xl" />
+                </div>
+                
+                <div className="relative z-10">
+                  <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white">
+                    Ready to Get Started?
+                  </h2>
+                  <p className="text-white/80 mb-8 text-lg">
+                    Join hundreds of restaurants using AddMenu
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                    <Button 
+                      size="lg" 
+                      className="h-14 px-8 rounded-full bg-white text-primary hover:bg-white/90 font-semibold shadow-lg"
+                      onClick={() => window.open('https://wa.me/917005832798', '_blank')}
+                    >
+                      <MessageCircle className="w-5 h-5 mr-2" />
+                      WhatsApp Us
+                    </Button>
+                    <Link to="/auth">
+                      <Button 
+                        size="lg" 
+                        variant="outline" 
+                        className="h-14 px-8 rounded-full border-2 border-white text-white hover:bg-white/10 font-semibold"
+                      >
+                        Start Free Trial
+                        <ArrowRight className="w-5 h-5 ml-2" />
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              </motion.div>
             </div>
           </section>
         </main>

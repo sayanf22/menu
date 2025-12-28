@@ -46,7 +46,7 @@ A modern digital menu solution for restaurants in India with QR code generation,
 
 ### Advanced Plan - ₹599/month (₹6,589/year)
 - Menu categories
-- 50 menu items
+- 100 menu items
 - Toggle availability
 - Advanced Bell
 - Dark/Light mode

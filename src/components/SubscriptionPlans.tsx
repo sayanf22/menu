@@ -129,8 +129,8 @@ const ALL_PLANS: Plan[] = [
     description: "Menu with categories",
     price_monthly: 59900,
     price_yearly: 658900, // 11 months price (1 month free)
-    features: ["Menu categories", "50 menu items", "Toggle availability", "Advanced Bell", "Dark/Light mode"],
-    max_images: 50,
+    features: ["Menu categories", "100 menu items", "Toggle availability", "Advanced Bell", "Dark/Light mode"],
+    max_images: 100,
     bell_feature_enabled: true,
     plan_tier: 3,
     isExternal: true,

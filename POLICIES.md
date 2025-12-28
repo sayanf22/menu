@@ -481,7 +481,7 @@ Features:
 
 Features:
 - Menu categories
-- 50 menu items
+- 100 menu items
 - Toggle item availability
 - Advanced Bell features
 - Dark/Light mode toggle
@@ -503,7 +503,7 @@ Features:
 | Feature | Basic | Standard | Advanced | Premium |
 |---------|-------|----------|----------|---------|
 | Digital QR Menu | ✓ | ✓ | ✓ | ✓ |
-| Menu Image Uploads | 5 | 15 | 50 | Unlimited |
+| Menu Image Uploads | 5 | 15 | 100 | Unlimited |
 | Drag & Drop Ordering | ✓ | ✓ | ✓ | ✓ |
 | Basic Analytics | ✓ | ✓ | ✓ | ✓ |
 | Customer Feedback | ✓ | ✓ | ✓ | ✓ |
