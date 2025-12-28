@@ -465,11 +465,11 @@ Features:
 - Email Support
 
 ### Standard Plan ⭐ Popular
-**₹369/month** or **₹4,059/year** (1 month FREE)
+**₹399/month** or **₹4,389/year** (1 month FREE)
 
 Features:
 - Everything in Basic
-- 10 Menu Image Uploads
+- 15 Menu Image Uploads
 - **Bell Calling Feature**
 - **Call Service Feature**
 - Priority Customer Support
@@ -503,7 +503,7 @@ Features:
 | Feature | Basic | Standard | Advanced | Premium |
 |---------|-------|----------|----------|---------|
 | Digital QR Menu | ✓ | ✓ | ✓ | ✓ |
-| Menu Image Uploads | 5 | 10 | 50 | Unlimited |
+| Menu Image Uploads | 5 | 15 | 50 | Unlimited |
 | Drag & Drop Ordering | ✓ | ✓ | ✓ | ✓ |
 | Basic Analytics | ✓ | ✓ | ✓ | ✓ |
 | Customer Feedback | ✓ | ✓ | ✓ | ✓ |

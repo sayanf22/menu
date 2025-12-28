@@ -36,13 +36,13 @@ A modern digital menu solution for restaurants in India with QR code generation,
 - Social Media Links
 - Drag & Drop Image Ordering
 
-### Standard Plan - ₹369/month (₹4,059/year) ⭐ Popular
+### Standard Plan - ₹399/month (₹4,389/year) ⭐ Popular
 - Everything in Basic
-- 10 Menu Images
+- 15 Menu Images
 - **Bell Calling Feature**
+- **Call Service Feature**
 - Priority Support
 - Advanced Analytics
-- Call Service Feature
 
 ### Advanced Plan - ₹599/month (₹6,589/year)
 - Menu categories

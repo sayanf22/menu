@@ -113,10 +113,10 @@ const ALL_PLANS: Plan[] = [
     id: "standard",
     name: "Standard",
     description: "With bell service",
-    price_monthly: 36900,
-    price_yearly: 405900, // 11 months price (1 month free)
-    features: ["Everything in Basic", "10 Menu Images", "Bell Calling Feature", "Priority Support", "Advanced Analytics"],
-    max_images: 10,
+    price_monthly: 39900,
+    price_yearly: 438900, // 11 months price (1 month free)
+    features: ["Everything in Basic", "15 Menu Images", "Bell Calling Feature", "Call Service Feature", "Priority Support", "Advanced Analytics"],
+    max_images: 15,
     bell_feature_enabled: true,
     plan_tier: 2,
     highlight: true,
