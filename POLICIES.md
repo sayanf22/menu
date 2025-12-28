@@ -20,7 +20,7 @@
 
 # Terms and Conditions
 
-**Last updated:** December 3, 2025
+**Last updated:** December 28, 2025
 
 ## 1. Introduction
 
@@ -41,8 +41,9 @@ By accessing or using the Service, you agree to be bound by these Terms.
 AddMenu provides:
 - Digital menu creation and hosting platform
 - QR code generation for restaurant menus
-- Menu management dashboard
+- Menu management dashboard with drag & drop ordering
 - Analytics and customer feedback tools
+- Bell calling and call service features
 - Customer support services
 
 ## 4. Account Registration
@@ -77,6 +78,7 @@ AddMenu provides:
 - Subscriptions billed in advance
 - Monthly subscriptions renew automatically each month
 - Annual subscriptions renew automatically each year
+- Yearly plans include 1 month FREE (pay for 11 months)
 - Email notifications sent before renewal
 
 ## 6. User Content
@@ -148,7 +150,7 @@ Our total liability shall not exceed the amount paid by you in the 12 months pre
 
 # Privacy Policy
 
-**Last updated:** December 3, 2025
+**Last updated:** December 28, 2025
 
 At AddMenu, we are committed to protecting your privacy and ensuring the security of your personal information.
 
@@ -195,7 +197,7 @@ We do NOT sell, trade, or rent your personal information.
 ### 3.1 Service Providers
 - **Razorpay:** Payment processing
 - **Supabase:** Database and authentication services
-- **Cloudflare:** Content delivery and security
+- **Cloudflare:** Content delivery, security, and image storage (R2)
 - **Analytics providers:** Usage analysis (anonymized data)
 
 ### 3.2 Legal Reasons
@@ -208,6 +210,7 @@ We do NOT sell, trade, or rent your personal information.
 
 - **Encryption:** All data encrypted in transit (SSL/TLS) and at rest
 - **Secure Storage:** Data stored on secure, access-controlled servers
+- **Password Security:** Bcrypt hashing for all passwords
 - **Access Controls:** Limited employee access on need-to-know basis
 - **Regular Audits:** Periodic security assessments and updates
 - **Payment Security:** PCI-DSS compliant payment processing via Razorpay
@@ -246,7 +249,7 @@ Our Service is not intended for children under 18 years of age. We do not knowin
 
 # Cancellation & Refund Policy
 
-**Last updated:** December 3, 2025
+**Last updated:** December 28, 2025
 
 ## ✓ 7-Day Money-Back Guarantee
 
@@ -311,6 +314,7 @@ Refunds credited to original payment method:
 
 ### Annual Subscriptions
 - Billed once per year
+- Includes 1 month FREE (pay for 11 months, get 12)
 - 7-day refund policy applies from payment date
 - Pro-rated refunds considered case-by-case
 
@@ -326,7 +330,7 @@ If you believe you were charged incorrectly:
 
 # Shipping & Delivery Policy
 
-**Last updated:** December 3, 2025
+**Last updated:** December 28, 2025
 
 ## Digital Service - No Physical Shipping
 
@@ -340,6 +344,7 @@ AddMenu provides:
 - Online dashboard access for menu management
 - Analytics and reporting tools
 - Customer feedback collection system
+- Bell calling and call service features
 
 ## 2. Digital Delivery Timeline
 
@@ -447,42 +452,69 @@ Serving restaurants across India including:
 ## Subscription Plans
 
 ### Basic Plan
-**₹249/month** or **₹2,490/year** (Save 17%)
+**₹249/month** or **₹2,739/year** (1 month FREE)
 
 Features:
 - Digital Menu with QR Code
 - 5 Menu Image Uploads
+- Drag & Drop Image Ordering
 - Basic Analytics Dashboard
 - Customer Feedback Collection
 - Social Media Links
 - Unlimited Menu Updates
 - Email Support
 
-### Basic Plus Plan
-**₹369/month** or **₹3,690/year** (Save 17%)
+### Standard Plan ⭐ Popular
+**₹369/month** or **₹4,059/year** (1 month FREE)
 
 Features:
 - Everything in Basic
 - 10 Menu Image Uploads
-- Bell Calling Feature
+- **Bell Calling Feature**
+- **Call Service Feature**
 - Priority Customer Support
 - Advanced Analytics
-- Custom Branding Options
+- Real-time Notifications
+
+### Advanced Plan
+**₹599/month** or **₹6,589/year** (1 month FREE)
+
+Features:
+- Menu categories
+- 50 menu items
+- Toggle item availability
+- Advanced Bell features
+- Dark/Light mode toggle
+- *Available at [addmenu.site](https://addmenu.site)*
+
+### Premium Plan 🚀 Best Value
+**₹999/month** or **₹10,989/year** (1 month FREE)
+
+Features:
+- Everything in Advanced
+- Unlimited menu items
+- Order management system
+- Order notifications
+- Priority support
+- *Available at [addmenu.site](https://addmenu.site)*
 
 ## Feature Comparison
 
-| Feature | Basic | Basic Plus |
-|---------|-------|------------|
-| Digital QR Menu | ✓ | ✓ |
-| Menu Image Uploads | 5 | 10 |
-| Basic Analytics | ✓ | ✓ |
-| Customer Feedback | ✓ | ✓ |
-| Social Media Links | ✓ | ✓ |
-| Unlimited Updates | ✓ | ✓ |
-| Bell Calling Feature | — | ✓ |
-| Advanced Analytics | — | ✓ |
-| Custom Branding | — | ✓ |
-| Priority Support | — | ✓ |
+| Feature | Basic | Standard | Advanced | Premium |
+|---------|-------|----------|----------|---------|
+| Digital QR Menu | ✓ | ✓ | ✓ | ✓ |
+| Menu Image Uploads | 5 | 10 | 50 | Unlimited |
+| Drag & Drop Ordering | ✓ | ✓ | ✓ | ✓ |
+| Basic Analytics | ✓ | ✓ | ✓ | ✓ |
+| Customer Feedback | ✓ | ✓ | ✓ | ✓ |
+| Social Media Links | ✓ | ✓ | ✓ | ✓ |
+| Bell Calling Feature | — | ✓ | ✓ | ✓ |
+| Call Service | — | ✓ | ✓ | ✓ |
+| Advanced Analytics | — | ✓ | ✓ | ✓ |
+| Menu Categories | — | — | ✓ | ✓ |
+| Toggle Availability | — | — | ✓ | ✓ |
+| Order Management | — | — | — | ✓ |
+| Priority Support | — | ✓ | ✓ | ✓ |
 
 ## Why Choose AddMenu?
 
@@ -490,6 +522,7 @@ Features:
 - **Secure:** Razorpay powered payments
 - **Support:** Local assistance available
 - **Guarantee:** 7-day money-back guarantee
+- **Yearly Savings:** Get 1 month FREE on yearly plans
 
 ---
 
@@ -497,7 +530,7 @@ Features:
 
 ## What is AddMenu?
 
-AddMenu is a digital menu solution for restaurants, cafes, and food businesses. We help you create beautiful QR code menus that your customers can scan and view on their phones.
+AddMenu is a digital menu solution for restaurants, cafes, and food businesses in India. We help you create beautiful QR code menus that your customers can scan and view on their phones.
 
 ## Our Mission
 
@@ -507,10 +540,12 @@ To help restaurants modernize their menu experience with affordable, easy-to-use
 
 - **Digital Menu Creation:** Upload your menu images and create a beautiful digital menu
 - **QR Code Generation:** Get a unique QR code for your restaurant
+- **Drag & Drop Ordering:** Organize your menu images in any order
 - **Menu Management:** Update your menu anytime from your dashboard
 - **Analytics:** Track menu views and customer engagement
 - **Feedback Collection:** Collect customer feedback directly
-- **Bell Calling (Basic Plus):** Let customers call for service from their table
+- **Bell Calling (Standard+):** Let customers call for service from their table
+- **Call Service (Standard+):** Direct phone call button for customers
 
 ## Why Restaurants Choose Us
 
@@ -520,6 +555,7 @@ To help restaurants modernize their menu experience with affordable, easy-to-use
 4. **Local Support:** WhatsApp and phone support in your language
 5. **Secure:** Razorpay powered secure payments
 6. **Reliable:** 99.9% uptime guarantee
+7. **Flexible:** Drag & drop to organize your menu
 
 ## Contact
 
@@ -530,4 +566,4 @@ To help restaurants modernize their menu experience with affordable, easy-to-use
 
 ---
 
-*Last updated: December 3, 2025*
+*Last updated: December 28, 2025*
