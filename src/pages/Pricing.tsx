@@ -129,6 +129,7 @@ const Pricing = () => {
   const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
   const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
   const [dbPlans, setDbPlans] = useState<Map<string, string>>(new Map());
+  const [dbPlanPrices, setDbPlanPrices] = useState<Map<string, { monthly: number; yearly: number | null }>>(new Map());
   const { initiatePayment, loading } = useRazorpay();
 
   useEffect(() => {
@@ -154,15 +155,22 @@ const Pricing = () => {
     try {
       const { data } = await supabase
         .from('subscription_plans')
-        .select('id, name')
+        .select('id, name, price_monthly, price_yearly')
         .eq('is_active', true);
       if (data) {
         const planMap = new Map<string, string>();
+        const priceMap = new Map<string, { monthly: number; yearly: number | null }>();
         data.forEach(p => {
-          if (p.name.toLowerCase() === 'basic') planMap.set('basic', p.id);
-          else if (p.name.toLowerCase().includes('plus')) planMap.set('standard', p.id);
+          if (p.name.toLowerCase() === 'basic') {
+            planMap.set('basic', p.id);
+            priceMap.set('basic', { monthly: p.price_monthly, yearly: p.price_yearly });
+          } else if (p.name.toLowerCase().includes('plus')) {
+            planMap.set('standard', p.id);
+            priceMap.set('standard', { monthly: p.price_monthly, yearly: p.price_yearly });
+          }
         });
         setDbPlans(planMap);
+        setDbPlanPrices(priceMap);
       }
     } catch (err) {
       console.error('Error fetching plans:', err);
@@ -308,7 +316,11 @@ const Pricing = () => {
             <div className="container mx-auto max-w-6xl">
               <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {ALL_PLANS.map((plan, index) => {
-                  const price = billingCycle === 'yearly' ? plan.price_yearly : plan.price_monthly;
+                  // Use database price if available, otherwise use hardcoded price
+                  const dbPrice = dbPlanPrices.get(plan.id);
+                  const price = billingCycle === 'yearly' 
+                    ? (dbPrice?.yearly || plan.price_yearly) 
+                    : (dbPrice?.monthly || plan.price_monthly);
                   const isSelected = selectedPlan === plan.id;
                   const isHighlighted = plan.highlight;
 

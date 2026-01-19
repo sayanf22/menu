@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -29,6 +29,7 @@ import { Link } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { SEO } from "@/components/SEO";
+import { supabase } from "@/integrations/supabase/client";
 
 type PlanType = "basic" | "standard" | "advanced" | "premium";
 
@@ -82,6 +83,33 @@ const PLANS = {
 const Index = () => {
   const [activeTab, setActiveTab] = useState<PlanType>("basic");
   const [deviceView, setDeviceView] = useState<"phone" | "tablet">("phone");
+  const [dbPlanPrices, setDbPlanPrices] = useState<Map<string, { monthly: number; yearly: number | null }>>(new Map());
+
+  useEffect(() => {
+    fetchDbPlans();
+  }, []);
+
+  const fetchDbPlans = async () => {
+    try {
+      const { data } = await supabase
+        .from('subscription_plans')
+        .select('id, name, price_monthly, price_yearly')
+        .eq('is_active', true);
+      if (data) {
+        const priceMap = new Map<string, { monthly: number; yearly: number | null }>();
+        data.forEach(p => {
+          if (p.name.toLowerCase() === 'basic') {
+            priceMap.set('basic', { monthly: p.price_monthly, yearly: p.price_yearly });
+          } else if (p.name.toLowerCase().includes('plus')) {
+            priceMap.set('standard', { monthly: p.price_monthly, yearly: p.price_yearly });
+          }
+        });
+        setDbPlanPrices(priceMap);
+      }
+    } catch (err) {
+      console.error('Error fetching plans:', err);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
@@ -542,6 +570,9 @@ const Index = () => {
             {(Object.entries(PLANS) as [PlanType, typeof PLANS.basic][]).map(([key, plan]) => {
               const Icon = plan.icon;
               const isHighlighted = key === "standard" || key === "premium";
+              // Use database price if available, otherwise use hardcoded price
+              const dbPrice = dbPlanPrices.get(key);
+              const displayPrice = dbPrice?.monthly ? (dbPrice.monthly / 100) : plan.price;
               
               return (
                 <Card 
@@ -587,7 +618,7 @@ const Index = () => {
                     <p className="text-muted-foreground text-sm mb-4">{plan.description}</p>
                     
                     <div className="mb-5">
-                      <span className="text-3xl font-bold">₹{plan.price}</span>
+                      <span className="text-3xl font-bold">₹{displayPrice}</span>
                       <span className="text-muted-foreground text-sm">/month</span>
                     </div>
 
