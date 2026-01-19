@@ -380,7 +380,7 @@ const Index = () => {
                         <h4 className="font-semibold text-sm">Restaurant Menu</h4>
                       </div>
                       
-                      {activeTab === "basic" ? (
+                      {activeTab === "basic" || activeTab === "standard" || activeTab === "advanced" ? (
                         <div className="space-y-3">
                           <div className="bg-muted rounded-2xl p-3 dark:bg-muted/50 transition-all duration-300">
                             <div className="w-full h-20 bg-primary/10 rounded-xl mb-2" />
@@ -437,7 +437,7 @@ const Index = () => {
                         </div>
                       </div>
                       
-                      {activeTab === "basic" ? (
+                      {activeTab === "basic" || activeTab === "standard" || activeTab === "advanced" ? (
                         <div className="grid grid-cols-2 gap-3">
                           <div className="bg-muted rounded-2xl p-2 dark:bg-muted/50 transition-all duration-300">
                             <div className="w-full h-16 bg-primary/10 rounded-xl mb-2" />
