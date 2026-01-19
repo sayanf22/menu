@@ -364,8 +364,16 @@ const Index = () => {
           {/* Device Mockups */}
           <div className="flex flex-col lg:flex-row items-center justify-center gap-8 max-w-6xl mx-auto">
             {/* Device Mockup */}
-            <div className="relative transition-all duration-500">
-              {deviceView === "phone" ? (
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={`${deviceView}-${activeTab}`}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.3 }}
+                className="relative"
+              >
+                {deviceView === "phone" ? (
                 // Phone Mockup
                 <div className="w-[280px] h-[560px] bg-foreground rounded-[3rem] p-3 shadow-2xl dark:bg-white/90 transition-all duration-500 hover:shadow-3xl">
                   <div className="w-full h-full bg-background rounded-[2.5rem] overflow-hidden relative dark:bg-background">
@@ -508,67 +516,95 @@ const Index = () => {
                   {deviceView === "phone" ? "Mobile View" : "Tablet View"}
                 </div>
               </div>
-            </div>
+            </motion.div>
+          </AnimatePresence>
 
             {/* Feature List */}
             <div className="max-w-md">
-              {(() => {
-                const plan = PLANS[activeTab];
-                const Icon = plan.icon;
-                return (
-                  <>
-                    <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                      <Icon className={`w-6 h-6 ${plan.gradient ? 'text-primary' : 'text-primary'}`} />
-                      {plan.name} Plan Features
-                      {plan.isExternal && (
-                        <span className="text-xs bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-100 px-2 py-0.5 rounded-full">Pro</span>
-                      )}
-                    </h3>
-                    <div className="space-y-4">
-                      {plan.features.map((feature, i) => (
-                        <div key={i} className="flex items-center gap-3 transition-all duration-300 hover:translate-x-1">
-                          <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
-                            plan.gradient ? 'bg-primary/10 dark:bg-primary/20' : 'bg-green-500/10 dark:bg-green-500/20'
-                          }`}>
-                            <Check className={`w-4 h-4 ${plan.gradient ? 'text-primary' : 'text-green-500'}`} />
-                          </div>
-                          <span>{feature}</span>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeTab}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {(() => {
+                    const plan = PLANS[activeTab];
+                    const Icon = plan.icon;
+                    return (
+                      <>
+                        <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
+                          <Icon className={`w-6 h-6 ${plan.gradient ? 'text-primary' : 'text-primary'}`} />
+                          {plan.name} Plan Features
+                          {plan.isExternal && (
+                            <span className="text-xs bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-100 px-2 py-0.5 rounded-full">Pro</span>
+                          )}
+                        </h3>
+                        <div className="space-y-4">
+                          {plan.features.map((feature, i) => (
+                            <motion.div
+                              key={i}
+                              initial={{ opacity: 0, x: 10 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ duration: 0.3, delay: i * 0.05 }}
+                              className="flex items-center gap-3 transition-all duration-300 hover:translate-x-1"
+                            >
+                              <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
+                                plan.gradient ? 'bg-primary/10 dark:bg-primary/20' : 'bg-green-500/10 dark:bg-green-500/20'
+                              }`}>
+                                <Check className={`w-4 h-4 ${plan.gradient ? 'text-primary' : 'text-green-500'}`} />
+                              </div>
+                              <span>{feature}</span>
+                            </motion.div>
+                          ))}
+                          {plan.notIncluded.map((feature, i) => (
+                            <motion.div
+                              key={i}
+                              initial={{ opacity: 0, x: 10 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ duration: 0.3, delay: (plan.features.length + i) * 0.05 }}
+                              className="flex items-center gap-3 opacity-50"
+                            >
+                              <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                                <X className="w-4 h-4 text-muted-foreground" />
+                              </div>
+                              <span className="line-through">{feature}</span>
+                            </motion.div>
+                          ))}
                         </div>
-                      ))}
-                      {plan.notIncluded.map((feature, i) => (
-                        <div key={i} className="flex items-center gap-3 opacity-50">
-                          <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-                            <X className="w-4 h-4 text-muted-foreground" />
-                          </div>
-                          <span className="line-through">{feature}</span>
-                        </div>
-                      ))}
-                    </div>
-                    
-                    <div className="mt-8">
-                      {plan.isExternal ? (
-                        <a href={plan.externalUrl} target="_blank" rel="noopener noreferrer">
-                          <Button className={`rounded-full h-12 px-8 shadow-lg transition-all duration-300 hover:scale-105 active:scale-95 hover:shadow-xl ${
-                            plan.gradient ? `bg-gradient-to-r ${plan.gradient} hover:opacity-90` : 'bg-primary hover:bg-primary/90'
-                          }`}>
-                            Get {plan.name} - ₹{plan.price}/mo
-                            <ExternalLink className="w-4 h-4 ml-2" />
-                          </Button>
-                        </a>
-                      ) : (
-                        <Link to="/auth">
-                          <Button className={`rounded-full h-12 px-8 shadow-lg shadow-primary/20 transition-all duration-300 hover:scale-105 active:scale-95 hover:shadow-xl ${
-                            plan.gradient ? `bg-gradient-to-r ${plan.gradient} hover:opacity-90` : 'bg-primary hover:bg-primary/90'
-                          }`}>
-                            Get {plan.name} - ₹{plan.price}/mo
-                            <ChevronRight className="w-4 h-4 ml-1" />
-                          </Button>
-                        </Link>
-                      )}
-                    </div>
-                  </>
-                );
-              })()}
+                        
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.3, delay: 0.2 }}
+                          className="mt-8"
+                        >
+                          {plan.isExternal ? (
+                            <a href={plan.externalUrl} target="_blank" rel="noopener noreferrer">
+                              <Button className={`rounded-full h-12 px-8 shadow-lg transition-all duration-300 hover:scale-105 active:scale-95 hover:shadow-xl ${
+                                plan.gradient ? `bg-gradient-to-r ${plan.gradient} hover:opacity-90` : 'bg-primary hover:bg-primary/90'
+                              }`}>
+                                Get {plan.name} - ₹{plan.price}/mo
+                                <ExternalLink className="w-4 h-4 ml-2" />
+                              </Button>
+                            </a>
+                          ) : (
+                            <Link to="/auth">
+                              <Button className={`rounded-full h-12 px-8 shadow-lg shadow-primary/20 transition-all duration-300 hover:scale-105 active:scale-95 hover:shadow-xl ${
+                                plan.gradient ? `bg-gradient-to-r ${plan.gradient} hover:opacity-90` : 'bg-primary hover:bg-primary/90'
+                              }`}>
+                                Get {plan.name} - ₹{plan.price}/mo
+                                <ChevronRight className="w-4 h-4 ml-1" />
+                              </Button>
+                            </Link>
+                          )}
+                        </motion.div>
+                      </>
+                    );
+                  })()}
+                </motion.div>
+              </AnimatePresence>
             </div>
           </div>
         </div>
