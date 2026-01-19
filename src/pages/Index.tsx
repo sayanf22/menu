@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -380,41 +381,57 @@ const Index = () => {
                         <h4 className="font-semibold text-sm">Restaurant Menu</h4>
                       </div>
                       
-                      {activeTab === "basic" || activeTab === "standard" || activeTab === "advanced" ? (
-                        <div className="space-y-3">
-                          <div className="bg-muted rounded-2xl p-3 dark:bg-muted/50 transition-all duration-300">
-                            <div className="w-full h-20 bg-primary/10 rounded-xl mb-2" />
-                            <div className="h-3 bg-muted-foreground/20 rounded-full w-3/4" />
-                            <div className="h-2 bg-muted-foreground/10 rounded-full w-1/2 mt-1" />
-                          </div>
-                          <div className="bg-muted rounded-2xl p-3 dark:bg-muted/50 transition-all duration-300">
-                            <div className="w-full h-20 bg-primary/10 rounded-xl mb-2" />
-                            <div className="h-3 bg-muted-foreground/20 rounded-full w-2/3" />
-                            <div className="h-2 bg-muted-foreground/10 rounded-full w-1/3 mt-1" />
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="space-y-3">
-                          <div className="bg-muted rounded-2xl p-3 dark:bg-muted/50 transition-all duration-300">
-                            <div className="w-full h-20 bg-primary/10 rounded-xl mb-2" />
-                            <div className="flex justify-between items-center">
-                              <div>
-                                <div className="h-3 bg-muted-foreground/20 rounded-full w-20" />
-                                <div className="h-2 bg-muted-foreground/10 rounded-full w-12 mt-1" />
-                              </div>
-                              <div className="bg-primary text-white text-xs px-3 py-1.5 rounded-full">
-                                Add to Cart
+                      <AnimatePresence mode="wait">
+                        {activeTab === "basic" || activeTab === "standard" || activeTab === "advanced" ? (
+                          <motion.div
+                            key="simple-menu"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            transition={{ duration: 0.3 }}
+                            className="space-y-3"
+                          >
+                            <div className="bg-muted rounded-2xl p-3 dark:bg-muted/50 transition-all duration-300">
+                              <div className="w-full h-20 bg-primary/10 rounded-xl mb-2" />
+                              <div className="h-3 bg-muted-foreground/20 rounded-full w-3/4" />
+                              <div className="h-2 bg-muted-foreground/10 rounded-full w-1/2 mt-1" />
+                            </div>
+                            <div className="bg-muted rounded-2xl p-3 dark:bg-muted/50 transition-all duration-300">
+                              <div className="w-full h-20 bg-primary/10 rounded-xl mb-2" />
+                              <div className="h-3 bg-muted-foreground/20 rounded-full w-2/3" />
+                              <div className="h-2 bg-muted-foreground/10 rounded-full w-1/3 mt-1" />
+                            </div>
+                          </motion.div>
+                        ) : (
+                          <motion.div
+                            key="ordering-menu"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            transition={{ duration: 0.3 }}
+                            className="space-y-3"
+                          >
+                            <div className="bg-muted rounded-2xl p-3 dark:bg-muted/50 transition-all duration-300">
+                              <div className="w-full h-20 bg-primary/10 rounded-xl mb-2" />
+                              <div className="flex justify-between items-center">
+                                <div>
+                                  <div className="h-3 bg-muted-foreground/20 rounded-full w-20" />
+                                  <div className="h-2 bg-muted-foreground/10 rounded-full w-12 mt-1" />
+                                </div>
+                                <div className="bg-primary text-white text-xs px-3 py-1.5 rounded-full">
+                                  Add to Cart
+                                </div>
                               </div>
                             </div>
-                          </div>
-                          <div className="bg-gradient-to-r from-primary/10 to-accent/10 rounded-2xl p-3 border-2 border-primary/30 transition-all duration-300">
-                            <div className="flex items-center gap-2 text-xs text-primary font-medium">
-                              <Zap className="w-4 h-4" />
-                              Online Ordering Enabled
+                            <div className="bg-gradient-to-r from-primary/10 to-accent/10 rounded-2xl p-3 border-2 border-primary/30 transition-all duration-300">
+                              <div className="flex items-center gap-2 text-xs text-primary font-medium">
+                                <Zap className="w-4 h-4" />
+                                Online Ordering Enabled
+                              </div>
                             </div>
-                          </div>
-                        </div>
-                      )}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
                   </div>
                 </div>
@@ -437,34 +454,50 @@ const Index = () => {
                         </div>
                       </div>
                       
-                      {activeTab === "basic" || activeTab === "standard" || activeTab === "advanced" ? (
-                        <div className="grid grid-cols-2 gap-3">
-                          <div className="bg-muted rounded-2xl p-2 dark:bg-muted/50 transition-all duration-300">
-                            <div className="w-full h-16 bg-primary/10 rounded-xl mb-2" />
-                            <div className="h-2 bg-muted-foreground/20 rounded-full w-3/4" />
-                          </div>
-                          <div className="bg-muted rounded-2xl p-2 dark:bg-muted/50 transition-all duration-300">
-                            <div className="w-full h-16 bg-primary/10 rounded-xl mb-2" />
-                            <div className="h-2 bg-muted-foreground/20 rounded-full w-2/3" />
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="grid grid-cols-2 gap-3">
-                          <div className="bg-muted rounded-2xl p-2 dark:bg-muted/50 transition-all duration-300">
-                            <div className="w-full h-16 bg-primary/10 rounded-xl mb-2" />
-                            <div className="flex justify-between items-center">
-                              <div className="h-2 bg-muted-foreground/20 rounded-full w-12" />
-                              <div className="bg-primary text-white text-[10px] px-2 py-1 rounded-full">Add</div>
+                      <AnimatePresence mode="wait">
+                        {activeTab === "basic" || activeTab === "standard" || activeTab === "advanced" ? (
+                          <motion.div
+                            key="simple-menu-tablet"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            transition={{ duration: 0.3 }}
+                            className="grid grid-cols-2 gap-3"
+                          >
+                            <div className="bg-muted rounded-2xl p-2 dark:bg-muted/50 transition-all duration-300">
+                              <div className="w-full h-16 bg-primary/10 rounded-xl mb-2" />
+                              <div className="h-2 bg-muted-foreground/20 rounded-full w-3/4" />
                             </div>
-                          </div>
-                          <div className="bg-gradient-to-r from-primary/10 to-accent/10 rounded-2xl p-2 border border-primary/30 transition-all duration-300">
-                            <div className="flex items-center gap-1 text-[10px] text-primary font-medium">
-                              <Zap className="w-3 h-3" />
-                              Online Orders
+                            <div className="bg-muted rounded-2xl p-2 dark:bg-muted/50 transition-all duration-300">
+                              <div className="w-full h-16 bg-primary/10 rounded-xl mb-2" />
+                              <div className="h-2 bg-muted-foreground/20 rounded-full w-2/3" />
                             </div>
-                          </div>
-                        </div>
-                      )}
+                          </motion.div>
+                        ) : (
+                          <motion.div
+                            key="ordering-menu-tablet"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            transition={{ duration: 0.3 }}
+                            className="grid grid-cols-2 gap-3"
+                          >
+                            <div className="bg-muted rounded-2xl p-2 dark:bg-muted/50 transition-all duration-300">
+                              <div className="w-full h-16 bg-primary/10 rounded-xl mb-2" />
+                              <div className="flex justify-between items-center">
+                                <div className="h-2 bg-muted-foreground/20 rounded-full w-12" />
+                                <div className="bg-primary text-white text-[10px] px-2 py-1 rounded-full">Add</div>
+                              </div>
+                            </div>
+                            <div className="bg-gradient-to-r from-primary/10 to-accent/10 rounded-2xl p-2 border border-primary/30 transition-all duration-300">
+                              <div className="flex items-center gap-1 text-[10px] text-primary font-medium">
+                                <Zap className="w-3 h-3" />
+                                Online Orders
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
                   </div>
                 </div>
