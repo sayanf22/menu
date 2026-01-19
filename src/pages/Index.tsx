@@ -37,7 +37,7 @@ const PLANS = {
   basic: {
     name: "Basic",
     price: 249,
-    description: "Perfect for small restaurants",
+    description: "Perfect for small hotels & restaurants",
     icon: Star,
     features: ["Digital Menu with QR Code", "5 Menu Image Uploads", "Drag & Drop Ordering", "Basic Analytics", "Customer Feedback", "Social Media Links"],
     notIncluded: ["Bell Calling Feature", "Call Service", "Priority Support"],
@@ -48,7 +48,7 @@ const PLANS = {
   standard: {
     name: "Standard",
     price: 399,
-    description: "Most popular choice",
+    description: "Most popular for hotels & restaurants",
     icon: Bell,
     features: ["Everything in Basic", "15 Menu Image Uploads", "Bell Calling Feature", "Call Service Button", "Priority Support", "Advanced Analytics"],
     notIncluded: [],
@@ -163,22 +163,22 @@ const Index = () => {
             {/* Badge */}
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium border border-primary/20 dark:bg-primary/15 dark:border-primary/30 transition-all duration-300 hover:scale-105">
               <Sparkles className="w-4 h-4" />
-              <span>Trusted by 100+ restaurants in Tripura</span>
+              <span>Trusted by 100+ hotels & restaurants in Tripura</span>
             </div>
 
             {/* Main Heading */}
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight">
-              Your Menu,{" "}
-              <span className="text-primary">Digitized</span>
+              Digital Menus for{" "}
+              <span className="text-primary">Hotels & Restaurants</span>
               <br />
               <span className="text-muted-foreground font-normal text-xl md:text-2xl lg:text-3xl mt-4 block">
-                QR Code Menus for Modern Restaurants
+                QR Code Menus for Modern Hospitality
               </span>
             </h1>
 
             {/* Description */}
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              Create beautiful contactless menus in minutes. Customers scan, browse, and order with ease. No app download required.
+              Create beautiful contactless menus for your hotel or restaurant in minutes. Customers scan, browse, and order with ease. No app download required.
             </p>
 
             {/* CTA Buttons */}
@@ -263,10 +263,10 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Why Choose <span className="text-primary">AddMenu</span>?
+              Perfect for <span className="text-primary">Hotels & Restaurants</span>
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Everything you need to digitize your restaurant menu
+              Everything you need to digitize your hotel or restaurant menu
             </p>
           </div>
 

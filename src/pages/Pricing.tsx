@@ -34,7 +34,7 @@ const ALL_PLANS: Plan[] = [
   {
     id: "basic",
     name: "Basic",
-    description: "Perfect for small restaurants",
+    description: "Perfect for small hotels & restaurants",
     tagline: "Get started",
     price_monthly: 24900,
     price_yearly: 273900,
@@ -54,7 +54,7 @@ const ALL_PLANS: Plan[] = [
   {
     id: "standard",
     name: "Standard",
-    description: "Most popular choice",
+    description: "Most popular for hotels & restaurants",
     tagline: "Best for growing",
     price_monthly: 39900,
     price_yearly: 438900,
@@ -274,7 +274,7 @@ const Pricing = () => {
                 transition={{ delay: 0.2 }}
                 className="text-lg text-muted-foreground mb-10 max-w-2xl mx-auto"
               >
-                From simple QR menus to complete ordering systems. Start free trial with 7-day money-back guarantee.
+                From simple QR menus to complete ordering systems for hotels & restaurants. Start free trial with 7-day money-back guarantee.
               </motion.p>
 
               {/* Billing Toggle */}
@@ -525,7 +525,7 @@ const Pricing = () => {
                 <h2 className="text-3xl font-bold mb-3">
                   Why Choose AddMenu?
                 </h2>
-                <p className="text-muted-foreground">Trusted by restaurants across Tripura</p>
+                <p className="text-muted-foreground">Trusted by hotels & restaurants across Tripura</p>
               </motion.div>
               
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -575,7 +575,7 @@ const Pricing = () => {
                     Ready to Get Started?
                   </h2>
                   <p className="text-white/80 mb-8 text-lg">
-                    Join hundreds of restaurants using AddMenu
+                    Join hundreds of hotels & restaurants using AddMenu
                   </p>
                   <div className="flex flex-col sm:flex-row gap-4 justify-center">
                     <Button 
