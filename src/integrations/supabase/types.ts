@@ -688,7 +688,178 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      admin_create_user_account: {
+        Args: {
+          p_admin_session_token?: string
+          p_email: string
+          p_password: string
+          p_restaurant_description?: string
+          p_restaurant_name: string
+        }
+        Returns: Json
+      }
+      admin_delete_user_account: {
+        Args: { p_admin_session_token: string; p_user_id: string }
+        Returns: Json
+      }
+      admin_get_profiles: {
+        Args: never
+        Returns: {
+          approval_status: string
+          billing_cycle: string
+          created_at: string
+          disabled_at: string
+          email: string
+          id: string
+          is_disabled: boolean
+          restaurant_description: string
+          restaurant_name: string
+          subscription_end: string
+          subscription_plan: string
+          subscription_status: string
+        }[]
+      }
+      admin_get_subscription_plans: {
+        Args: never
+        Returns: {
+          bell_feature_enabled: boolean
+          id: string
+          max_images: number
+          name: string
+          price_monthly: number
+        }[]
+      }
+      admin_grant_subscription: {
+        Args: {
+          p_admin_email: string
+          p_months: number
+          p_plan_id: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
+      admin_revoke_subscription: {
+        Args: { p_admin_email: string; p_user_id: string }
+        Returns: Json
+      }
+      admin_update_profile_status: {
+        Args: {
+          disabled_by_email?: string
+          is_disabled_value: boolean
+          profile_id: string
+        }
+        Returns: Json
+      }
+      check_bell_feature_access: {
+        Args: { p_user_id: string }
+        Returns: boolean
+      }
+      check_bell_rate_limit: {
+        Args: { p_device_fingerprint: string; p_restaurant_id: string }
+        Returns: boolean
+      }
+      check_image_upload_limit: { Args: { p_user_id: string }; Returns: Json }
+      check_rate_limit: {
+        Args: {
+          p_endpoint: string
+          p_identifier: string
+          p_max_requests?: number
+          p_window_minutes?: number
+        }
+        Returns: boolean
+      }
+      check_restaurant_subscription: {
+        Args: { restaurant_uuid: string }
+        Returns: Json
+      }
+      cleanup_expired_sessions: { Args: never; Returns: number }
+      cleanup_old_rate_limits: { Args: never; Returns: undefined }
+      cleanup_stale_pending_upgrades: { Args: never; Returns: undefined }
+      clear_failed_logins: {
+        Args: { p_identifier: string }
+        Returns: undefined
+      }
+      create_menu_session: {
+        Args: {
+          p_device_fingerprint?: string
+          p_restaurant_id: string
+          p_session_duration_minutes?: number
+        }
+        Returns: Json
+      }
+      create_user_profile: {
+        Args: {
+          restaurant_description?: string
+          restaurant_name: string
+          user_id: string
+        }
+        Returns: Json
+      }
+      disable_expired_subscriptions: { Args: never; Returns: number }
+      ensure_profile_exists: { Args: { user_id: string }; Returns: boolean }
+      get_public_social_links: {
+        Args: { rest_id: string }
+        Returns: {
+          facebook: string
+          instagram: string
+          twitter: string
+          website: string
+          whatsapp: string
+          youtube: string
+        }[]
+      }
+      get_user_plan_details: { Args: { p_user_id: string }; Returns: Json }
+      get_user_subscription_status: {
+        Args: { p_user_id: string }
+        Returns: Json
+      }
+      has_active_subscription: { Args: { user_uuid: string }; Returns: boolean }
+      is_login_blocked: { Args: { p_identifier: string }; Returns: boolean }
+      is_subscription_active: { Args: { p_user_id: string }; Returns: boolean }
+      is_user_approved: { Args: { user_uuid: string }; Returns: boolean }
+      is_valid_email: { Args: { email_text: string }; Returns: boolean }
+      is_valid_url: { Args: { url_text: string }; Returns: boolean }
+      log_security_event: {
+        Args: {
+          p_details?: Json
+          p_event_type: string
+          p_ip_address?: string
+          p_success?: boolean
+          p_user_agent?: string
+          p_user_id?: string
+        }
+        Returns: undefined
+      }
+      reactivate_subscription: {
+        Args: {
+          p_period_end: string
+          p_period_start: string
+          p_subscription_id: string
+          p_user_id: string
+        }
+        Returns: boolean
+      }
+      record_failed_login: {
+        Args: { p_identifier: string; p_type?: string }
+        Returns: undefined
+      }
+      sanitize_text: { Args: { input_text: string }; Returns: string }
+      update_admin_password: {
+        Args: {
+          p_email: string
+          p_new_password: string
+          p_old_password: string
+        }
+        Returns: Json
+      }
+      validate_menu_session: {
+        Args: { p_idle_timeout_minutes?: number; p_session_token: string }
+        Returns: Json
+      }
+      verify_admin_login: {
+        Args: { p_email: string; p_password: string }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never
