@@ -1,9 +1,9 @@
 /**
  * Bell Button Component - Winter Theme with Ice Effect
- * Allows customers to call waiter from menu view
+ * Allows customers to call waiter/service from menu view
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bell, X, Send, Loader2, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -23,10 +23,33 @@ export const BellButton = ({ restaurantId }: BellButtonProps) => {
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [cooldown, setCooldown] = useState(false);
+  const [businessType, setBusinessType] = useState<"hotel" | "restaurant">("restaurant");
+
+  // Fetch business type when component mounts
+  useEffect(() => {
+    const fetchBusinessType = async () => {
+      try {
+        const { data } = await supabase
+          .from("profiles")
+          .select("business_type")
+          .eq("id", restaurantId)
+          .single();
+        if (data?.business_type) {
+          setBusinessType(data.business_type as "hotel" | "restaurant");
+        }
+      } catch (error) {
+        console.error("Error fetching business type:", error);
+      }
+    };
+    fetchBusinessType();
+  }, [restaurantId]);
+
+  const locationLabel = businessType === "hotel" ? "Room Number" : "Table Number";
+  const locationPlaceholder = businessType === "hotel" ? "e.g., 101, 205" : "e.g., 5, A1, Window";
 
   const handleCallWaiter = async () => {
     if (!tableNumber.trim()) {
-      toast.error("Please enter your table number");
+      toast.error(`Please enter your ${locationLabel.toLowerCase()}`);
       return;
     }
 
@@ -63,7 +86,7 @@ export const BellButton = ({ restaurantId }: BellButtonProps) => {
 
       setSent(true);
       setCooldown(true);
-      toast.success("Waiter has been notified!");
+      toast.success(`${businessType === "hotel" ? "Service" : "Waiter"} has been notified!`);
 
       // Reset after 3 seconds
       setTimeout(() => {
@@ -137,7 +160,7 @@ export const BellButton = ({ restaurantId }: BellButtonProps) => {
                   >
                     <CheckCircle className="w-16 h-16 mx-auto text-green-500 mb-4" />
                   </motion.div>
-                  <h3 className="text-lg font-semibold text-slate-800 dark:text-white">Waiter Notified!</h3>
+                  <h3 className="text-lg font-semibold text-slate-800 dark:text-white">{businessType === "hotel" ? "Service" : "Waiter"} Notified!</h3>
                   <p className="text-muted-foreground text-sm mt-1">
                     Someone will be with you shortly
                   </p>
@@ -150,9 +173,9 @@ export const BellButton = ({ restaurantId }: BellButtonProps) => {
                         <Bell className="w-5 h-5 text-white" />
                       </div>
                       <div>
-                        <h3 className="font-semibold text-slate-800 dark:text-white">Call Waiter</h3>
+                        <h3 className="font-semibold text-slate-800 dark:text-white">Call {businessType === "hotel" ? "Service" : "Waiter"}</h3>
                         <p className="text-xs text-muted-foreground">
-                          Enter your table number
+                          Enter your {locationLabel.toLowerCase()}
                         </p>
                       </div>
                     </div>
@@ -169,10 +192,10 @@ export const BellButton = ({ restaurantId }: BellButtonProps) => {
 
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="table">Table Number</Label>
+                      <Label htmlFor="table">{locationLabel}</Label>
                       <Input
                         id="table"
-                        placeholder="e.g., 5, A1, Window"
+                        placeholder={locationPlaceholder}
                         value={tableNumber}
                         onChange={(e) => setTableNumber(e.target.value)}
                         className="text-lg h-12 text-center font-medium"
@@ -191,7 +214,7 @@ export const BellButton = ({ restaurantId }: BellButtonProps) => {
                       ) : (
                         <Send className="w-5 h-5 mr-2" />
                       )}
-                      {cooldown ? "Please wait..." : "Call Waiter"}
+                      {cooldown ? "Please wait..." : `Call ${businessType === "hotel" ? "Service" : "Waiter"}`}
                     </Button>
 
                     {cooldown && (

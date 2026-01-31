@@ -24,7 +24,7 @@ interface SettingsProps {
   onProfileUpdate?: (profile: Record<string, unknown>) => void;
 }
 
-interface BasicPlusPlan {
+interface StandardPlan {
   id: string;
   name: string;
   price_monthly: number;
@@ -42,7 +42,7 @@ const Settings = ({ restaurantId, onProfileUpdate }: SettingsProps) => {
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [hasBellAccess, setHasBellAccess] = useState<boolean | null>(null);
   const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
-  const [basicPlusPlan, setBasicPlusPlan] = useState<BasicPlusPlan | null>(null);
+  const [standardPlan, setStandardPlan] = useState<StandardPlan | null>(null);
   const { initiatePayment, loading: paymentLoading } = useRazorpay();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -53,6 +53,7 @@ const Settings = ({ restaurantId, onProfileUpdate }: SettingsProps) => {
     bell_service_enabled: true,
     call_service_enabled: false,
     call_phone_number: "",
+    business_type: "restaurant" as "hotel" | "restaurant",
   });
   
   const [bellServiceSaving, setBellServiceSaving] = useState(false);
@@ -74,7 +75,7 @@ const Settings = ({ restaurantId, onProfileUpdate }: SettingsProps) => {
   useEffect(() => {
     fetchProfile();
     checkBellAccess();
-    fetchBasicPlusPlan();
+    fetchStandardPlan();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restaurantId]);
 
@@ -89,7 +90,7 @@ const Settings = ({ restaurantId, onProfileUpdate }: SettingsProps) => {
     }
   };
 
-  const fetchBasicPlusPlan = async () => {
+  const fetchStandardPlan = async () => {
     try {
       const { data } = await supabase
         .from("subscription_plans")
@@ -98,25 +99,25 @@ const Settings = ({ restaurantId, onProfileUpdate }: SettingsProps) => {
         .eq("is_active", true)
         .single();
       if (data) {
-        setBasicPlusPlan(data as BasicPlusPlan);
+        setStandardPlan(data as StandardPlan);
       }
     } catch (error) {
-      console.error("Error fetching Basic Plus plan:", error);
+      console.error("Error fetching Standard plan:", error);
     }
   };
 
   const handleUpgrade = async (billingCycle: 'monthly' | 'yearly') => {
-    if (!basicPlusPlan) {
+    if (!standardPlan) {
       toast.error("Plan not found. Please try again.");
       return;
     }
     
     await initiatePayment(
-      { planId: basicPlusPlan.id, billingCycle },
+      { planId: standardPlan.id, billingCycle },
       () => {
         setShowUpgradeDialog(false);
         setHasBellAccess(true);
-        toast.success("Upgraded to Basic Plus! Bell feature is now available.");
+        toast.success("Upgraded to Standard! Bell feature is now available.");
         window.location.reload();
       },
       () => {
@@ -131,7 +132,7 @@ const Settings = ({ restaurantId, onProfileUpdate }: SettingsProps) => {
     try {
       const { data, error } = await supabase
         .from("profiles")
-        .select("restaurant_name, restaurant_description, logo_url, bell_service_enabled, call_service_enabled, call_phone_number")
+        .select("restaurant_name, restaurant_description, logo_url, bell_service_enabled, call_service_enabled, call_phone_number, business_type")
         .eq("id", restaurantId)
         .single();
 
@@ -146,6 +147,7 @@ const Settings = ({ restaurantId, onProfileUpdate }: SettingsProps) => {
           bell_service_enabled: profileData.bell_service_enabled !== false,
           call_service_enabled: profileData.call_service_enabled === true,
           call_phone_number: profileData.call_phone_number as string || "",
+          business_type: (profileData.business_type as "hotel" | "restaurant") || "restaurant",
         });
         if (profileData.logo_url) {
           setLogoPreview(profileData.logo_url as string);
@@ -263,6 +265,7 @@ const Settings = ({ restaurantId, onProfileUpdate }: SettingsProps) => {
       const updateData: Record<string, unknown> = {
         restaurant_name: profile.restaurant_name.trim(),
         restaurant_description: profile.restaurant_description.trim() || null,
+        business_type: profile.business_type,
       };
 
       if (logoUrl !== null) {
@@ -554,6 +557,24 @@ const Settings = ({ restaurantId, onProfileUpdate }: SettingsProps) => {
                 <Textarea id="restaurant_description" placeholder="Brief description (optional)" value={profile.restaurant_description} onChange={(e) => setProfile({ ...profile, restaurant_description: e.target.value })} rows={3} />
               </div>
 
+              <div className="space-y-2">
+                <Label htmlFor="business_type">Business Type</Label>
+                <select
+                  id="business_type"
+                  value={profile.business_type}
+                  onChange={(e) => setProfile({ ...profile, business_type: e.target.value as "hotel" | "restaurant" })}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <option value="restaurant">Restaurant</option>
+                  <option value="hotel">Hotel</option>
+                </select>
+                <p className="text-xs text-muted-foreground">
+                  {profile.business_type === "hotel" 
+                    ? "Bell service will show 'Room Number' for hotels" 
+                    : "Bell service will show 'Table Number' for restaurants"}
+                </p>
+              </div>
+
               <div className="flex gap-3 pt-2">
                 <Button type="button" variant="outline" onClick={handleCancel} className="flex-1">Cancel</Button>
                 <Button type="submit" disabled={saving || uploading} className="flex-1">
@@ -653,7 +674,7 @@ const Settings = ({ restaurantId, onProfileUpdate }: SettingsProps) => {
                     <Crown className="h-4 w-4 text-amber-500" />
                   </div>
                   <p className="text-sm text-muted-foreground mb-3">
-                    Bell Service is available with Basic Plus plan.
+                    Bell Service is available with Standard plan.
                   </p>
                   <Button 
                     size="sm"
@@ -873,7 +894,7 @@ const Settings = ({ restaurantId, onProfileUpdate }: SettingsProps) => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Crown className="h-5 w-5 text-amber-500" />
-              Upgrade to Basic Plus
+              Upgrade to Standard
             </DialogTitle>
             <DialogDescription>
               Unlock Bell Service and more features
@@ -895,7 +916,7 @@ const Settings = ({ restaurantId, onProfileUpdate }: SettingsProps) => {
               </div>
             </div>
             
-            {basicPlusPlan && (
+            {standardPlan && (
               <div className="grid grid-cols-2 gap-3 pt-4">
                 <Button
                   onClick={() => handleUpgrade('monthly')}
@@ -903,7 +924,7 @@ const Settings = ({ restaurantId, onProfileUpdate }: SettingsProps) => {
                   variant="outline"
                   className="flex flex-col h-auto py-3"
                 >
-                  <span className="text-lg font-bold">{formatPrice(basicPlusPlan.price_monthly)}</span>
+                  <span className="text-lg font-bold">{formatPrice(standardPlan.price_monthly)}</span>
                   <span className="text-xs text-muted-foreground">/month</span>
                 </Button>
                 <Button
@@ -911,7 +932,7 @@ const Settings = ({ restaurantId, onProfileUpdate }: SettingsProps) => {
                   disabled={paymentLoading}
                   className="flex flex-col h-auto py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
                 >
-                  <span className="text-lg font-bold">{formatPrice(basicPlusPlan.price_yearly)}</span>
+                  <span className="text-lg font-bold">{formatPrice(standardPlan.price_yearly)}</span>
                   <span className="text-xs">/year (1 month free)</span>
                 </Button>
               </div>
