@@ -8,109 +8,45 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { toast } from "sonner";
-import { Star, Loader2, X, ChevronDown, Send, MessageSquare } from "lucide-react";
+import { Star, Loader2, X, ChevronDown, Send, MessageSquare, UtensilsCrossed } from "lucide-react";
 import { generateDeviceFingerprint } from "@/lib/deviceFingerprint";
 import { motion, useInView, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import { BellButton } from "@/components/BellButton";
 import { CallButton } from "@/components/CallButton";
 import SessionExpired from "./SessionExpired";
 
-// Christmas Tree SVG Component
-const ChristmasTree = memo(({ className = "", size = 24 }: { className?: string; size?: number }) => (
+// Food Icon SVG Component
+const FoodIcon = memo(({ className = "", size = 24 }: { className?: string; size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
-    <path d="M12 2L8 8H10L6 14H9L5 20H19L15 14H18L14 8H16L12 2Z" fill="currentColor" />
-    <rect x="10.5" y="20" width="3" height="2" fill="#8B4513" />
-    <circle cx="12" cy="6" r="0.8" fill="#FFD700" />
-    <circle cx="10" cy="10" r="0.6" fill="#FF0000" />
-    <circle cx="14" cy="12" r="0.6" fill="#FF0000" />
-    <circle cx="9" cy="15" r="0.6" fill="#FFD700" />
-    <circle cx="15" cy="16" r="0.6" fill="#FF0000" />
-    <circle cx="11" cy="18" r="0.6" fill="#FFD700" />
+    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="currentColor" opacity="0.2"/>
+    <circle cx="12" cy="9" r="3" fill="currentColor"/>
+    <path d="M8 9h8M12 6v6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
   </svg>
 ));
-ChristmasTree.displayName = "ChristmasTree";
+FoodIcon.displayName = "FoodIcon";
 
-// Snowflake SVG Component
-const SnowflakeIcon = memo(({ className = "", size = 16 }: { className?: string; size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={className}>
-    <line x1="12" y1="2" x2="12" y2="22" />
-    <line x1="2" y1="12" x2="22" y2="12" />
-    <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
-    <line x1="19.07" y1="4.93" x2="4.93" y2="19.07" />
-    <line x1="12" y1="2" x2="9" y2="5" />
-    <line x1="12" y1="2" x2="15" y2="5" />
-    <line x1="12" y1="22" x2="9" y2="19" />
-    <line x1="12" y1="22" x2="15" y2="19" />
-    <line x1="2" y1="12" x2="5" y2="9" />
-    <line x1="2" y1="12" x2="5" y2="15" />
-    <line x1="22" y1="12" x2="19" y2="9" />
-    <line x1="22" y1="12" x2="19" y2="15" />
+// Restaurant/Food Plate Icon
+const PlateIcon = memo(({ className = "", size = 24 }: { className?: string; size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
+    <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+    <circle cx="12" cy="12" r="6" fill="currentColor" opacity="0.2"/>
+    <path d="M12 8v8M8 12h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
   </svg>
 ));
-SnowflakeIcon.displayName = "SnowflakeIcon";
+PlateIcon.displayName = "PlateIcon";
 
-// Winter Scene Background with Snow, Trees, and Decorations
-const WinterBackground = memo(() => {
-  const snowflakes = Array.from({ length: 30 }, (_, i) => ({
-    id: i,
-    delay: Math.random() * 10,
-    duration: 10 + Math.random() * 15,
-    left: `${Math.random() * 100}%`,
-    size: 10 + Math.random() * 18,
-  }));
+// Chef Hat Icon
+const ChefHatIcon = memo(({ className = "", size = 24 }: { className?: string; size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
+    <path d="M6 20h12v2H6v-2z" fill="currentColor"/>
+    <path d="M19 8c0-1.1-.9-2-2-2-.18 0-.35.03-.51.08C15.85 4.84 14.05 4 12 4s-3.85.84-4.49 2.08C7.35 6.03 7.18 6 7 6c-1.1 0-2 .9-2 2 0 .76.43 1.42 1.05 1.76V18h11.9V9.76c.62-.34 1.05-1 1.05-1.76z" fill="currentColor" opacity="0.8"/>
+    <path d="M8 10h8v6H8v-6z" fill="currentColor" opacity="0.3"/>
+  </svg>
+));
+ChefHatIcon.displayName = "ChefHatIcon";
 
-  return (
-    <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-      {/* Falling snowflakes - visible in both modes */}
-      {snowflakes.map((flake) => (
-        <motion.div
-          key={flake.id}
-          className="absolute text-sky-400/50 dark:text-sky-200/30"
-          style={{ left: flake.left, top: -30 }}
-          animate={{ 
-            y: ["0vh", "105vh"],
-            rotate: [0, 360],
-            x: [0, Math.sin(flake.id) * 40, 0]
-          }}
-          transition={{ 
-            duration: flake.duration, 
-            delay: flake.delay, 
-            repeat: Infinity, 
-            ease: "linear"
-          }}
-        >
-          <SnowflakeIcon size={flake.size} />
-        </motion.div>
-      ))}
-      
-      {/* Big Christmas trees on left side */}
-      <div className="absolute bottom-0 left-0 opacity-15 dark:opacity-10">
-        <ChristmasTree size={180} className="text-green-600 dark:text-green-500" />
-      </div>
-      <div className="absolute bottom-0 left-16 opacity-10 dark:opacity-8">
-        <ChristmasTree size={120} className="text-green-700 dark:text-green-600" />
-      </div>
-      
-      {/* Big Christmas trees on right side */}
-      <div className="absolute bottom-0 right-0 opacity-15 dark:opacity-10">
-        <ChristmasTree size={150} className="text-green-600 dark:text-green-500" />
-      </div>
-      <div className="absolute bottom-0 right-20 opacity-10 dark:opacity-8">
-        <ChristmasTree size={100} className="text-green-700 dark:text-green-600" />
-      </div>
-      
-      {/* Frost overlay at top */}
-      <div className="absolute top-0 left-0 right-0 h-40 bg-gradient-to-b from-sky-200/40 via-sky-100/20 to-transparent dark:from-sky-900/30 dark:via-sky-950/15" />
-      
-      {/* Snow ground effect at bottom */}
-      <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-white/30 via-sky-50/20 to-transparent dark:from-sky-950/20 dark:via-transparent" />
-    </div>
-  );
-});
-WinterBackground.displayName = "WinterBackground";
-
-// Logo with Ice/Frost Effect
-const FrostedLogo = memo(({ src, alt, size = "lg" }: { src: string; alt: string; size?: "sm" | "md" | "lg" }) => {
+// Simple Logo Component with food-themed fallback
+const SimpleLogo = memo(({ src, alt, size = "lg" }: { src: string; alt: string; size?: "sm" | "md" | "lg" }) => {
   const sizeClasses = {
     sm: "w-8 h-8 sm:w-9 sm:h-9",
     md: "w-16 h-16 sm:w-20 sm:h-20",
@@ -119,34 +55,19 @@ const FrostedLogo = memo(({ src, alt, size = "lg" }: { src: string; alt: string;
   
   return (
     <div className="relative inline-block">
-      {/* Ice glow effect */}
-      <div className="absolute inset-0 bg-gradient-to-br from-cyan-300/40 via-sky-400/30 to-blue-300/40 dark:from-cyan-400/20 dark:via-sky-500/15 dark:to-blue-400/20 rounded-full blur-xl scale-150" />
-      
-      {/* Frost ring */}
-      <div className="absolute -inset-1.5 bg-gradient-to-br from-white/80 via-sky-100/60 to-cyan-100/80 dark:from-sky-300/30 dark:via-sky-400/20 dark:to-cyan-300/30 rounded-full" />
-      
-      {/* Ice crystals decoration */}
-      <div className="absolute -top-2 -right-1 text-cyan-400/70 dark:text-cyan-300/50">
-        <SnowflakeIcon size={12} />
-      </div>
-      <div className="absolute -bottom-1 -left-2 text-sky-400/60 dark:text-sky-300/40">
-        <SnowflakeIcon size={10} />
-      </div>
-      
-      {/* Main image */}
       <img 
         src={src} 
         alt={alt} 
-        className={`${sizeClasses[size]} object-cover rounded-full border-2 border-white/60 dark:border-sky-400/40 shadow-lg shadow-sky-300/40 dark:shadow-sky-800/50 relative z-10`}
+        className={`${sizeClasses[size]} object-cover rounded-full border-2 border-primary/20 shadow-lg ring-2 ring-primary/10`}
         loading="eager"
       />
-      
-      {/* Frost overlay on image */}
-      <div className="absolute inset-0 rounded-full bg-gradient-to-t from-transparent via-transparent to-white/20 dark:to-sky-200/10 z-20 pointer-events-none" />
+      <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-primary rounded-full flex items-center justify-center shadow-md">
+        <UtensilsCrossed className="w-3 h-3 text-primary-foreground" />
+      </div>
     </div>
   );
 });
-FrostedLogo.displayName = "FrostedLogo";
+SimpleLogo.displayName = "SimpleLogo";
 
 // Lazy loaded image component with blur placeholder
 const LazyImage = memo(({ src, alt, className, onClick }: { src: string; alt: string; className?: string; onClick?: () => void }) => {
@@ -213,14 +134,14 @@ const ScrollRevealSection = memo(({ children, className = "", delay = 0 }: { chi
 });
 ScrollRevealSection.displayName = "ScrollRevealSection";
 
-// Winter-themed social icon with frost effect
+// Simple social icon
 const SocialIcon = memo(({ href, children, label }: { href: string; children: React.ReactNode; label: string }) => (
   <motion.a
     href={href}
     target="_blank"
     rel="noopener noreferrer"
     aria-label={label}
-    className="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center rounded-full bg-white/50 dark:bg-slate-800/50 border border-sky-200/50 dark:border-sky-700/40 text-slate-600 dark:text-sky-200/80 hover:text-emerald-600 dark:hover:text-emerald-400 hover:border-emerald-300/60 dark:hover:border-emerald-600/50 hover:bg-emerald-50/50 dark:hover:bg-emerald-900/20 transition-all duration-300 backdrop-blur-sm shadow-sm shadow-sky-100/50 dark:shadow-sky-900/30"
+    className="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center rounded-full bg-background border border-border text-foreground hover:text-primary hover:border-primary transition-all duration-300 shadow-sm"
     whileHover={{ scale: 1.1, y: -2 }}
     whileTap={{ scale: 0.95 }}
   >
@@ -535,45 +456,35 @@ const handleSubmitFeedback = async (e: React.FormEvent) => {
     );
   }
 
-  // Splash Screen - Christmas/Winter Theme
+  // Splash Screen
   if (showSplash) {
     return (
-      <div className="min-h-screen min-h-[100dvh] flex items-center justify-center bg-gradient-to-b from-sky-100 via-white to-sky-50 dark:from-slate-900 dark:via-slate-900 dark:to-sky-950/40 relative overflow-hidden">
-        {/* Winter Background */}
-        <WinterBackground />
-        
-        {/* Decorative Christmas trees on sides */}
-        <div className="absolute bottom-0 left-0 opacity-20 dark:opacity-15">
-          <ChristmasTree size={140} className="text-green-600 dark:text-green-500" />
-        </div>
-        <div className="absolute bottom-0 right-0 opacity-20 dark:opacity-15">
-          <ChristmasTree size={110} className="text-green-600 dark:text-green-500" />
+      <div className="min-h-screen min-h-[100dvh] flex items-center justify-center bg-gradient-to-br from-orange-50 via-background to-amber-50 dark:from-slate-950 dark:via-slate-900 dark:to-orange-950/20 relative overflow-hidden">
+        {/* Decorative food elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-5 dark:opacity-10">
+          <FoodIcon className="absolute top-10 left-10 text-orange-500" size={60} />
+          <PlateIcon className="absolute top-20 right-20 text-amber-500" size={80} />
+          <ChefHatIcon className="absolute bottom-20 left-20 text-orange-600" size={70} />
+          <UtensilsCrossed className="absolute bottom-10 right-10 text-amber-600" size={50} />
         </div>
         
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6 }} className="relative z-10 text-center px-6 max-w-sm mx-auto">
           {profile?.logo_url ? (
             <motion.div initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring", stiffness: 100, damping: 18, delay: 0.15 }} className="mb-6">
-              <FrostedLogo src={profile.logo_url} alt={profile.restaurant_name} size="lg" />
+              <SimpleLogo src={profile.logo_url} alt={profile.restaurant_name} size="lg" />
             </motion.div>
           ) : (
-            <motion.div initial={{ scale: 0.6 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 100, damping: 18 }} className="w-28 h-28 sm:w-32 sm:h-32 mx-auto mb-6 rounded-full bg-gradient-to-br from-sky-100 to-cyan-100 dark:from-sky-900/50 dark:to-cyan-900/30 flex items-center justify-center border-2 border-white/60 dark:border-sky-600/40 shadow-lg shadow-sky-200/50 dark:shadow-sky-900/50">
-              <ChristmasTree size={40} className="text-green-600 dark:text-green-500" />
+            <motion.div initial={{ scale: 0.6 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 100, damping: 18 }} className="w-28 h-28 sm:w-32 sm:h-32 mx-auto mb-6 rounded-full bg-gradient-to-br from-orange-100 to-amber-100 dark:from-orange-950/50 dark:to-amber-950/30 flex items-center justify-center border-2 border-orange-200 dark:border-orange-800 shadow-lg">
+              <ChefHatIcon className="w-16 h-16 text-orange-600 dark:text-orange-400" />
             </motion.div>
           )}
           
-          {/* Christmas greeting badge */}
-          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mb-3">
-            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-red-500/15 via-green-500/10 to-red-500/15 dark:from-red-500/25 dark:via-green-500/15 dark:to-red-500/25 border border-red-200/30 dark:border-red-500/20 text-red-700 dark:text-red-300 text-xs font-medium shadow-sm">
-              <span>🎄</span> Merry Christmas <span>❄️</span>
-            </span>
-          </motion.div>
-          
-          <motion.h1 initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ type: "spring", stiffness: 100, damping: 18, delay: 0.3 }} className="text-xl sm:text-2xl font-semibold tracking-tight mb-2 text-slate-800 dark:text-white">{profile?.restaurant_name || "Loading..."}</motion.h1>
-          {profile?.restaurant_description && <motion.p initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ type: "spring", stiffness: 100, damping: 18, delay: 0.4 }} className="text-slate-600 dark:text-sky-200/70 text-sm leading-relaxed line-clamp-2">{profile.restaurant_description}</motion.p>}
+          <motion.h1 initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ type: "spring", stiffness: 100, damping: 18, delay: 0.3 }} className="text-xl sm:text-2xl font-semibold tracking-tight mb-2">{profile?.restaurant_name || "Loading..."}</motion.h1>
+          {profile?.restaurant_description && <motion.p initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ type: "spring", stiffness: 100, damping: 18, delay: 0.4 }} className="text-muted-foreground text-sm leading-relaxed line-clamp-2">{profile.restaurant_description}</motion.p>}
           
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7 }} className="mt-8">
             <motion.div animate={{ y: [0, 6, 0] }} transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}>
-              <ChevronDown className="w-5 h-5 mx-auto text-emerald-500/60 dark:text-emerald-400/50" />
+              <ChevronDown className="w-5 h-5 mx-auto text-orange-500/60 dark:text-orange-400/50" />
             </motion.div>
           </motion.div>
         </motion.div>
@@ -583,16 +494,15 @@ const handleSubmitFeedback = async (e: React.FormEvent) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen min-h-[100dvh] flex items-center justify-center bg-gradient-to-b from-sky-100 via-white to-sky-50 dark:from-slate-900 dark:via-slate-900 dark:to-sky-950/40">
-        <WinterBackground />
+      <div className="min-h-screen min-h-[100dvh] flex items-center justify-center bg-gradient-to-br from-orange-50 via-background to-amber-50 dark:from-slate-950 dark:via-slate-900 dark:to-orange-950/20">
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center relative z-10">
           <motion.div
             animate={{ rotate: 360 }}
-            transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
           >
-            <SnowflakeIcon size={32} className="text-sky-500 dark:text-sky-400 mx-auto" />
+            <UtensilsCrossed className="h-8 w-8 text-orange-500 dark:text-orange-400 mx-auto" />
           </motion.div>
-          <p className="text-sm text-slate-600 dark:text-sky-200/70 mt-3">Loading menu...</p>
+          <p className="text-sm text-muted-foreground mt-3">Loading menu...</p>
         </motion.div>
       </div>
     );
@@ -600,17 +510,16 @@ const handleSubmitFeedback = async (e: React.FormEvent) => {
 
   if (profile?.disabled) {
     return (
-      <div className="min-h-screen min-h-[100dvh] flex items-center justify-center p-4 bg-gradient-to-b from-sky-100 via-white to-sky-50 dark:from-slate-900 dark:via-slate-900 dark:to-sky-950/40">
-        <WinterBackground />
+      <div className="min-h-screen min-h-[100dvh] flex items-center justify-center p-4 bg-gradient-to-br from-orange-50 via-background to-amber-50 dark:from-slate-950 dark:via-slate-900 dark:to-orange-950/20">
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ type: "spring", stiffness: 100, damping: 18 }} className="relative z-10">
-          <Card className="max-w-sm w-full text-center p-6 sm:p-8 border-sky-200/50 dark:border-sky-800/30 shadow-lg bg-white/90 dark:bg-slate-900/90 backdrop-blur-md">
+          <Card className="max-w-sm w-full text-center p-6 sm:p-8 shadow-lg border-orange-200/50 dark:border-orange-800/30">
             {profile?.logo_url && (
               <div className="mb-4">
-                <FrostedLogo src={profile.logo_url} alt={profile.restaurant_name} size="md" />
+                <SimpleLogo src={profile.logo_url} alt={profile.restaurant_name} size="md" />
               </div>
             )}
-            <h2 className="text-lg sm:text-xl font-semibold mb-2 text-slate-800 dark:text-white">{profile?.restaurant_name || 'Menu Unavailable'}</h2>
-            <div className="w-12 h-1 bg-gradient-to-r from-red-400 to-green-400 mx-auto mb-4 rounded-full" />
+            <h2 className="text-lg sm:text-xl font-semibold mb-2">{profile?.restaurant_name || 'Menu Unavailable'}</h2>
+            <div className="w-12 h-1 bg-gradient-to-r from-orange-400 to-amber-400 mx-auto mb-4 rounded-full" />
             <p className="text-muted-foreground text-sm mb-4">
               {profile?.subscriptionExpired 
                 ? "This restaurant's subscription has expired. Please contact the restaurant directly."
@@ -621,16 +530,15 @@ const handleSubmitFeedback = async (e: React.FormEvent) => {
                 href={`https://wa.me/${socialLinks.whatsapp.replace(/[^0-9]/g, "")}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-full text-sm font-medium transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white transition-colors"
               >
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
                 Contact Restaurant
               </a>
             )}
-            <p className="text-xs text-slate-500 dark:text-sky-300/50 mt-4 flex items-center justify-center gap-1">
-              <SnowflakeIcon size={10} className="text-sky-400" />
+            <p className="text-xs text-muted-foreground mt-4 flex items-center justify-center gap-1.5">
+              <UtensilsCrossed className="w-3 h-3 text-orange-500/60" />
               Powered by AddMenu
-              <SnowflakeIcon size={10} className="text-sky-400" />
             </p>
           </Card>
         </motion.div>
@@ -640,65 +548,70 @@ const handleSubmitFeedback = async (e: React.FormEvent) => {
 
 
   return (
-    <div ref={containerRef} className="min-h-screen min-h-[100dvh] bg-gradient-to-b from-sky-100 via-white to-sky-50 dark:from-slate-900 dark:via-slate-900 dark:to-sky-950/40">
-      {/* Winter Background */}
-      <WinterBackground />
+    <div ref={containerRef} className="min-h-screen min-h-[100dvh] bg-gradient-to-br from-orange-50/30 via-background to-amber-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-orange-950/10">
+      {/* Decorative food pattern background */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none opacity-[0.02] dark:opacity-[0.03]">
+        <div className="absolute top-20 left-10">
+          <FoodIcon size={40} className="text-orange-500" />
+        </div>
+        <div className="absolute top-40 right-20">
+          <PlateIcon size={50} className="text-amber-500" />
+        </div>
+        <div className="absolute bottom-40 left-20">
+          <ChefHatIcon size={45} className="text-orange-600" />
+        </div>
+        <div className="absolute bottom-20 right-10">
+          <UtensilsCrossed size={35} className="text-amber-600" />
+        </div>
+      </div>
       
       {/* Theme Toggle */}
       <motion.div initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="fixed top-3 right-3 sm:top-4 sm:right-4 z-50">
         <ThemeToggle />
       </motion.div>
 
-      {/* Sticky Header - Winter Theme */}
-      <motion.header style={{ opacity: headerOpacity }} className="fixed top-0 left-0 right-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-b border-sky-200/50 dark:border-sky-800/30">
+      {/* Sticky Header */}
+      <motion.header style={{ opacity: headerOpacity }} className="fixed top-0 left-0 right-0 z-40 bg-background/90 backdrop-blur-xl border-b border-orange-200/30 dark:border-orange-800/20">
         <div className="max-w-2xl mx-auto px-3 sm:px-4 py-2.5 sm:py-3">
           <div className="flex items-center gap-2.5 sm:gap-3">
-            {profile?.logo_url && <FrostedLogo src={profile.logo_url} alt={profile.restaurant_name} size="sm" />}
-            <div className="flex-1 min-w-0"><h1 className="text-sm sm:text-base font-medium truncate text-slate-800 dark:text-white">{profile?.restaurant_name}</h1></div>
-            {/* Christmas tree indicator */}
-            <ChristmasTree size={18} className="text-green-600/70 dark:text-green-500/60" />
+            {profile?.logo_url && <SimpleLogo src={profile.logo_url} alt={profile.restaurant_name} size="sm" />}
+            <div className="flex-1 min-w-0"><h1 className="text-sm sm:text-base font-medium truncate">{profile?.restaurant_name}</h1></div>
+            <UtensilsCrossed className="w-4 h-4 text-orange-500/60 dark:text-orange-400/50" />
           </div>
         </div>
       </motion.header>
 
-      {/* Hero Section - Winter Theme */}
+      {/* Hero Section */}
       <motion.section initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }} className="pt-6 sm:pt-8 pb-4 sm:pb-6 px-3 sm:px-4 relative">
         <div className="max-w-2xl mx-auto text-center relative z-10">
-          {/* Holiday badge */}
-          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="mb-3">
-            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-red-500/15 via-green-500/10 to-red-500/15 dark:from-red-500/25 dark:via-green-500/15 dark:to-red-500/25 border border-red-200/30 dark:border-red-500/20 text-red-700 dark:text-red-300 text-xs font-medium shadow-sm">
-              <ChristmasTree size={14} className="text-green-600 dark:text-green-400" />
-              Season's Greetings
-              <SnowflakeIcon size={12} className="text-sky-500 dark:text-sky-400" />
-            </span>
-          </motion.div>
-          
           {profile?.logo_url && (
             <motion.div initial={{ scale: 0.85, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring", stiffness: 100, damping: 18, delay: 0.1 }} className="mb-3 sm:mb-4">
-              <FrostedLogo src={profile.logo_url} alt={profile.restaurant_name} size="md" />
+              <SimpleLogo src={profile.logo_url} alt={profile.restaurant_name} size="md" />
             </motion.div>
           )}
-          <motion.h1 initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="text-xl sm:text-2xl font-semibold tracking-tight mb-1.5 sm:mb-2 text-slate-800 dark:text-white">{profile?.restaurant_name}</motion.h1>
-          {profile?.restaurant_description && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.25 }} className="text-slate-600 dark:text-sky-200/70 text-xs sm:text-sm max-w-md mx-auto line-clamp-2">{profile.restaurant_description}</motion.p>}
+          <motion.h1 initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="text-xl sm:text-2xl font-semibold tracking-tight mb-1.5 sm:mb-2">{profile?.restaurant_name}</motion.h1>
+          {profile?.restaurant_description && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.25 }} className="text-muted-foreground text-xs sm:text-sm max-w-md mx-auto line-clamp-2">{profile.restaurant_description}</motion.p>}
         </div>
       </motion.section>
 
       {/* Main Content */}
       <main className="max-w-2xl mx-auto px-3 sm:px-4 pb-6 sm:pb-8 relative z-10">
-        {/* Menu Images - Winter styled cards */}
+        {/* Menu Images */}
         <div className="space-y-3 sm:space-y-4">
           {menuImages.length > 0 ? menuImages.map((image, index) => (
             <ScrollRevealSection key={image.id} delay={Math.min(index * 0.06, 0.3)}>
-              <motion.div className="overflow-hidden rounded-xl sm:rounded-2xl bg-white/90 dark:bg-slate-800/60 border border-sky-200/50 dark:border-sky-800/40 shadow-md shadow-sky-100/60 dark:shadow-sky-900/30 hover:shadow-lg hover:shadow-sky-200/60 dark:hover:shadow-sky-800/40 transition-shadow duration-400 backdrop-blur-sm" whileHover={{ y: -2 }} transition={{ duration: 0.25 }}>
+              <motion.div className="overflow-hidden rounded-xl sm:rounded-2xl bg-card border border-orange-200/30 dark:border-orange-800/20 shadow-md hover:shadow-xl hover:border-orange-300/50 dark:hover:border-orange-700/30 transition-all duration-400" whileHover={{ y: -2, scale: 1.005 }} transition={{ duration: 0.25 }}>
                 <LazyImage src={image.image_url} alt={`Menu page ${index + 1}`} className="w-full h-auto cursor-zoom-in" onClick={() => openZoom(image.image_url, index)} />
               </motion.div>
             </ScrollRevealSection>
           )) : (
             <ScrollRevealSection>
-              <div className="py-12 sm:py-16 text-center border-2 border-dashed border-sky-200/60 dark:border-sky-800/40 rounded-xl sm:rounded-2xl bg-white/60 dark:bg-slate-800/40 backdrop-blur-sm">
-                <ChristmasTree size={40} className="mx-auto mb-3 text-green-500/60 dark:text-green-500/40" />
-                <p className="text-slate-600 dark:text-sky-200/70 text-sm">No menu available yet</p>
-                <p className="text-xs text-slate-500 dark:text-sky-300/50 mt-1">Check back soon!</p>
+              <div className="py-12 sm:py-16 text-center border-2 border-dashed border-orange-200/40 dark:border-orange-800/30 rounded-xl sm:rounded-2xl bg-card">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-orange-100 dark:bg-orange-950/30 flex items-center justify-center">
+                  <ChefHatIcon className="h-8 w-8 text-orange-500/60 dark:text-orange-400/50" />
+                </div>
+                <p className="text-muted-foreground text-sm font-medium">No menu available yet</p>
+                <p className="text-xs text-muted-foreground/70 mt-1">Check back soon for delicious updates!</p>
               </div>
             </ScrollRevealSection>
           )}
@@ -719,53 +632,53 @@ const handleSubmitFeedback = async (e: React.FormEvent) => {
           </ScrollRevealSection>
         )}
 
-    
-    {/* Feedback Section - Christmas Theme */}
+    {/* Feedback Section */}
         <ScrollRevealSection delay={0.2} className="mt-8 sm:mt-10">
           <AnimatePresence mode="wait">
             {!showFeedback ? (
               <motion.div key="btn" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }}>
                 <motion.button
                   onClick={() => setShowFeedback(true)}
-                  className="w-full group flex items-center justify-center gap-2.5 h-11 sm:h-12 px-4 rounded-xl border border-sky-200/50 dark:border-sky-800/40 bg-white/70 dark:bg-slate-800/50 hover:bg-emerald-50/50 dark:hover:bg-emerald-900/20 hover:border-emerald-300/50 dark:hover:border-emerald-700/40 transition-all duration-300 backdrop-blur-sm shadow-sm"
+                  className="w-full group flex items-center justify-center gap-2.5 h-11 sm:h-12 px-4 rounded-xl border border-orange-200/50 dark:border-orange-800/30 bg-card hover:bg-orange-50/50 dark:hover:bg-orange-950/20 hover:border-orange-300/60 dark:hover:border-orange-700/40 transition-all duration-300 shadow-sm"
                   whileHover={{ scale: 1.01 }}
                   whileTap={{ scale: 0.99 }}
                 >
-                  <MessageSquare className="w-4 h-4 text-slate-500 dark:text-sky-300/70 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors" />
-                  <span className="text-sm font-medium text-slate-600 dark:text-sky-200/70 group-hover:text-slate-800 dark:group-hover:text-white transition-colors">Leave Feedback</span>
+                  <MessageSquare className="w-4 h-4 text-muted-foreground group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors" />
+                  <span className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">Share Your Experience</span>
+                  <Star className="w-4 h-4 text-amber-400/60 group-hover:text-amber-400 transition-colors" />
                 </motion.button>
               </motion.div>
             ) : (
               <motion.div key="form" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }} transition={{ type: "spring", stiffness: 100, damping: 18 }}>
-                <Card className="border-sky-200/50 dark:border-sky-800/40 shadow-md shadow-sky-100/60 dark:shadow-sky-900/30 overflow-hidden bg-white/90 dark:bg-slate-800/60 backdrop-blur-md">
+                <Card className="shadow-md overflow-hidden border-orange-200/50 dark:border-orange-800/30">
                   <CardContent className="p-4 sm:p-5">
                     <div className="flex justify-between items-center mb-4 sm:mb-5">
-                      <h2 className="text-sm sm:text-base font-medium text-slate-800 dark:text-white flex items-center gap-2">
+                      <h2 className="text-sm sm:text-base font-medium flex items-center gap-2">
+                        <Star className="w-4 h-4 text-amber-500" />
                         Share Your Experience
-                        <SnowflakeIcon size={14} className="text-sky-400/60" />
                       </h2>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 sm:h-8 sm:w-8 rounded-full -mr-1 hover:bg-sky-100/50 dark:hover:bg-sky-900/30" onClick={() => setShowFeedback(false)}><X className="h-4 w-4" /></Button>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 sm:h-8 sm:w-8 rounded-full -mr-1 hover:bg-orange-100/50 dark:hover:bg-orange-950/30" onClick={() => setShowFeedback(false)}><X className="h-4 w-4" /></Button>
                     </div>
                     <form onSubmit={handleSubmitFeedback} className="space-y-4 sm:space-y-5">
                       <div className="space-y-2">
-                        <Label className="text-xs sm:text-sm text-slate-600 dark:text-sky-200/70">How was your experience?</Label>
+                        <Label className="text-xs sm:text-sm">How was your experience?</Label>
                         <div className="flex gap-1 justify-center py-1.5 sm:py-2">
                           {[1, 2, 3, 4, 5].map((star) => (
                             <motion.button key={star} type="button" onClick={() => setFeedback({ ...feedback, rating: star })} whileHover={{ scale: 1.12 }} whileTap={{ scale: 0.92 }} className="p-0.5 sm:p-1">
-                              <Star className={`h-7 w-7 sm:h-8 sm:w-8 transition-all duration-200 ${star <= feedback.rating ? "fill-amber-400 text-amber-400 drop-shadow-sm" : "text-sky-200/70 dark:text-sky-700/70 hover:text-amber-300 dark:hover:text-amber-400/60"}`} />
+                              <Star className={`h-7 w-7 sm:h-8 sm:w-8 transition-all duration-200 ${star <= feedback.rating ? "fill-amber-400 text-amber-400 drop-shadow-sm" : "text-muted-foreground/30 hover:text-amber-300"}`} />
                             </motion.button>
                           ))}
                         </div>
                       </div>
                       <div className="space-y-1.5 sm:space-y-2">
-                        <Label htmlFor="name" className="text-xs sm:text-sm text-slate-600 dark:text-sky-200/70">Name <span className="text-slate-400 dark:text-sky-400/50">(optional)</span></Label>
-                        <Input id="name" placeholder="Your name" value={feedback.name} onChange={(e) => setFeedback({ ...feedback, name: e.target.value })} className="h-9 sm:h-10 rounded-lg sm:rounded-xl border-sky-200/50 dark:border-sky-800/40 bg-white/60 dark:bg-slate-900/40 text-sm focus:border-emerald-400 dark:focus:border-emerald-600" />
+                        <Label htmlFor="name" className="text-xs sm:text-sm">Name <span className="text-muted-foreground">(optional)</span></Label>
+                        <Input id="name" placeholder="Your name" value={feedback.name} onChange={(e) => setFeedback({ ...feedback, name: e.target.value })} className="h-9 sm:h-10 rounded-lg sm:rounded-xl text-sm border-orange-200/50 dark:border-orange-800/30 focus:border-orange-400 dark:focus:border-orange-600" />
                       </div>
                       <div className="space-y-1.5 sm:space-y-2">
-                        <Label htmlFor="comment" className="text-xs sm:text-sm text-slate-600 dark:text-sky-200/70">Comment</Label>
-                        <Textarea id="comment" placeholder="Tell us about your experience..." value={feedback.comment} onChange={(e) => setFeedback({ ...feedback, comment: e.target.value })} rows={3} className="rounded-lg sm:rounded-xl border-sky-200/50 dark:border-sky-800/40 bg-white/60 dark:bg-slate-900/40 resize-none text-sm min-h-[80px] focus:border-emerald-400 dark:focus:border-emerald-600" />
+                        <Label htmlFor="comment" className="text-xs sm:text-sm">Comment</Label>
+                        <Textarea id="comment" placeholder="Tell us about your experience..." value={feedback.comment} onChange={(e) => setFeedback({ ...feedback, comment: e.target.value })} rows={3} className="rounded-lg sm:rounded-xl resize-none text-sm min-h-[80px] border-orange-200/50 dark:border-orange-800/30 focus:border-orange-400 dark:focus:border-orange-600" />
                       </div>
-                      <Button type="submit" className="w-full h-10 sm:h-11 rounded-lg sm:rounded-xl text-sm bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 dark:from-emerald-600 dark:to-green-700 dark:hover:from-emerald-500 dark:hover:to-green-600 text-white shadow-md shadow-emerald-200/50 dark:shadow-emerald-900/50" disabled={submitting || !canSubmitFeedback}>
+                      <Button type="submit" className="w-full h-10 sm:h-11 rounded-lg sm:rounded-xl text-sm bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-md" disabled={submitting || !canSubmitFeedback}>
                         {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />}
                         {canSubmitFeedback ? "Submit Feedback" : "Already Submitted"}
                       </Button>
@@ -777,40 +690,22 @@ const handleSubmitFeedback = async (e: React.FormEvent) => {
           </AnimatePresence>
         </ScrollRevealSection>
 
-        {/* Footer - Christmas Theme */}
+        {/* Footer */}
         <ScrollRevealSection delay={0.25} className="mt-10 sm:mt-12">
           <div className="text-center">
-            <p className="text-[10px] sm:text-xs text-slate-400 dark:text-sky-400/40">
-              <span className="inline-flex items-center gap-1.5">
-                <ChristmasTree size={12} className="text-green-500/60" />
-                Powered by <a href="https://addmenu.in" className="text-slate-500 dark:text-sky-300/50 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">AddMenu</a>
-                <SnowflakeIcon size={10} className="text-sky-400/60" />
-              </span>
+            <p className="text-[10px] sm:text-xs text-muted-foreground flex items-center justify-center gap-1.5">
+              <UtensilsCrossed className="w-3 h-3 text-orange-500/60" />
+              Powered by <a href="https://addmenu.in" className="hover:text-orange-600 dark:hover:text-orange-400 transition-colors font-medium">AddMenu</a>
             </p>
           </div>
         </ScrollRevealSection>
       </main>
 
 
-      {/* Image Zoom Modal - Christmas Theme */}
+      {/* Image Zoom Modal */}
       <AnimatePresence>
         {zoomedImage && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }} className="fixed inset-0 z-[100] bg-slate-950/95 dark:bg-black/95 flex items-center justify-center touch-none" onClick={() => setZoomedImage(null)}>
-            {/* Subtle snow effect in modal */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-20">
-              {Array.from({ length: 10 }).map((_, i) => (
-                <motion.div
-                  key={i}
-                  className="absolute text-white/40"
-                  style={{ left: `${(i * 10) + 5}%`, top: -20 }}
-                  animate={{ y: "105vh", rotate: 360 }}
-                  transition={{ duration: 12 + i * 2, delay: i * 0.8, repeat: Infinity, ease: "linear" }}
-                >
-                  <SnowflakeIcon size={10 + (i % 3) * 4} />
-                </motion.div>
-              ))}
-            </div>
-            
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }} className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center touch-none" onClick={() => setZoomedImage(null)}>
             {/* Close button */}
             <motion.button initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ delay: 0.08 }} className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10 w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors border border-white/20" onClick={() => setZoomedImage(null)}>
               <X className="h-4 w-4 sm:h-5 sm:w-5" />
