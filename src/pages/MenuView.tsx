@@ -15,17 +15,13 @@ import { BellButton } from "@/components/BellButton";
 import { CallButton } from "@/components/CallButton";
 import SessionExpired from "./SessionExpired";
 
-// Animated Food Pattern Background
+// Optimized animated food pattern background - lightweight version
 const FoodPatternBackground = memo(() => {
   const foodItems = [
     { Icon: Coffee, delay: 0, duration: 20, x: "10%", y: "15%" },
     { Icon: Pizza, delay: 2, duration: 25, x: "85%", y: "20%" },
     { Icon: Salad, delay: 4, duration: 22, x: "15%", y: "70%" },
-    { Icon: IceCream, delay: 6, duration: 23, x: "80%", y: "75%" },
-    { Icon: UtensilsCrossed, delay: 1, duration: 24, x: "50%", y: "10%" },
-    { Icon: Coffee, delay: 3, duration: 21, x: "90%", y: "50%" },
-    { Icon: Pizza, delay: 5, duration: 26, x: "20%", y: "40%" },
-    { Icon: Salad, delay: 7, duration: 23, x: "70%", y: "45%" },
+    { Icon: UtensilsCrossed, delay: 1, duration: 24, x: "80%", y: "75%" },
   ];
 
   return (
@@ -33,11 +29,11 @@ const FoodPatternBackground = memo(() => {
       {/* Gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-orange-50/40 via-amber-50/20 to-red-50/30 dark:from-orange-950/20 dark:via-amber-950/10 dark:to-red-950/15" />
       
-      {/* Animated food icons */}
+      {/* Animated food icons - reduced for performance */}
       {foodItems.map((item, index) => (
         <motion.div
           key={index}
-          className="absolute text-orange-300/20 dark:text-orange-700/15"
+          className="absolute text-orange-300/20 dark:text-orange-700/15 will-change-transform"
           style={{ left: item.x, top: item.y }}
           animate={{
             y: [0, -20, 0],
@@ -143,16 +139,21 @@ const LazyImage = memo(({ src, alt, className, onClick }: { src: string; alt: st
 
 LazyImage.displayName = "LazyImage";
 
-// Scroll reveal section with smooth animation
+// Optimized scroll reveal section with lightweight animations
 const ScrollRevealSection = memo(({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) => {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-50px" });
+  const isInView = useInView(ref, { once: true, margin: "-80px", amount: 0.3 });
+  
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: 40 }}
-      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 40 }}
-      transition={{ type: "spring", stiffness: 80, damping: 20, delay }}
+      initial={{ opacity: 0, y: 50 }}
+      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
+      transition={{ 
+        duration: 0.5,
+        delay,
+        ease: [0.25, 0.1, 0.25, 1], // Custom easing for smoothness
+      }}
       className={className}
     >
       {children}
@@ -637,7 +638,7 @@ const handleSubmitFeedback = async (e: React.FormEvent) => {
       </motion.header>
 
       {/* Hero Section */}
-      <motion.section initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }} className="pt-6 sm:pt-8 pb-4 sm:pb-6 px-3 sm:px-4 relative">
+      <motion.section initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }} className="pt-20 sm:pt-24 pb-4 sm:pb-6 px-3 sm:px-4 relative">
         <div className="max-w-2xl mx-auto text-center relative z-10">
           {profile?.logo_url && (
             <motion.div initial={{ scale: 0.85, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring", stiffness: 100, damping: 18, delay: 0.1 }} className="mb-4 sm:mb-5">
@@ -660,11 +661,12 @@ const handleSubmitFeedback = async (e: React.FormEvent) => {
         {/* Menu Images */}
         <div className="space-y-4 sm:space-y-5">
           {menuImages.length > 0 ? menuImages.map((image, index) => (
-            <ScrollRevealSection key={image.id} delay={Math.min(index * 0.05, 0.25)}>
+            <ScrollRevealSection key={image.id} delay={index * 0.1}>
               <motion.div 
-                className="overflow-hidden rounded-2xl sm:rounded-3xl bg-white dark:bg-slate-900 border-2 border-orange-200/40 dark:border-orange-800/30 shadow-lg hover:shadow-2xl hover:border-orange-300/60 dark:hover:border-orange-700/40 transition-all duration-400 group"
-                whileHover={{ y: -4, scale: 1.01 }} 
-                transition={{ duration: 0.3, type: "spring", stiffness: 200 }}
+                className="overflow-hidden rounded-2xl sm:rounded-3xl bg-white dark:bg-slate-900 border-2 border-orange-200/40 dark:border-orange-800/30 shadow-lg hover:shadow-2xl hover:border-orange-300/60 dark:hover:border-orange-700/40 transition-all duration-300 group will-change-transform"
+                whileHover={{ y: -6, scale: 1.01 }} 
+                whileTap={{ scale: 0.99 }}
+                transition={{ duration: 0.2 }}
               >
                 <div className="relative">
                   <LazyImage 
@@ -676,8 +678,12 @@ const handleSubmitFeedback = async (e: React.FormEvent) => {
                   {/* Hover overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
                   {/* Page number badge */}
-                  <div className="absolute top-3 right-3 bg-orange-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">
+                  <div className="absolute top-3 right-3 bg-gradient-to-br from-orange-500 to-amber-500 text-white text-sm font-bold px-3.5 py-1.5 rounded-full shadow-lg ring-2 ring-white/50">
                     {index + 1}
+                  </div>
+                  {/* Click to zoom hint */}
+                  <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-sm text-white text-xs px-3 py-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    Click to zoom
                   </div>
                 </div>
               </motion.div>
