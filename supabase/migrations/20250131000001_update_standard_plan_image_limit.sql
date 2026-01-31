@@ -32,14 +32,14 @@ BEGIN
   FROM menu_images
   WHERE restaurant_id = p_user_id;
 
-  -- Get user's subscription plan and max images allowed
+  -- Get user's subscription plan and max images allowed (FIXED: use user_subscriptions table)
   SELECT 
     COALESCE(sp.max_images, 5),
     COALESCE(sp.name, 'Basic')
   INTO v_max_allowed, v_plan_name
   FROM profiles p
-  LEFT JOIN subscriptions s ON s.user_id = p.id AND s.status = 'active'
-  LEFT JOIN subscription_plans sp ON sp.id = s.plan_id
+  LEFT JOIN user_subscriptions us ON us.user_id = p.id AND us.status = 'active'
+  LEFT JOIN subscription_plans sp ON sp.id = us.plan_id
   WHERE p.id = p_user_id;
 
   -- If no plan found, default to Basic (5 images)
@@ -67,4 +67,4 @@ $$;
 GRANT EXECUTE ON FUNCTION public.check_image_upload_limit(uuid) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.check_image_upload_limit(uuid) TO anon;
 
-COMMENT ON FUNCTION public.check_image_upload_limit IS 'Check if user can upload more menu images based on their subscription plan';
+COMMENT ON FUNCTION public.check_image_upload_limit IS 'Check if user can upload more menu images based on their subscription plan. Uses user_subscriptions table.';
