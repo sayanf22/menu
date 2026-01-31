@@ -10,7 +10,7 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { toast } from "sonner";
 import { Star, Loader2, X, ChevronDown, Send, MessageSquare, UtensilsCrossed, Coffee, Pizza, Salad } from "lucide-react";
 import { generateDeviceFingerprint } from "@/lib/deviceFingerprint";
-import { motion, useInView, AnimatePresence, useScroll, useTransform } from "framer-motion";
+import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import { BellButton } from "@/components/BellButton";
 import { CallButton } from "@/components/CallButton";
 import SessionExpired from "./SessionExpired";
@@ -139,38 +139,10 @@ const LazyImage = memo(({ src, alt, className, onClick }: { src: string; alt: st
 
 LazyImage.displayName = "LazyImage";
 
-// Individual menu card with independent scroll-triggered animation
+// Individual menu card - simple and smooth
 const MenuCard = memo(({ image, index, onClick }: { image: MenuImage; index: number; onClick: () => void }) => {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { 
-    once: true, 
-    margin: "0px 0px -200px 0px", // Trigger when card is 200px from entering viewport
-    amount: 0.1 // Start animation when 10% is visible
-  });
-
   return (
     <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 120, scale: 0.95 }}
-      animate={isInView ? { 
-        opacity: 1, 
-        y: 0, 
-        scale: 1 
-      } : { 
-        opacity: 0, 
-        y: 120, 
-        scale: 0.95 
-      }}
-      transition={{ 
-        duration: 0.9,
-        ease: [0.16, 1, 0.3, 1], // Smooth ease-out curve for 90fps feel
-        opacity: { duration: 0.6 },
-        scale: { duration: 0.9 }
-      }}
-      style={{
-        willChange: 'transform, opacity',
-        transform: 'translateZ(0)', // Force GPU acceleration
-      }}
       className="overflow-hidden rounded-2xl sm:rounded-3xl bg-white dark:bg-slate-900 border-2 border-orange-200/40 dark:border-orange-800/30 shadow-lg hover:shadow-2xl hover:border-orange-300/60 dark:hover:border-orange-700/40 transition-all duration-300 group"
       whileHover={{ y: -6, scale: 1.01 }} 
       whileTap={{ scale: 0.99 }}
@@ -195,69 +167,26 @@ const MenuCard = memo(({ image, index, onClick }: { image: MenuImage; index: num
 });
 MenuCard.displayName = "MenuCard";
 
-// Empty menu state with scroll animation
+// Empty menu state - simple
 const EmptyMenuState = memo(() => {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { 
-    once: true, 
-    margin: "0px 0px -200px 0px",
-    amount: 0.1 
-  });
-
   return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 120, scale: 0.95 }}
-      animate={isInView ? { opacity: 1, y: 0, scale: 1 } : { opacity: 0, y: 120, scale: 0.95 }}
-      transition={{ 
-        duration: 0.9, 
-        ease: [0.16, 1, 0.3, 1],
-        opacity: { duration: 0.6 },
-        scale: { duration: 0.9 }
-      }}
-      style={{
-        willChange: 'transform, opacity',
-        transform: 'translateZ(0)',
-      }}
-      className="py-16 sm:py-20 text-center border-2 border-dashed border-orange-200/50 dark:border-orange-800/30 rounded-2xl sm:rounded-3xl bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm"
-    >
+    <div className="py-16 sm:py-20 text-center border-2 border-dashed border-orange-200/50 dark:border-orange-800/30 rounded-2xl sm:rounded-3xl bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
       <div className="w-20 h-20 mx-auto mb-5 rounded-full bg-gradient-to-br from-orange-100 to-amber-100 dark:from-orange-950/50 dark:to-amber-950/30 flex items-center justify-center shadow-lg">
         <UtensilsCrossed className="h-10 w-10 text-orange-500/70 dark:text-orange-400/60" />
       </div>
       <p className="text-muted-foreground text-base font-semibold mb-2">No menu available yet</p>
       <p className="text-xs text-muted-foreground/70">Check back soon for delicious updates!</p>
-    </motion.div>
+    </div>
   );
 });
 EmptyMenuState.displayName = "EmptyMenuState";
 
-// Scroll reveal wrapper for sections
+// Simple wrapper for sections
 const ScrollReveal = memo(({ children, className = "" }: { children: React.ReactNode; className?: string }) => {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { 
-    once: true, 
-    margin: "0px 0px -150px 0px",
-    amount: 0.15 
-  });
-
   return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 80 }}
-      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 80 }}
-      transition={{ 
-        duration: 0.8, 
-        ease: [0.16, 1, 0.3, 1],
-        opacity: { duration: 0.5 }
-      }}
-      style={{
-        willChange: 'transform, opacity',
-        transform: 'translateZ(0)',
-      }}
-      className={className}
-    >
+    <div className={className}>
       {children}
-    </motion.div>
+    </div>
   );
 });
 ScrollReveal.displayName = "ScrollReveal";
