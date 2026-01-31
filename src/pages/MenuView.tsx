@@ -144,20 +144,34 @@ const MenuCard = memo(({ image, index, onClick }: { image: MenuImage; index: num
   const ref = useRef(null);
   const isInView = useInView(ref, { 
     once: true, 
-    margin: "-50px",
-    amount: 0.3
+    margin: "0px 0px -200px 0px", // Trigger when card is 200px from entering viewport
+    amount: 0.1 // Start animation when 10% is visible
   });
 
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: 80 }}
-      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 80 }}
-      transition={{ 
-        duration: 0.7,
-        ease: [0.22, 1, 0.36, 1],
+      initial={{ opacity: 0, y: 120, scale: 0.95 }}
+      animate={isInView ? { 
+        opacity: 1, 
+        y: 0, 
+        scale: 1 
+      } : { 
+        opacity: 0, 
+        y: 120, 
+        scale: 0.95 
       }}
-      className="overflow-hidden rounded-2xl sm:rounded-3xl bg-white dark:bg-slate-900 border-2 border-orange-200/40 dark:border-orange-800/30 shadow-lg hover:shadow-2xl hover:border-orange-300/60 dark:hover:border-orange-700/40 transition-all duration-300 group will-change-transform"
+      transition={{ 
+        duration: 0.9,
+        ease: [0.16, 1, 0.3, 1], // Smooth ease-out curve for 90fps feel
+        opacity: { duration: 0.6 },
+        scale: { duration: 0.9 }
+      }}
+      style={{
+        willChange: 'transform, opacity',
+        transform: 'translateZ(0)', // Force GPU acceleration
+      }}
+      className="overflow-hidden rounded-2xl sm:rounded-3xl bg-white dark:bg-slate-900 border-2 border-orange-200/40 dark:border-orange-800/30 shadow-lg hover:shadow-2xl hover:border-orange-300/60 dark:hover:border-orange-700/40 transition-all duration-300 group"
       whileHover={{ y: -6, scale: 1.01 }} 
       whileTap={{ scale: 0.99 }}
     >
@@ -184,14 +198,27 @@ MenuCard.displayName = "MenuCard";
 // Empty menu state with scroll animation
 const EmptyMenuState = memo(() => {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-50px" });
+  const isInView = useInView(ref, { 
+    once: true, 
+    margin: "0px 0px -200px 0px",
+    amount: 0.1 
+  });
 
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: 60 }}
-      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 60 }}
-      transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+      initial={{ opacity: 0, y: 120, scale: 0.95 }}
+      animate={isInView ? { opacity: 1, y: 0, scale: 1 } : { opacity: 0, y: 120, scale: 0.95 }}
+      transition={{ 
+        duration: 0.9, 
+        ease: [0.16, 1, 0.3, 1],
+        opacity: { duration: 0.6 },
+        scale: { duration: 0.9 }
+      }}
+      style={{
+        willChange: 'transform, opacity',
+        transform: 'translateZ(0)',
+      }}
       className="py-16 sm:py-20 text-center border-2 border-dashed border-orange-200/50 dark:border-orange-800/30 rounded-2xl sm:rounded-3xl bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm"
     >
       <div className="w-20 h-20 mx-auto mb-5 rounded-full bg-gradient-to-br from-orange-100 to-amber-100 dark:from-orange-950/50 dark:to-amber-950/30 flex items-center justify-center shadow-lg">
@@ -207,14 +234,26 @@ EmptyMenuState.displayName = "EmptyMenuState";
 // Scroll reveal wrapper for sections
 const ScrollReveal = memo(({ children, className = "" }: { children: React.ReactNode; className?: string }) => {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-50px" });
+  const isInView = useInView(ref, { 
+    once: true, 
+    margin: "0px 0px -150px 0px",
+    amount: 0.15 
+  });
 
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: 40 }}
-      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 40 }}
-      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+      initial={{ opacity: 0, y: 80 }}
+      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 80 }}
+      transition={{ 
+        duration: 0.8, 
+        ease: [0.16, 1, 0.3, 1],
+        opacity: { duration: 0.5 }
+      }}
+      style={{
+        willChange: 'transform, opacity',
+        transform: 'translateZ(0)',
+      }}
       className={className}
     >
       {children}
