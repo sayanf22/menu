@@ -8,66 +8,93 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { toast } from "sonner";
-import { Star, Loader2, X, ChevronDown, Send, MessageSquare, UtensilsCrossed } from "lucide-react";
+import { Star, Loader2, X, ChevronDown, Send, MessageSquare, UtensilsCrossed, Coffee, Pizza, Salad, IceCream } from "lucide-react";
 import { generateDeviceFingerprint } from "@/lib/deviceFingerprint";
 import { motion, useInView, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import { BellButton } from "@/components/BellButton";
 import { CallButton } from "@/components/CallButton";
 import SessionExpired from "./SessionExpired";
 
-// Food Icon SVG Component
-const FoodIcon = memo(({ className = "", size = 24 }: { className?: string; size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
-    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="currentColor" opacity="0.2"/>
-    <circle cx="12" cy="9" r="3" fill="currentColor"/>
-    <path d="M8 9h8M12 6v6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-  </svg>
-));
-FoodIcon.displayName = "FoodIcon";
+// Animated Food Pattern Background
+const FoodPatternBackground = memo(() => {
+  const foodItems = [
+    { Icon: Coffee, delay: 0, duration: 20, x: "10%", y: "15%" },
+    { Icon: Pizza, delay: 2, duration: 25, x: "85%", y: "20%" },
+    { Icon: Salad, delay: 4, duration: 22, x: "15%", y: "70%" },
+    { Icon: IceCream, delay: 6, duration: 23, x: "80%", y: "75%" },
+    { Icon: UtensilsCrossed, delay: 1, duration: 24, x: "50%", y: "10%" },
+    { Icon: Coffee, delay: 3, duration: 21, x: "90%", y: "50%" },
+    { Icon: Pizza, delay: 5, duration: 26, x: "20%", y: "40%" },
+    { Icon: Salad, delay: 7, duration: 23, x: "70%", y: "45%" },
+  ];
 
-// Restaurant/Food Plate Icon
-const PlateIcon = memo(({ className = "", size = 24 }: { className?: string; size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
-    <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5" fill="none"/>
-    <circle cx="12" cy="12" r="6" fill="currentColor" opacity="0.2"/>
-    <path d="M12 8v8M8 12h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-  </svg>
-));
-PlateIcon.displayName = "PlateIcon";
+  return (
+    <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+      {/* Gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-br from-orange-50/40 via-amber-50/20 to-red-50/30 dark:from-orange-950/20 dark:via-amber-950/10 dark:to-red-950/15" />
+      
+      {/* Animated food icons */}
+      {foodItems.map((item, index) => (
+        <motion.div
+          key={index}
+          className="absolute text-orange-300/20 dark:text-orange-700/15"
+          style={{ left: item.x, top: item.y }}
+          animate={{
+            y: [0, -20, 0],
+            rotate: [0, 10, -10, 0],
+            scale: [1, 1.1, 1],
+          }}
+          transition={{
+            duration: item.duration,
+            delay: item.delay,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        >
+          <item.Icon size={40} />
+        </motion.div>
+      ))}
+      
+      {/* Decorative circles */}
+      <div className="absolute top-20 left-10 w-32 h-32 bg-orange-200/10 dark:bg-orange-800/10 rounded-full blur-3xl" />
+      <div className="absolute bottom-20 right-10 w-40 h-40 bg-amber-200/10 dark:bg-amber-800/10 rounded-full blur-3xl" />
+      <div className="absolute top-1/2 left-1/3 w-36 h-36 bg-red-200/10 dark:bg-red-800/10 rounded-full blur-3xl" />
+    </div>
+  );
+});
+FoodPatternBackground.displayName = "FoodPatternBackground";
 
-// Chef Hat Icon
-const ChefHatIcon = memo(({ className = "", size = 24 }: { className?: string; size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
-    <path d="M6 20h12v2H6v-2z" fill="currentColor"/>
-    <path d="M19 8c0-1.1-.9-2-2-2-.18 0-.35.03-.51.08C15.85 4.84 14.05 4 12 4s-3.85.84-4.49 2.08C7.35 6.03 7.18 6 7 6c-1.1 0-2 .9-2 2 0 .76.43 1.42 1.05 1.76V18h11.9V9.76c.62-.34 1.05-1 1.05-1.76z" fill="currentColor" opacity="0.8"/>
-    <path d="M8 10h8v6H8v-6z" fill="currentColor" opacity="0.3"/>
-  </svg>
-));
-ChefHatIcon.displayName = "ChefHatIcon";
-
-// Simple Logo Component with food-themed fallback
-const SimpleLogo = memo(({ src, alt, size = "lg" }: { src: string; alt: string; size?: "sm" | "md" | "lg" }) => {
+// Enhanced Logo Component
+const RestaurantLogo = memo(({ src, alt, size = "lg" }: { src: string; alt: string; size?: "sm" | "md" | "lg" }) => {
   const sizeClasses = {
-    sm: "w-8 h-8 sm:w-9 sm:h-9",
-    md: "w-16 h-16 sm:w-20 sm:h-20",
-    lg: "w-28 h-28 sm:w-32 sm:h-32"
+    sm: "w-10 h-10 sm:w-11 sm:h-11",
+    md: "w-20 h-20 sm:w-24 sm:h-24",
+    lg: "w-32 h-32 sm:w-36 sm:h-36"
   };
   
   return (
-    <div className="relative inline-block">
-      <img 
-        src={src} 
-        alt={alt} 
-        className={`${sizeClasses[size]} object-cover rounded-full border-2 border-primary/20 shadow-lg ring-2 ring-primary/10`}
-        loading="eager"
-      />
-      <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-primary rounded-full flex items-center justify-center shadow-md">
-        <UtensilsCrossed className="w-3 h-3 text-primary-foreground" />
+    <div className="relative inline-block group">
+      {/* Glow effect */}
+      <div className="absolute inset-0 bg-gradient-to-br from-orange-400/30 to-amber-400/30 dark:from-orange-600/20 dark:to-amber-600/20 rounded-full blur-xl scale-110 group-hover:scale-125 transition-transform duration-500" />
+      
+      {/* Main image */}
+      <div className="relative">
+        <img 
+          src={src} 
+          alt={alt} 
+          className={`${sizeClasses[size]} object-cover rounded-full border-3 border-white dark:border-slate-800 shadow-2xl ring-4 ring-orange-200/50 dark:ring-orange-800/30 relative z-10`}
+          loading="eager"
+        />
+        
+        {/* Badge */}
+        <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-gradient-to-br from-orange-500 to-amber-500 rounded-full flex items-center justify-center shadow-lg z-20 ring-2 ring-white dark:ring-slate-800">
+          <UtensilsCrossed className="w-4 h-4 text-white" />
+        </div>
       </div>
     </div>
   );
 });
-SimpleLogo.displayName = "SimpleLogo";
+RestaurantLogo.displayName = "RestaurantLogo";
 
 // Lazy loaded image component with blur placeholder
 const LazyImage = memo(({ src, alt, className, onClick }: { src: string; alt: string; className?: string; onClick?: () => void }) => {
@@ -456,36 +483,71 @@ const handleSubmitFeedback = async (e: React.FormEvent) => {
     );
   }
 
-  // Splash Screen
+  // Splash Screen with modern design
   if (showSplash) {
     return (
-      <div className="min-h-screen min-h-[100dvh] flex items-center justify-center bg-gradient-to-br from-orange-50 via-background to-amber-50 dark:from-slate-950 dark:via-slate-900 dark:to-orange-950/20 relative overflow-hidden">
-        {/* Decorative food elements */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-5 dark:opacity-10">
-          <FoodIcon className="absolute top-10 left-10 text-orange-500" size={60} />
-          <PlateIcon className="absolute top-20 right-20 text-amber-500" size={80} />
-          <ChefHatIcon className="absolute bottom-20 left-20 text-orange-600" size={70} />
-          <UtensilsCrossed className="absolute bottom-10 right-10 text-amber-600" size={50} />
-        </div>
+      <div className="min-h-screen min-h-[100dvh] flex items-center justify-center bg-gradient-to-br from-white via-orange-50/30 to-amber-50/40 dark:from-slate-950 dark:via-slate-900 dark:to-orange-950/20 relative overflow-hidden">
+        <FoodPatternBackground />
         
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6 }} className="relative z-10 text-center px-6 max-w-sm mx-auto">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }} 
+          animate={{ opacity: 1, scale: 1 }} 
+          transition={{ duration: 0.6, type: "spring", stiffness: 100 }} 
+          className="relative z-10 text-center px-6 max-w-md mx-auto"
+        >
           {profile?.logo_url ? (
-            <motion.div initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring", stiffness: 100, damping: 18, delay: 0.15 }} className="mb-6">
-              <SimpleLogo src={profile.logo_url} alt={profile.restaurant_name} size="lg" />
+            <motion.div 
+              initial={{ scale: 0.5, opacity: 0 }} 
+              animate={{ scale: 1, opacity: 1 }} 
+              transition={{ type: "spring", stiffness: 120, damping: 15, delay: 0.2 }} 
+              className="mb-6"
+            >
+              <RestaurantLogo src={profile.logo_url} alt={profile.restaurant_name} size="lg" />
             </motion.div>
           ) : (
-            <motion.div initial={{ scale: 0.6 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 100, damping: 18 }} className="w-28 h-28 sm:w-32 sm:h-32 mx-auto mb-6 rounded-full bg-gradient-to-br from-orange-100 to-amber-100 dark:from-orange-950/50 dark:to-amber-950/30 flex items-center justify-center border-2 border-orange-200 dark:border-orange-800 shadow-lg">
-              <ChefHatIcon className="w-16 h-16 text-orange-600 dark:text-orange-400" />
+            <motion.div 
+              initial={{ scale: 0.5 }} 
+              animate={{ scale: 1 }} 
+              transition={{ type: "spring", stiffness: 120, damping: 15 }} 
+              className="w-32 h-32 sm:w-36 sm:h-36 mx-auto mb-6 rounded-full bg-gradient-to-br from-orange-100 to-amber-100 dark:from-orange-950/50 dark:to-amber-950/30 flex items-center justify-center border-4 border-white dark:border-slate-800 shadow-2xl ring-4 ring-orange-200/50 dark:ring-orange-800/30"
+            >
+              <UtensilsCrossed className="w-16 h-16 text-orange-600 dark:text-orange-400" />
             </motion.div>
           )}
           
-          <motion.h1 initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ type: "spring", stiffness: 100, damping: 18, delay: 0.3 }} className="text-xl sm:text-2xl font-semibold tracking-tight mb-2">{profile?.restaurant_name || "Loading..."}</motion.h1>
-          {profile?.restaurant_description && <motion.p initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ type: "spring", stiffness: 100, damping: 18, delay: 0.4 }} className="text-muted-foreground text-sm leading-relaxed line-clamp-2">{profile.restaurant_description}</motion.p>}
+          <motion.h1 
+            initial={{ opacity: 0, y: 20 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            transition={{ delay: 0.4 }} 
+            className="text-2xl sm:text-3xl font-bold tracking-tight mb-3 bg-gradient-to-r from-orange-600 to-amber-600 dark:from-orange-400 dark:to-amber-400 bg-clip-text text-transparent"
+          >
+            {profile?.restaurant_name || "Loading..."}
+          </motion.h1>
           
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7 }} className="mt-8">
-            <motion.div animate={{ y: [0, 6, 0] }} transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}>
-              <ChevronDown className="w-5 h-5 mx-auto text-orange-500/60 dark:text-orange-400/50" />
+          {profile?.restaurant_description && (
+            <motion.p 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              transition={{ delay: 0.5 }} 
+              className="text-muted-foreground text-sm leading-relaxed line-clamp-2 mb-8"
+            >
+              {profile.restaurant_description}
+            </motion.p>
+          )}
+          
+          <motion.div 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            transition={{ delay: 0.7 }} 
+            className="flex items-center justify-center gap-2 text-xs text-muted-foreground"
+          >
+            <motion.div 
+              animate={{ y: [0, 8, 0] }} 
+              transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <ChevronDown className="w-5 h-5 text-orange-500/60" />
             </motion.div>
+            <span>Scroll to view menu</span>
           </motion.div>
         </motion.div>
       </div>
@@ -494,15 +556,17 @@ const handleSubmitFeedback = async (e: React.FormEvent) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen min-h-[100dvh] flex items-center justify-center bg-gradient-to-br from-orange-50 via-background to-amber-50 dark:from-slate-950 dark:via-slate-900 dark:to-orange-950/20">
+      <div className="min-h-screen min-h-[100dvh] flex items-center justify-center bg-gradient-to-br from-white via-orange-50/30 to-amber-50/40 dark:from-slate-950 dark:via-slate-900 dark:to-orange-950/20">
+        <FoodPatternBackground />
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center relative z-10">
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+            className="mb-4"
           >
-            <UtensilsCrossed className="h-8 w-8 text-orange-500 dark:text-orange-400 mx-auto" />
+            <UtensilsCrossed className="h-10 w-10 text-orange-500 dark:text-orange-400 mx-auto" />
           </motion.div>
-          <p className="text-sm text-muted-foreground mt-3">Loading menu...</p>
+          <p className="text-sm font-medium text-muted-foreground">Loading delicious menu...</p>
         </motion.div>
       </div>
     );
@@ -510,17 +574,18 @@ const handleSubmitFeedback = async (e: React.FormEvent) => {
 
   if (profile?.disabled) {
     return (
-      <div className="min-h-screen min-h-[100dvh] flex items-center justify-center p-4 bg-gradient-to-br from-orange-50 via-background to-amber-50 dark:from-slate-950 dark:via-slate-900 dark:to-orange-950/20">
+      <div className="min-h-screen min-h-[100dvh] flex items-center justify-center p-4 bg-gradient-to-br from-white via-orange-50/30 to-amber-50/40 dark:from-slate-950 dark:via-slate-900 dark:to-orange-950/20">
+        <FoodPatternBackground />
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ type: "spring", stiffness: 100, damping: 18 }} className="relative z-10">
-          <Card className="max-w-sm w-full text-center p-6 sm:p-8 shadow-lg border-orange-200/50 dark:border-orange-800/30">
+          <Card className="max-w-sm w-full text-center p-6 sm:p-8 shadow-2xl border-orange-200/50 dark:border-orange-800/30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl">
             {profile?.logo_url && (
               <div className="mb-4">
-                <SimpleLogo src={profile.logo_url} alt={profile.restaurant_name} size="md" />
+                <RestaurantLogo src={profile.logo_url} alt={profile.restaurant_name} size="md" />
               </div>
             )}
-            <h2 className="text-lg sm:text-xl font-semibold mb-2">{profile?.restaurant_name || 'Menu Unavailable'}</h2>
-            <div className="w-12 h-1 bg-gradient-to-r from-orange-400 to-amber-400 mx-auto mb-4 rounded-full" />
-            <p className="text-muted-foreground text-sm mb-4">
+            <h2 className="text-lg sm:text-xl font-bold mb-2 bg-gradient-to-r from-orange-600 to-amber-600 dark:from-orange-400 dark:to-amber-400 bg-clip-text text-transparent">{profile?.restaurant_name || 'Menu Unavailable'}</h2>
+            <div className="w-16 h-1 bg-gradient-to-r from-orange-400 to-amber-400 mx-auto mb-4 rounded-full" />
+            <p className="text-muted-foreground text-sm mb-6">
               {profile?.subscriptionExpired 
                 ? "This restaurant's subscription has expired. Please contact the restaurant directly."
                 : "This restaurant's menu is currently unavailable."}
@@ -530,13 +595,13 @@ const handleSubmitFeedback = async (e: React.FormEvent) => {
                 href={`https://wa.me/${socialLinks.whatsapp.replace(/[^0-9]/g, "")}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white transition-colors"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-green-600 hover:bg-green-700 text-white transition-colors shadow-lg hover:shadow-xl"
               >
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
                 Contact Restaurant
               </a>
             )}
-            <p className="text-xs text-muted-foreground mt-4 flex items-center justify-center gap-1.5">
+            <p className="text-xs text-muted-foreground mt-6 flex items-center justify-center gap-1.5">
               <UtensilsCrossed className="w-3 h-3 text-orange-500/60" />
               Powered by AddMenu
             </p>
@@ -548,22 +613,8 @@ const handleSubmitFeedback = async (e: React.FormEvent) => {
 
 
   return (
-    <div ref={containerRef} className="min-h-screen min-h-[100dvh] bg-gradient-to-br from-orange-50/30 via-background to-amber-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-orange-950/10">
-      {/* Decorative food pattern background */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none opacity-[0.02] dark:opacity-[0.03]">
-        <div className="absolute top-20 left-10">
-          <FoodIcon size={40} className="text-orange-500" />
-        </div>
-        <div className="absolute top-40 right-20">
-          <PlateIcon size={50} className="text-amber-500" />
-        </div>
-        <div className="absolute bottom-40 left-20">
-          <ChefHatIcon size={45} className="text-orange-600" />
-        </div>
-        <div className="absolute bottom-20 right-10">
-          <UtensilsCrossed size={35} className="text-amber-600" />
-        </div>
-      </div>
+    <div ref={containerRef} className="min-h-screen min-h-[100dvh] bg-gradient-to-br from-white via-orange-50/20 to-amber-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-orange-950/10">
+      <FoodPatternBackground />
       
       {/* Theme Toggle */}
       <motion.div initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="fixed top-3 right-3 sm:top-4 sm:right-4 z-50">
@@ -571,11 +622,15 @@ const handleSubmitFeedback = async (e: React.FormEvent) => {
       </motion.div>
 
       {/* Sticky Header */}
-      <motion.header style={{ opacity: headerOpacity }} className="fixed top-0 left-0 right-0 z-40 bg-background/90 backdrop-blur-xl border-b border-orange-200/30 dark:border-orange-800/20">
+      <motion.header style={{ opacity: headerOpacity }} className="fixed top-0 left-0 right-0 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-orange-200/30 dark:border-orange-800/20 shadow-sm">
         <div className="max-w-2xl mx-auto px-3 sm:px-4 py-2.5 sm:py-3">
           <div className="flex items-center gap-2.5 sm:gap-3">
-            {profile?.logo_url && <SimpleLogo src={profile.logo_url} alt={profile.restaurant_name} size="sm" />}
-            <div className="flex-1 min-w-0"><h1 className="text-sm sm:text-base font-medium truncate">{profile?.restaurant_name}</h1></div>
+            {profile?.logo_url && <RestaurantLogo src={profile.logo_url} alt={profile.restaurant_name} size="sm" />}
+            <div className="flex-1 min-w-0">
+              <h1 className="text-sm sm:text-base font-semibold truncate bg-gradient-to-r from-orange-600 to-amber-600 dark:from-orange-400 dark:to-amber-400 bg-clip-text text-transparent">
+                {profile?.restaurant_name}
+              </h1>
+            </div>
             <UtensilsCrossed className="w-4 h-4 text-orange-500/60 dark:text-orange-400/50" />
           </div>
         </div>
@@ -585,33 +640,56 @@ const handleSubmitFeedback = async (e: React.FormEvent) => {
       <motion.section initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }} className="pt-6 sm:pt-8 pb-4 sm:pb-6 px-3 sm:px-4 relative">
         <div className="max-w-2xl mx-auto text-center relative z-10">
           {profile?.logo_url && (
-            <motion.div initial={{ scale: 0.85, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring", stiffness: 100, damping: 18, delay: 0.1 }} className="mb-3 sm:mb-4">
-              <SimpleLogo src={profile.logo_url} alt={profile.restaurant_name} size="md" />
+            <motion.div initial={{ scale: 0.85, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring", stiffness: 100, damping: 18, delay: 0.1 }} className="mb-4 sm:mb-5">
+              <RestaurantLogo src={profile.logo_url} alt={profile.restaurant_name} size="md" />
             </motion.div>
           )}
-          <motion.h1 initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="text-xl sm:text-2xl font-semibold tracking-tight mb-1.5 sm:mb-2">{profile?.restaurant_name}</motion.h1>
-          {profile?.restaurant_description && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.25 }} className="text-muted-foreground text-xs sm:text-sm max-w-md mx-auto line-clamp-2">{profile.restaurant_description}</motion.p>}
+          <motion.h1 initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="text-2xl sm:text-3xl font-bold tracking-tight mb-2 bg-gradient-to-r from-orange-600 to-amber-600 dark:from-orange-400 dark:to-amber-400 bg-clip-text text-transparent">
+            {profile?.restaurant_name}
+          </motion.h1>
+          {profile?.restaurant_description && (
+            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.25 }} className="text-muted-foreground text-sm sm:text-base max-w-md mx-auto line-clamp-2">
+              {profile.restaurant_description}
+            </motion.p>
+          )}
         </div>
       </motion.section>
 
       {/* Main Content */}
       <main className="max-w-2xl mx-auto px-3 sm:px-4 pb-6 sm:pb-8 relative z-10">
         {/* Menu Images */}
-        <div className="space-y-3 sm:space-y-4">
+        <div className="space-y-4 sm:space-y-5">
           {menuImages.length > 0 ? menuImages.map((image, index) => (
-            <ScrollRevealSection key={image.id} delay={Math.min(index * 0.06, 0.3)}>
-              <motion.div className="overflow-hidden rounded-xl sm:rounded-2xl bg-card border border-orange-200/30 dark:border-orange-800/20 shadow-md hover:shadow-xl hover:border-orange-300/50 dark:hover:border-orange-700/30 transition-all duration-400" whileHover={{ y: -2, scale: 1.005 }} transition={{ duration: 0.25 }}>
-                <LazyImage src={image.image_url} alt={`Menu page ${index + 1}`} className="w-full h-auto cursor-zoom-in" onClick={() => openZoom(image.image_url, index)} />
+            <ScrollRevealSection key={image.id} delay={Math.min(index * 0.05, 0.25)}>
+              <motion.div 
+                className="overflow-hidden rounded-2xl sm:rounded-3xl bg-white dark:bg-slate-900 border-2 border-orange-200/40 dark:border-orange-800/30 shadow-lg hover:shadow-2xl hover:border-orange-300/60 dark:hover:border-orange-700/40 transition-all duration-400 group"
+                whileHover={{ y: -4, scale: 1.01 }} 
+                transition={{ duration: 0.3, type: "spring", stiffness: 200 }}
+              >
+                <div className="relative">
+                  <LazyImage 
+                    src={image.image_url} 
+                    alt={`Menu page ${index + 1}`} 
+                    className="w-full h-auto cursor-zoom-in" 
+                    onClick={() => openZoom(image.image_url, index)} 
+                  />
+                  {/* Hover overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                  {/* Page number badge */}
+                  <div className="absolute top-3 right-3 bg-orange-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">
+                    {index + 1}
+                  </div>
+                </div>
               </motion.div>
             </ScrollRevealSection>
           )) : (
             <ScrollRevealSection>
-              <div className="py-12 sm:py-16 text-center border-2 border-dashed border-orange-200/40 dark:border-orange-800/30 rounded-xl sm:rounded-2xl bg-card">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-orange-100 dark:bg-orange-950/30 flex items-center justify-center">
-                  <ChefHatIcon className="h-8 w-8 text-orange-500/60 dark:text-orange-400/50" />
+              <div className="py-16 sm:py-20 text-center border-2 border-dashed border-orange-200/50 dark:border-orange-800/30 rounded-2xl sm:rounded-3xl bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+                <div className="w-20 h-20 mx-auto mb-5 rounded-full bg-gradient-to-br from-orange-100 to-amber-100 dark:from-orange-950/50 dark:to-amber-950/30 flex items-center justify-center shadow-lg">
+                  <UtensilsCrossed className="h-10 w-10 text-orange-500/70 dark:text-orange-400/60" />
                 </div>
-                <p className="text-muted-foreground text-sm font-medium">No menu available yet</p>
-                <p className="text-xs text-muted-foreground/70 mt-1">Check back soon for delicious updates!</p>
+                <p className="text-muted-foreground text-base font-semibold mb-2">No menu available yet</p>
+                <p className="text-xs text-muted-foreground/70">Check back soon for delicious updates!</p>
               </div>
             </ScrollRevealSection>
           )}
