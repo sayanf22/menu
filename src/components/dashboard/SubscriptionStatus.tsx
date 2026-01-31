@@ -299,7 +299,7 @@ export const SubscriptionStatus = ({ userId }: SubscriptionStatusProps) => {
                       Bell Calling
                     </Badge>
                     <Badge variant="secondary" className="bg-white/60 dark:bg-white/10">
-                      10 Images
+                      15 Images
                     </Badge>
                     <Badge variant="secondary" className="bg-white/60 dark:bg-white/10">
                       Priority Support

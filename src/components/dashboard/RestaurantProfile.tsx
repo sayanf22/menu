@@ -862,7 +862,7 @@ const RestaurantProfile = ({ restaurantId, onProfileUpdate }: RestaurantProfileP
                                 </li>
                                 <li className="flex items-center gap-2">
                                     <Check className="h-4 w-4 text-green-600" />
-                                    10 Menu Images (vs 5)
+                                    15 Menu Images (vs 5)
                                 </li>
                                 <li className="flex items-center gap-2">
                                     <Check className="h-4 w-4 text-green-600" />

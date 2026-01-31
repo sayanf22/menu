@@ -212,7 +212,7 @@ export const BellNotifications = ({ restaurantId, variant = "header" }: BellNoti
               </li>
               <li className="flex items-center gap-2">
                 <Check className="h-4 w-4 text-green-600" />
-                10 menu images (vs 5 in Basic)
+                15 menu images (vs 5 in Basic)
               </li>
             </ul>
           </div>
