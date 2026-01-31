@@ -3,7 +3,7 @@
  * Shows real-time bell notifications in restaurant dashboard
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bell, BellRing, X, Check, Power, PowerOff, Lock, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -50,8 +50,28 @@ export const BellNotifications = ({ restaurantId, variant = "header" }: BellNoti
     price_yearly: number;
   } | null>(null);
   const { initiatePayment, loading: paymentLoading } = useRazorpay();
+  const [isTabVisible, setIsTabVisible] = useState(true);
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>("default");
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   const locationLabel = businessType === "hotel" ? "Room" : "Table";
+
+  // Page Visibility API - Track if tab is visible
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      setIsTabVisible(!document.hidden);
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, []);
+
+  // Request browser notification permission when component mounts
+  useEffect(() => {
+    if ("Notification" in window) {
+      setNotificationPermission(Notification.permission);
+    }
+  }, []);
 
   // Check bell feature access and fetch business type
   useEffect(() => {
@@ -113,27 +133,78 @@ export const BellNotifications = ({ restaurantId, variant = "header" }: BellNoti
       setPendingCount((prev) => prev + 1);
 
       if (isListening) {
+        // Always play sound, even if tab is hidden
         if (stopSound) stopSound();
         const stop = playBellSound(15000);
         setStopSound(() => stop);
         setTimeout(() => { stop(); setStopSound(null); }, 15000);
+        
+        // Show toast notification
         toast.info(`🔔 ${locationLabel} ${newNotification.table_number} is calling!`, {
           duration: 15000,
           className: "bg-primary text-primary-foreground",
         });
+
+        // If tab is hidden, show browser notification
+        if (!isTabVisible && notificationPermission === "granted") {
+          const notification = new Notification("AddMenu - Customer Calling!", {
+            body: `${locationLabel} ${newNotification.table_number} is calling for service`,
+            icon: "/favicon.png",
+            badge: "/favicon-96x96.png",
+            tag: `bell-${newNotification.id}`,
+            requireInteraction: true,
+            silent: false, // Play default notification sound
+          });
+
+          // Auto-close notification after 15 seconds
+          setTimeout(() => notification.close(), 15000);
+
+          // Focus window when notification is clicked
+          notification.onclick = () => {
+            window.focus();
+            notification.close();
+          };
+        }
       }
     },
-    [isListening, stopSound]
+    [isListening, stopSound, locationLabel, isTabVisible, notificationPermission]
   );
 
   useEffect(() => {
-    if (!isListening || !hasBellAccess) return;
+    if (!isListening || !hasBellAccess) {
+      // Clean up channel if exists
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
+      return;
+    }
+
     fetchNotifications();
-    const channel = supabase
-      .channel(`bell_${restaurantId}`)
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "bell_notifications", filter: `restaurant_id=eq.${restaurantId}` }, handleNewNotification)
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
+    
+    // Create channel only if it doesn't exist
+    if (!channelRef.current) {
+      channelRef.current = supabase
+        .channel(`bell_${restaurantId}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "bell_notifications",
+            filter: `restaurant_id=eq.${restaurantId}`
+          },
+          handleNewNotification
+        )
+        .subscribe();
+    }
+
+    return () => {
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
+    };
   }, [restaurantId, isListening, hasBellAccess, handleNewNotification, fetchNotifications]);
 
   const toggleListening = async () => {
@@ -143,8 +214,22 @@ export const BellNotifications = ({ restaurantId, variant = "header" }: BellNoti
     }
     
     if (!isListening) {
+      // Request audio permission
       const hasPermission = await requestAudioPermission();
-      if (!hasPermission) { toast.error("Please allow audio"); return; }
+      if (!hasPermission) { 
+        toast.error("Please allow audio to receive bell notifications"); 
+        return; 
+      }
+
+      // Request browser notification permission if not already granted
+      if ("Notification" in window && Notification.permission === "default") {
+        const permission = await Notification.requestPermission();
+        setNotificationPermission(permission);
+        if (permission === "granted") {
+          toast.success("Browser notifications enabled! You'll be notified even when this tab is in the background.");
+        }
+      }
+
       playNotificationDing();
       setIsListening(true);
       toast.success("Bell notifications activated!");

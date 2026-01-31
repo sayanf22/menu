@@ -79,10 +79,13 @@ const Dashboard = () => {
 
   useEffect(() => {
     checkUser();
+    
+    // Listen for auth changes but don't refetch profile if already loaded
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!session) {
         navigate("/auth");
-      } else {
+      } else if (!user) {
+        // Only set user and fetch profile if we don't have user data yet
         setUser(session.user);
         fetchProfile(session.user.id);
       }
