@@ -42,7 +42,8 @@ export const BellNotifications = ({ restaurantId, variant = "header" }: BellNoti
   const [stopSound, setStopSound] = useState<(() => void) | null>(null);
   const [hasBellAccess, setHasBellAccess] = useState<boolean | null>(null);
   const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
-  const [basicPlusPlan, setBasicPlusPlan] = useState<{
+  const [businessType, setBusinessType] = useState<"hotel" | "restaurant">("restaurant");
+  const [standardPlan, setStandardPlan] = useState<{
     id: string;
     name: string;
     price_monthly: number;
@@ -50,7 +51,9 @@ export const BellNotifications = ({ restaurantId, variant = "header" }: BellNoti
   } | null>(null);
   const { initiatePayment, loading: paymentLoading } = useRazorpay();
 
-  // Check bell feature access
+  const locationLabel = businessType === "hotel" ? "Room" : "Table";
+
+  // Check bell feature access and fetch business type
   useEffect(() => {
     const checkAccess = async () => {
       const { data, error } = await supabase.rpc("check_bell_feature_access", {
@@ -58,10 +61,23 @@ export const BellNotifications = ({ restaurantId, variant = "header" }: BellNoti
       });
       setHasBellAccess(error ? false : data === true);
     };
+    
+    const fetchBusinessType = async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("business_type")
+        .eq("id", restaurantId)
+        .single();
+      if (data?.business_type) {
+        setBusinessType(data.business_type as "hotel" | "restaurant");
+      }
+    };
+    
     checkAccess();
+    fetchBusinessType();
   }, [restaurantId]);
 
-  // Fetch Basic Plus plan for upgrade
+  // Fetch Standard plan for upgrade
   useEffect(() => {
     const fetchPlan = async () => {
       const { data } = await supabase
@@ -70,7 +86,7 @@ export const BellNotifications = ({ restaurantId, variant = "header" }: BellNoti
         .eq("bell_feature_enabled", true)
         .eq("is_active", true)
         .single();
-      if (data) setBasicPlusPlan(data);
+      if (data) setStandardPlan(data);
     };
     fetchPlan();
   }, []);
@@ -101,7 +117,7 @@ export const BellNotifications = ({ restaurantId, variant = "header" }: BellNoti
         const stop = playBellSound(15000);
         setStopSound(() => stop);
         setTimeout(() => { stop(); setStopSound(null); }, 15000);
-        toast.info(`🔔 Table ${newNotification.table_number} is calling!`, {
+        toast.info(`🔔 ${locationLabel} ${newNotification.table_number} is calling!`, {
           duration: 15000,
           className: "bg-primary text-primary-foreground",
         });
@@ -161,13 +177,13 @@ export const BellNotifications = ({ restaurantId, variant = "header" }: BellNoti
   };
 
   const handleUpgrade = async (billingCycle: 'monthly' | 'yearly') => {
-    if (!basicPlusPlan) return;
+    if (!standardPlan) return;
     await initiatePayment(
-      { planId: basicPlusPlan.id, billingCycle },
+      { planId: standardPlan.id, billingCycle },
       () => {
         setShowUpgradeDialog(false);
         setHasBellAccess(true);
-        toast.success("Upgraded to Basic Plus! Bell feature is now available.");
+        toast.success("Upgraded to Standard! Bell feature is now available.");
       },
       () => toast.error("Payment failed. Please try again.")
     );
@@ -183,10 +199,10 @@ export const BellNotifications = ({ restaurantId, variant = "header" }: BellNoti
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Crown className="h-5 w-5 text-amber-500" />
-            Upgrade to Basic Plus
+            Upgrade to Standard
           </DialogTitle>
           <DialogDescription>
-            Unlock the Bell Calling feature to let customers call for service directly from their table.
+            Unlock the Bell Calling feature to let customers call for service directly from their {businessType === "hotel" ? "room" : "table"}.
           </DialogDescription>
         </DialogHeader>
         
@@ -204,7 +220,7 @@ export const BellNotifications = ({ restaurantId, variant = "header" }: BellNoti
             <ul className="space-y-2 text-sm">
               <li className="flex items-center gap-2">
                 <Check className="h-4 w-4 text-green-600" />
-                Customers can call from their table
+                Customers can call from their {businessType === "hotel" ? "room" : "table"}
               </li>
               <li className="flex items-center gap-2">
                 <Check className="h-4 w-4 text-green-600" />
@@ -217,7 +233,7 @@ export const BellNotifications = ({ restaurantId, variant = "header" }: BellNoti
             </ul>
           </div>
 
-          {basicPlusPlan && (
+          {standardPlan && (
             <div className="grid grid-cols-2 gap-3">
               <Button
                 onClick={() => handleUpgrade('monthly')}
@@ -225,7 +241,7 @@ export const BellNotifications = ({ restaurantId, variant = "header" }: BellNoti
                 variant="outline"
                 className="h-auto py-3 flex-col"
               >
-                <span className="text-lg font-bold">{formatPrice(basicPlusPlan.price_monthly)}</span>
+                <span className="text-lg font-bold">{formatPrice(standardPlan.price_monthly)}</span>
                 <span className="text-xs text-muted-foreground">/month</span>
               </Button>
               <Button
@@ -233,7 +249,7 @@ export const BellNotifications = ({ restaurantId, variant = "header" }: BellNoti
                 disabled={paymentLoading}
                 className="h-auto py-3 flex-col bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
               >
-                <span className="text-lg font-bold">{formatPrice(basicPlusPlan.price_yearly)}</span>
+                <span className="text-lg font-bold">{formatPrice(standardPlan.price_yearly)}</span>
                 <span className="text-xs opacity-90">/year (Save 17%)</span>
               </Button>
             </div>
@@ -256,7 +272,7 @@ export const BellNotifications = ({ restaurantId, variant = "header" }: BellNoti
                 Bell Service
               </CardTitle>
               <CardDescription>
-                Upgrade to Basic Plus to unlock this feature
+                Upgrade to Standard to unlock this feature
               </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col items-center py-8">
@@ -264,14 +280,14 @@ export const BellNotifications = ({ restaurantId, variant = "header" }: BellNoti
                 <Bell className="w-16 h-16 text-muted-foreground/50" />
               </div>
               <p className="text-sm text-muted-foreground text-center mb-4 max-w-xs">
-                Let customers call for service directly from their table with real-time notifications.
+                Let customers call for service directly from their {businessType === "hotel" ? "room" : "table"} with real-time notifications.
               </p>
               <Button 
                 onClick={() => setShowUpgradeDialog(true)}
                 className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
               >
                 <Crown className="h-4 w-4 mr-2" />
-                Upgrade to Basic Plus
+                Upgrade to Standard
               </Button>
             </CardContent>
           </Card>
@@ -402,7 +418,7 @@ export const BellNotifications = ({ restaurantId, variant = "header" }: BellNoti
                           {notification.table_number}
                         </div>
                         <div>
-                          <p className="font-semibold">Table {notification.table_number}</p>
+                          <p className="font-semibold">{locationLabel} {notification.table_number}</p>
                           <p className="text-xs text-muted-foreground">{formatTime(notification.created_at)}</p>
                         </div>
                       </div>
@@ -498,7 +514,7 @@ export const BellNotifications = ({ restaurantId, variant = "header" }: BellNoti
                         <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">
                           {notification.table_number}
                         </div>
-                        <span className="text-sm">Table {notification.table_number}</span>
+                        <span className="text-sm">{locationLabel} {notification.table_number}</span>
                       </div>
                       <Button variant="ghost" size="icon" className="h-7 w-7 text-green-600" onClick={() => acknowledgeNotification(notification.id)}>
                         <Check className="h-4 w-4" />
