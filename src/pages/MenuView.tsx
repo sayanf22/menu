@@ -139,28 +139,92 @@ const LazyImage = memo(({ src, alt, className, onClick }: { src: string; alt: st
 
 LazyImage.displayName = "LazyImage";
 
-// Optimized scroll reveal section with lightweight animations
-const ScrollRevealSection = memo(({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) => {
+// Individual menu card with scroll-triggered animation
+const MenuCard = memo(({ image, index, onClick }: { image: MenuImage; index: number; onClick: () => void }) => {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-80px", amount: 0.3 });
-  
+  const isInView = useInView(ref, { 
+    once: true, 
+    margin: "-100px",
+    amount: 0.2 
+  });
+
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: 50 }}
-      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
+      initial={{ opacity: 0, y: 60 }}
+      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 60 }}
       transition={{ 
-        duration: 0.5,
-        delay,
-        ease: [0.25, 0.1, 0.25, 1], // Custom easing for smoothness
+        duration: 0.6,
+        ease: [0.25, 0.1, 0.25, 1],
       }}
+      className="overflow-hidden rounded-2xl sm:rounded-3xl bg-white dark:bg-slate-900 border-2 border-orange-200/40 dark:border-orange-800/30 shadow-lg hover:shadow-2xl hover:border-orange-300/60 dark:hover:border-orange-700/40 transition-all duration-300 group will-change-transform"
+      whileHover={{ y: -6, scale: 1.01 }} 
+      whileTap={{ scale: 0.99 }}
+    >
+      <div className="relative">
+        <LazyImage 
+          src={image.image_url} 
+          alt={`Menu page ${index + 1}`} 
+          className="w-full h-auto cursor-zoom-in" 
+          onClick={onClick} 
+        />
+        {/* Hover overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+        {/* Page number badge */}
+        <div className="absolute top-3 right-3 bg-gradient-to-br from-orange-500 to-amber-500 text-white text-sm font-bold px-3.5 py-1.5 rounded-full shadow-lg ring-2 ring-white/50">
+          {index + 1}
+        </div>
+        {/* Click to zoom hint */}
+        <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-sm text-white text-xs px-3 py-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          Click to zoom
+        </div>
+      </div>
+    </motion.div>
+  );
+});
+MenuCard.displayName = "MenuCard";
+
+// Empty menu state component
+const EmptyMenuState = memo(() => {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-100px" });
+
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 40 }}
+      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 40 }}
+      transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
+      className="py-16 sm:py-20 text-center border-2 border-dashed border-orange-200/50 dark:border-orange-800/30 rounded-2xl sm:rounded-3xl bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm"
+    >
+      <div className="w-20 h-20 mx-auto mb-5 rounded-full bg-gradient-to-br from-orange-100 to-amber-100 dark:from-orange-950/50 dark:to-amber-950/30 flex items-center justify-center shadow-lg">
+        <UtensilsCrossed className="h-10 w-10 text-orange-500/70 dark:text-orange-400/60" />
+      </div>
+      <p className="text-muted-foreground text-base font-semibold mb-2">No menu available yet</p>
+      <p className="text-xs text-muted-foreground/70">Check back soon for delicious updates!</p>
+    </motion.div>
+  );
+});
+EmptyMenuState.displayName = "EmptyMenuState";
+
+// Generic scroll reveal wrapper for other sections
+const ScrollReveal = memo(({ children, className = "" }: { children: React.ReactNode; className?: string }) => {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-80px" });
+
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 30 }}
+      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+      transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
       className={className}
     >
       {children}
     </motion.div>
   );
 });
-ScrollRevealSection.displayName = "ScrollRevealSection";
+ScrollReveal.displayName = "ScrollReveal";
 
 // Simple social icon
 const SocialIcon = memo(({ href, children, label }: { href: string; children: React.ReactNode; label: string }) => (
@@ -660,51 +724,24 @@ const handleSubmitFeedback = async (e: React.FormEvent) => {
       <main className="max-w-2xl mx-auto px-3 sm:px-4 pb-6 sm:pb-8 relative z-10">
         {/* Menu Images */}
         <div className="space-y-4 sm:space-y-5">
-          {menuImages.length > 0 ? menuImages.map((image, index) => (
-            <ScrollRevealSection key={image.id} delay={index * 0.1}>
-              <motion.div 
-                className="overflow-hidden rounded-2xl sm:rounded-3xl bg-white dark:bg-slate-900 border-2 border-orange-200/40 dark:border-orange-800/30 shadow-lg hover:shadow-2xl hover:border-orange-300/60 dark:hover:border-orange-700/40 transition-all duration-300 group will-change-transform"
-                whileHover={{ y: -6, scale: 1.01 }} 
-                whileTap={{ scale: 0.99 }}
-                transition={{ duration: 0.2 }}
-              >
-                <div className="relative">
-                  <LazyImage 
-                    src={image.image_url} 
-                    alt={`Menu page ${index + 1}`} 
-                    className="w-full h-auto cursor-zoom-in" 
-                    onClick={() => openZoom(image.image_url, index)} 
-                  />
-                  {/* Hover overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-                  {/* Page number badge */}
-                  <div className="absolute top-3 right-3 bg-gradient-to-br from-orange-500 to-amber-500 text-white text-sm font-bold px-3.5 py-1.5 rounded-full shadow-lg ring-2 ring-white/50">
-                    {index + 1}
-                  </div>
-                  {/* Click to zoom hint */}
-                  <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-sm text-white text-xs px-3 py-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    Click to zoom
-                  </div>
-                </div>
-              </motion.div>
-            </ScrollRevealSection>
-          )) : (
-            <ScrollRevealSection>
-              <div className="py-16 sm:py-20 text-center border-2 border-dashed border-orange-200/50 dark:border-orange-800/30 rounded-2xl sm:rounded-3xl bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-                <div className="w-20 h-20 mx-auto mb-5 rounded-full bg-gradient-to-br from-orange-100 to-amber-100 dark:from-orange-950/50 dark:to-amber-950/30 flex items-center justify-center shadow-lg">
-                  <UtensilsCrossed className="h-10 w-10 text-orange-500/70 dark:text-orange-400/60" />
-                </div>
-                <p className="text-muted-foreground text-base font-semibold mb-2">No menu available yet</p>
-                <p className="text-xs text-muted-foreground/70">Check back soon for delicious updates!</p>
-              </div>
-            </ScrollRevealSection>
+          {menuImages.length > 0 ? (
+            menuImages.map((image, index) => (
+              <MenuCard
+                key={image.id}
+                image={image}
+                index={index}
+                onClick={() => openZoom(image.image_url, index)}
+              />
+            ))
+          ) : (
+            <EmptyMenuState />
           )}
         </div>
 
 
         {/* Social Links */}
         {socialLinks && (
-          <ScrollRevealSection delay={0.15} className="mt-6 sm:mt-8">
+          <ScrollReveal className="mt-6 sm:mt-8">
             <div className="flex flex-wrap justify-center gap-2.5 sm:gap-3">
               {socialLinks.facebook && <SocialIcon href={socialLinks.facebook} label="Facebook"><svg className="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg></SocialIcon>}
               {socialLinks.instagram && <SocialIcon href={socialLinks.instagram} label="Instagram"><svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></SocialIcon>}
@@ -713,11 +750,11 @@ const handleSubmitFeedback = async (e: React.FormEvent) => {
               {socialLinks.whatsapp && <SocialIcon href={`https://wa.me/${socialLinks.whatsapp.replace(/[^0-9]/g, "")}`} label="WhatsApp"><svg className="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></SocialIcon>}
               {socialLinks.website && <SocialIcon href={socialLinks.website} label="Website"><svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></SocialIcon>}
             </div>
-          </ScrollRevealSection>
+          </ScrollReveal>
         )}
 
     {/* Feedback Section */}
-        <ScrollRevealSection delay={0.2} className="mt-8 sm:mt-10">
+        <ScrollReveal className="mt-8 sm:mt-10">
           <AnimatePresence mode="wait">
             {!showFeedback ? (
               <motion.div key="btn" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }}>
@@ -772,17 +809,17 @@ const handleSubmitFeedback = async (e: React.FormEvent) => {
               </motion.div>
             )}
           </AnimatePresence>
-        </ScrollRevealSection>
+        </ScrollReveal>
 
         {/* Footer */}
-        <ScrollRevealSection delay={0.25} className="mt-10 sm:mt-12">
+        <ScrollReveal className="mt-10 sm:mt-12">
           <div className="text-center">
             <p className="text-[10px] sm:text-xs text-muted-foreground flex items-center justify-center gap-1.5">
               <UtensilsCrossed className="w-3 h-3 text-orange-500/60" />
               Powered by <a href="https://addmenu.in" className="hover:text-orange-600 dark:hover:text-orange-400 transition-colors font-medium">AddMenu</a>
             </p>
           </div>
-        </ScrollRevealSection>
+        </ScrollReveal>
       </main>
 
 
