@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { toast } from "sonner";
-import { Star, Loader2, X, ChevronDown, Send, MessageSquare, UtensilsCrossed, Coffee, Pizza, Salad, IceCream } from "lucide-react";
+import { Star, Loader2, X, ChevronDown, Send, MessageSquare, UtensilsCrossed, Coffee, Pizza, Salad } from "lucide-react";
 import { generateDeviceFingerprint } from "@/lib/deviceFingerprint";
 import { motion, useInView, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import { BellButton } from "@/components/BellButton";
@@ -139,23 +139,23 @@ const LazyImage = memo(({ src, alt, className, onClick }: { src: string; alt: st
 
 LazyImage.displayName = "LazyImage";
 
-// Individual menu card with scroll-triggered animation
+// Individual menu card with independent scroll-triggered animation
 const MenuCard = memo(({ image, index, onClick }: { image: MenuImage; index: number; onClick: () => void }) => {
   const ref = useRef(null);
   const isInView = useInView(ref, { 
     once: true, 
-    margin: "-100px",
-    amount: 0.2 
+    margin: "-50px",
+    amount: 0.3
   });
 
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: 60 }}
-      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 60 }}
+      initial={{ opacity: 0, y: 80 }}
+      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 80 }}
       transition={{ 
-        duration: 0.6,
-        ease: [0.25, 0.1, 0.25, 1],
+        duration: 0.7,
+        ease: [0.22, 1, 0.36, 1],
       }}
       className="overflow-hidden rounded-2xl sm:rounded-3xl bg-white dark:bg-slate-900 border-2 border-orange-200/40 dark:border-orange-800/30 shadow-lg hover:shadow-2xl hover:border-orange-300/60 dark:hover:border-orange-700/40 transition-all duration-300 group will-change-transform"
       whileHover={{ y: -6, scale: 1.01 }} 
@@ -168,13 +168,10 @@ const MenuCard = memo(({ image, index, onClick }: { image: MenuImage; index: num
           className="w-full h-auto cursor-zoom-in" 
           onClick={onClick} 
         />
-        {/* Hover overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-        {/* Page number badge */}
         <div className="absolute top-3 right-3 bg-gradient-to-br from-orange-500 to-amber-500 text-white text-sm font-bold px-3.5 py-1.5 rounded-full shadow-lg ring-2 ring-white/50">
           {index + 1}
         </div>
-        {/* Click to zoom hint */}
         <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-sm text-white text-xs px-3 py-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300">
           Click to zoom
         </div>
@@ -184,17 +181,17 @@ const MenuCard = memo(({ image, index, onClick }: { image: MenuImage; index: num
 });
 MenuCard.displayName = "MenuCard";
 
-// Empty menu state component
+// Empty menu state with scroll animation
 const EmptyMenuState = memo(() => {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-100px" });
+  const isInView = useInView(ref, { once: true, margin: "-50px" });
 
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: 40 }}
-      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 40 }}
-      transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
+      initial={{ opacity: 0, y: 60 }}
+      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 60 }}
+      transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
       className="py-16 sm:py-20 text-center border-2 border-dashed border-orange-200/50 dark:border-orange-800/30 rounded-2xl sm:rounded-3xl bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm"
     >
       <div className="w-20 h-20 mx-auto mb-5 rounded-full bg-gradient-to-br from-orange-100 to-amber-100 dark:from-orange-950/50 dark:to-amber-950/30 flex items-center justify-center shadow-lg">
@@ -207,17 +204,17 @@ const EmptyMenuState = memo(() => {
 });
 EmptyMenuState.displayName = "EmptyMenuState";
 
-// Generic scroll reveal wrapper for other sections
+// Scroll reveal wrapper for sections
 const ScrollReveal = memo(({ children, className = "" }: { children: React.ReactNode; className?: string }) => {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-80px" });
+  const isInView = useInView(ref, { once: true, margin: "-50px" });
 
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: 30 }}
-      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
-      transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
+      initial={{ opacity: 0, y: 40 }}
+      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 40 }}
+      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
       className={className}
     >
       {children}
