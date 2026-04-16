@@ -161,10 +161,11 @@ const Pricing = () => {
         const planMap = new Map<string, string>();
         const priceMap = new Map<string, { monthly: number; yearly: number | null }>();
         data.forEach(p => {
-          if (p.name.toLowerCase() === 'basic') {
+          const nameLower = p.name.toLowerCase();
+          if (nameLower === 'basic') {
             planMap.set('basic', p.id);
             priceMap.set('basic', { monthly: p.price_monthly, yearly: p.price_yearly });
-          } else if (p.name.toLowerCase().includes('plus')) {
+          } else if (nameLower === 'standard' || nameLower.includes('plus')) {
             planMap.set('standard', p.id);
             priceMap.set('standard', { monthly: p.price_monthly, yearly: p.price_yearly });
           }

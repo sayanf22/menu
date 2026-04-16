@@ -289,7 +289,7 @@ export const SubscriptionStatus = ({ userId }: SubscriptionStatusProps) => {
                   <Crown className="h-6 w-6 text-white" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-semibold text-lg mb-1">Upgrade to Basic Plus</h3>
+                  <h3 className="font-semibold text-lg mb-1">Upgrade to Standard</h3>
                   <p className="text-sm text-muted-foreground mb-4">
                     Get the Bell Calling feature and let customers call for service directly from their table.
                   </p>

@@ -148,8 +148,8 @@ const Auth = () => {
           plan_tier: 1
         },
         {
-          id: 'basic-plus',
-          name: 'Basic Plus',
+          id: 'standard',
+          name: 'Standard',
           description: 'For growing restaurants with bell service',
           price_monthly: 39900,
           price_yearly: 438900,
@@ -381,7 +381,7 @@ const Auth = () => {
               ) : (
                 <div className="space-y-3">
                   {plans.map((plan) => {
-                    const isBasicPlus = plan.name.toLowerCase().includes('plus') || plan.plan_tier === 2;
+                    const isStandard = plan.name.toLowerCase() === 'standard' || plan.name.toLowerCase().includes('plus') || plan.plan_tier === 2;
                     const price = billingCycle === 'yearly' ? plan.price_yearly : plan.price_monthly;
                     const isSelected = selectedPlan === plan.id;
                     const features = (plan.features as string[]) || [];
@@ -390,13 +390,13 @@ const Auth = () => {
                       <div
                         key={plan.id}
                         className={`relative p-4 rounded-xl border-2 cursor-pointer transition-all hover:shadow-md ${
-                          isBasicPlus 
+                          isStandard 
                             ? 'border-primary bg-primary/5' 
                             : 'border-border hover:border-primary/50'
                         } ${isSelected && paymentLoading ? 'opacity-75' : ''}`}
                         onClick={() => !paymentLoading && handleSelectPlan(plan.id)}
                       >
-                        {isBasicPlus && (
+                        {isStandard && (
                           <Badge className="absolute -top-2 right-3 bg-primary text-[10px]">
                             Bell Feature
                           </Badge>
@@ -405,9 +405,9 @@ const Auth = () => {
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-2">
                             <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                              isBasicPlus ? 'bg-primary' : 'bg-primary/10'
+                              isStandard ? 'bg-primary' : 'bg-primary/10'
                             }`}>
-                              {isBasicPlus ? (
+                              {isStandard ? (
                                 <Crown className="w-4 h-4 text-white" />
                               ) : (
                                 <Star className="w-4 h-4 text-primary" />
@@ -436,7 +436,7 @@ const Auth = () => {
                         </div>
 
                         <Button
-                          className={`w-full ${isBasicPlus ? '' : 'bg-primary/90'}`}
+                          className={`w-full ${isStandard ? '' : 'bg-primary/90'}`}
                           size="sm"
                           disabled={paymentLoading}
                         >

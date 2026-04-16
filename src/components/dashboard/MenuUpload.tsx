@@ -294,7 +294,7 @@ const MenuUpload = ({ restaurantId }: MenuUploadProps) => {
       
       const limit = limitCheck as unknown as UploadLimit;
       if (!limit?.can_upload) {
-        toast.error(`You've reached your upload limit (${limit?.max_allowed || 5} images). Upgrade to Basic Plus for more uploads!`);
+        toast.error(`You've reached your upload limit (${limit?.max_allowed || 5} images). Upgrade to Standard for more uploads!`);
         setUploading(false);
         event.target.value = "";
         return;

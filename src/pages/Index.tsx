@@ -101,7 +101,7 @@ const Index = () => {
         data.forEach(p => {
           if (p.name.toLowerCase() === 'basic') {
             priceMap.set('basic', { monthly: p.price_monthly, yearly: p.price_yearly });
-          } else if (p.name.toLowerCase().includes('plus')) {
+          } else if (p.name.toLowerCase() === 'standard' || p.name.toLowerCase().includes('plus')) {
             priceMap.set('standard', { monthly: p.price_monthly, yearly: p.price_yearly });
           }
         });

@@ -94,7 +94,7 @@ const RestaurantProfile = ({ restaurantId, onProfileUpdate }: RestaurantProfileP
                 setBasicPlusPlan(data as BasicPlusPlan);
             }
         } catch (error) {
-            console.error("Error fetching Basic Plus plan:", error);
+            console.error("Error fetching Standard plan:", error);
         }
     };
 
@@ -109,7 +109,7 @@ const RestaurantProfile = ({ restaurantId, onProfileUpdate }: RestaurantProfileP
             () => {
                 setShowUpgradeDialog(false);
                 setHasBellAccess(true);
-                toast.success("Upgraded to Basic Plus! Bell feature is now available.");
+                toast.success("Upgraded to Standard! Bell feature is now available.");
                 // Refresh the page to update all components
                 window.location.reload();
             },
@@ -328,7 +328,7 @@ const RestaurantProfile = ({ restaurantId, onProfileUpdate }: RestaurantProfileP
 
     const handleBellServiceToggle = async (enabled: boolean) => {
         if (!hasBellAccess) {
-            toast.error("Upgrade to Basic Plus to use Bell Service");
+            toast.error("Upgrade to Standard to use Bell Service");
             return;
         }
         
@@ -647,14 +647,14 @@ const RestaurantProfile = ({ restaurantId, onProfileUpdate }: RestaurantProfileP
                                         <Crown className="h-4 w-4 text-amber-500" />
                                     </div>
                                     <p className="text-sm text-muted-foreground mb-4">
-                                        Bell Service is available with Basic Plus plan. Let customers call for service directly from their table.
+                                        Bell Service is available with Standard plan. Let customers call for service directly from their table.
                                     </p>
                                     <Button 
                                         onClick={() => setShowUpgradeDialog(true)}
                                         className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white"
                                     >
                                         <Sparkles className="h-4 w-4 mr-2" />
-                                        Upgrade to Basic Plus
+                                        Upgrade to Standard
                                     </Button>
                                 </div>
                             </div>
@@ -836,7 +836,7 @@ const RestaurantProfile = ({ restaurantId, onProfileUpdate }: RestaurantProfileP
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                             <Crown className="h-5 w-5 text-amber-500" />
-                            Upgrade to Basic Plus
+                            Upgrade to Standard
                         </DialogTitle>
                         <DialogDescription>
                             Unlock the Bell Calling feature and more benefits.
@@ -851,7 +851,7 @@ const RestaurantProfile = ({ restaurantId, onProfileUpdate }: RestaurantProfileP
                                     <Bell className="h-5 w-5 text-white" />
                                 </div>
                                 <div>
-                                    <h4 className="font-semibold">Basic Plus Features</h4>
+                                    <h4 className="font-semibold">Standard Features</h4>
                                     <p className="text-sm text-muted-foreground">Everything you need</p>
                                 </div>
                             </div>
