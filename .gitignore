@@ -116,6 +116,9 @@ tmp/
 supabase/.branches/
 supabase/.temp/
 
+# Kiro MCP config - contains Supabase access token, never commit!
+.kiro/settings/mcp.json
+
 # Debug files
 debug.log
 *.stackdump
