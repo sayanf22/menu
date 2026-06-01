@@ -732,6 +732,7 @@ export type Database = {
       admin_grant_subscription: {
         Args: {
           p_admin_email: string
+          p_admin_session_token?: string
           p_months: number
           p_plan_id: string
           p_user_id: string
@@ -739,13 +740,18 @@ export type Database = {
         Returns: Json
       }
       admin_revoke_subscription: {
-        Args: { p_admin_email: string; p_user_id: string }
+        Args: {
+          p_admin_email: string
+          p_admin_session_token?: string
+          p_user_id: string
+        }
         Returns: Json
       }
       admin_update_profile_status: {
         Args: {
           disabled_by_email?: string
           is_disabled_value: boolean
+          p_admin_session_token?: string
           profile_id: string
         }
         Returns: Json

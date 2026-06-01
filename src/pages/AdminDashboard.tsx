@@ -158,15 +158,29 @@ const AdminDashboard = () => {
 
     try {
       const adminEmail = localStorage.getItem("admin_email") || "admin";
+      const adminSessionToken = localStorage.getItem("admin_session_token");
+
+      // All admin actions require a valid session token
+      if (!adminSessionToken) {
+        toast.error("Admin session expired. Please login again.");
+        navigate("/adminlogin");
+        return;
+      }
 
       if (actionType === "disable" || actionType === "enable") {
         const isDisabling = actionType === "disable";
-        const { error } = await supabase.rpc("admin_update_profile_status", {
+        const { data, error } = await supabase.rpc("admin_update_profile_status", {
           profile_id: selectedProfile.id,
           is_disabled_value: isDisabling,
           disabled_by_email: isDisabling ? adminEmail : null,
+          p_admin_session_token: adminSessionToken,
         });
         if (error) throw error;
+        const result = data as { success?: boolean; error?: string } | null;
+        if (result && !result.success) {
+          toast.error(result.error || "Failed to update account");
+          return;
+        }
         toast.success(`Account ${isDisabling ? "disabled" : "enabled"} successfully`);
       } else if (actionType === "grant") {
         if (!selectedPlanId) {
@@ -178,6 +192,7 @@ const AdminDashboard = () => {
           p_plan_id: selectedPlanId,
           p_months: grantMonths,
           p_admin_email: adminEmail,
+          p_admin_session_token: adminSessionToken,
         });
         if (error) throw error;
         const result = data as { success?: boolean; error?: string } | null;
@@ -187,20 +202,19 @@ const AdminDashboard = () => {
         }
         toast.success(`Subscription granted for ${grantMonths} month(s)`);
       } else if (actionType === "revoke") {
-        const { error } = await supabase.rpc("admin_revoke_subscription", {
+        const { data, error } = await supabase.rpc("admin_revoke_subscription", {
           p_user_id: selectedProfile.id,
           p_admin_email: adminEmail,
+          p_admin_session_token: adminSessionToken,
         });
         if (error) throw error;
-        toast.success("Subscription revoked successfully");
-      } else if (actionType === "delete") {
-        const adminSessionToken = localStorage.getItem("admin_session_token");
-        if (!adminSessionToken) {
-          toast.error("Admin session expired. Please login again.");
-          navigate("/adminlogin");
+        const result = data as { success?: boolean; error?: string } | null;
+        if (result && !result.success) {
+          toast.error(result.error || "Failed to revoke subscription");
           return;
         }
-        
+        toast.success("Subscription revoked successfully");
+      } else if (actionType === "delete") {
         const { data, error } = await supabase.rpc("admin_delete_user_account", {
           p_user_id: selectedProfile.id,
           p_admin_session_token: adminSessionToken,

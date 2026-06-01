@@ -385,9 +385,11 @@ const MenuView = () => {
       }
       
       // The function returns { has_subscription: boolean, status: string, ... }
+      // Trust the server's has_subscription decision (it already accounts for
+      // active status and valid period end, including admin-granted subscriptions).
       const result = data as { has_subscription?: boolean; status?: string } | null;
       return { 
-        active: result?.has_subscription === true && result?.status === "active",
+        active: result?.has_subscription === true,
         reason: result?.status || "none"
       };
     } catch {
