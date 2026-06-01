@@ -9,7 +9,7 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Eye, EyeOff, Check, Crown, Star, ArrowRight, ArrowLeft, CreditCard } from "lucide-react";
+import { Loader2, Eye, EyeOff, Check, Crown, Star, ArrowRight, ArrowLeft, CreditCard, Shield, User } from "lucide-react";
 import { sanitizeInput, isValidEmail, resetRateLimit, checkRateLimit, RATE_LIMITS, validatePasswordStrength } from "@/lib/security";
 import { useRazorpay } from "@/hooks/useRazorpay";
 
@@ -309,52 +309,54 @@ const Auth = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent/5 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50/40 via-background to-amber-50/30 dark:from-slate-950 dark:via-background dark:to-orange-950/10 p-4">
       <div className="fixed top-4 right-4 z-50">
         <ThemeToggle />
       </div>
 
-      <Card className="w-full max-w-md shadow-xl border-0">
+      <Card className={`w-full shadow-2xl border border-border/50 rounded-3xl transition-all duration-300 ${signUpStep === 'plan' ? 'max-w-lg' : 'max-w-md'}`}>
         <CardHeader className="text-center pb-2">
           <div className="flex items-center justify-center mb-4">
-            <img src="/favicon.png" alt="AddMenu Logo" className="w-14 h-14" />
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-orange-400/30 to-amber-400/30 rounded-2xl blur-lg" />
+              <img src="/favicon.png" alt="AddMenu Logo" className="relative w-14 h-14 rounded-2xl" />
+            </div>
           </div>
-          <CardTitle className="text-2xl font-bold">AddMenu</CardTitle>
+          <CardTitle className="text-2xl font-bold tracking-tight">AddMenu</CardTitle>
           <CardDescription>
             {signUpStep === 'plan' 
-              ? 'Select a plan to continue' 
+              ? 'Pick a plan that fits your business' 
               : 'Create your digital menu'}
           </CardDescription>
         </CardHeader>
         
         <CardContent>
           {signUpStep === 'plan' ? (
-            <div className="space-y-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setSignUpStep('details')}
-                className="mb-2 -ml-2"
-              >
-                <ArrowLeft className="w-4 h-4 mr-1" />
-                Back
-              </Button>
-
-              <div className="bg-muted/50 rounded-lg p-3 mb-4">
-                <p className="text-sm text-center">
-                  <span className="text-muted-foreground">Account: </span>
-                  <span className="font-medium">{signUpData.email}</span>
-                </p>
+            <div className="space-y-5">
+              <div className="flex items-center justify-between">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSignUpStep('details')}
+                  className="-ml-2 text-muted-foreground hover:text-foreground"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-1" />
+                  Back
+                </Button>
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/60 rounded-full px-3 py-1.5">
+                  <User className="w-3 h-3" />
+                  <span className="font-medium text-foreground/80 truncate max-w-[160px]">{signUpData.email}</span>
+                </div>
               </div>
 
-              {/* Billing Toggle */}
-              <div className="flex justify-center mb-4">
-                <div className="inline-flex items-center bg-muted rounded-full p-1">
+              {/* Billing Toggle - segmented control */}
+              <div className="flex justify-center">
+                <div className="inline-flex items-center bg-muted rounded-full p-1 relative">
                   <button
                     onClick={() => setBillingCycle('monthly')}
-                    className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                    className={`relative z-10 px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
                       billingCycle === 'monthly'
-                        ? 'bg-primary text-primary-foreground'
+                        ? 'bg-background text-foreground shadow-sm'
                         : 'text-muted-foreground hover:text-foreground'
                     }`}
                   >
@@ -362,129 +364,149 @@ const Auth = () => {
                   </button>
                   <button
                     onClick={() => setBillingCycle('yearly')}
-                    className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all flex items-center gap-1 ${
+                    className={`relative z-10 px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 flex items-center gap-2 ${
                       billingCycle === 'yearly'
-                        ? 'bg-primary text-primary-foreground'
+                        ? 'bg-background text-foreground shadow-sm'
                         : 'text-muted-foreground hover:text-foreground'
                     }`}
                   >
                     Yearly
-                    <Badge variant="secondary" className="text-[10px] bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-100">-17%</Badge>
+                    <span className="text-[10px] font-semibold bg-green-100 text-green-700 dark:bg-green-900/60 dark:text-green-300 px-1.5 py-0.5 rounded-full">
+                      Save 17%
+                    </span>
                   </button>
                 </div>
               </div>
 
               {loadingPlans ? (
-                <div className="flex justify-center py-8">
-                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                <div className="flex flex-col items-center justify-center py-12 gap-3">
+                  <Loader2 className="h-7 w-7 animate-spin text-primary" />
+                  <p className="text-sm text-muted-foreground">Loading plans...</p>
                 </div>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {plans.map((plan) => {
                     const isStandard = plan.name.toLowerCase() === 'standard' || plan.name.toLowerCase().includes('plus') || plan.plan_tier === 2;
                     const price = billingCycle === 'yearly' ? plan.price_yearly : plan.price_monthly;
+                    const monthlyEquivalent = billingCycle === 'yearly' && plan.price_yearly ? Math.round(plan.price_yearly / 12) : null;
                     const isSelected = selectedPlan === plan.id;
                     const features = (plan.features as string[]) || [];
 
                     return (
                       <div
                         key={plan.id}
-                        className={`relative p-4 rounded-2xl border-2 cursor-pointer transition-all duration-300 hover:shadow-lg ${
+                        className={`relative rounded-2xl border transition-all duration-300 overflow-hidden ${
                           isStandard
-                            ? 'border-primary bg-gradient-to-br from-primary/10 to-accent/5 shadow-md'
-                            : 'border-border hover:border-primary/50 bg-card'
-                        } ${isSelected && paymentLoading ? 'opacity-75' : ''}`}
-                        onClick={() => !paymentLoading && handleSelectPlan(plan.id)}
+                            ? 'border-orange-300 dark:border-orange-700/60 shadow-lg shadow-orange-500/10 ring-1 ring-orange-200/50 dark:ring-orange-800/30'
+                            : 'border-border hover:border-orange-200 dark:hover:border-orange-800/50 hover:shadow-md'
+                        }`}
                       >
                         {isStandard && (
-                          <Badge className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 text-[10px] px-3 shadow-sm">
-                            ⭐ Most Popular
-                          </Badge>
+                          <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[11px] font-semibold text-center py-1 flex items-center justify-center gap-1">
+                            <Star className="w-3 h-3 fill-white" />
+                            MOST POPULAR
+                          </div>
                         )}
 
-                        <div className="flex items-center justify-between mb-3 mt-1">
-                          <div className="flex items-center gap-2.5">
-                            <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${
-                              isStandard ? 'bg-gradient-to-br from-amber-500 to-orange-500' : 'bg-primary/10'
-                            }`}>
-                              {isStandard ? (
-                                <Crown className="w-4 h-4 text-white" />
-                              ) : (
-                                <Star className="w-4 h-4 text-primary" />
+                        <div className="p-5">
+                          <div className="flex items-start justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                              <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                                isStandard ? 'bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-md' : 'bg-primary/10 text-primary'
+                              }`}>
+                                {isStandard ? <Crown className="w-5 h-5" /> : <Star className="w-5 h-5" />}
+                              </div>
+                              <div>
+                                <h3 className="font-bold text-base leading-tight">{plan.name}</h3>
+                                <p className="text-xs text-muted-foreground mt-0.5">
+                                  {plan.max_images} images{plan.bell_feature_enabled ? ' · Bell service' : ''}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="flex items-baseline gap-0.5 justify-end">
+                                <span className="text-2xl font-bold tracking-tight">{formatPrice(price || 0)}</span>
+                                <span className="text-xs text-muted-foreground font-medium">/{billingCycle === 'yearly' ? 'yr' : 'mo'}</span>
+                              </div>
+                              {monthlyEquivalent && (
+                                <p className="text-[11px] text-muted-foreground mt-0.5">≈ {formatPrice(monthlyEquivalent)}/mo</p>
                               )}
                             </div>
-                            <div>
-                              <h3 className="font-bold text-sm">{plan.name}</h3>
-                              <p className="text-xs text-muted-foreground">{plan.max_images} images{plan.bell_feature_enabled ? ' + Bell' : ''}</p>
-                            </div>
                           </div>
-                          <div className="text-right">
-                            <div className="font-bold text-xl">{formatPrice(price || 0)}</div>
-                            <div className="text-[11px] text-muted-foreground">
-                              /{billingCycle === 'yearly' ? 'year' : 'month'}
+
+                          {billingCycle === 'yearly' && plan.price_yearly && (
+                            <div className="flex items-center gap-1.5 text-[11px] text-green-600 dark:text-green-400 font-medium mb-3 bg-green-50 dark:bg-green-950/30 rounded-lg px-2.5 py-1.5">
+                              <Check className="w-3 h-3" />
+                              1 month free — pay for 11, get 12
                             </div>
-                          </div>
-                        </div>
-
-                        {billingCycle === 'yearly' && plan.price_yearly && (
-                          <div className="flex items-center gap-1 text-[11px] text-green-600 dark:text-green-400 font-medium mb-2">
-                            <Check className="w-3 h-3" />
-                            1 month free — pay for 11, get 12
-                          </div>
-                        )}
-
-                        <div className="grid grid-cols-2 gap-1.5 mb-3">
-                          {features.slice(0, 4).map((feature, i) => (
-                            <div key={i} className="flex items-center gap-1 text-xs text-muted-foreground">
-                              <Check className="w-3 h-3 text-green-500 flex-shrink-0" />
-                              <span className="truncate">{feature}</span>
-                            </div>
-                          ))}
-                        </div>
-
-                        <Button
-                          className={`w-full rounded-xl h-10 ${isStandard ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:opacity-90 text-white' : ''}`}
-                          size="sm"
-                          disabled={paymentLoading}
-                        >
-                          {isSelected && paymentLoading ? (
-                            <>
-                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                              Processing...
-                            </>
-                          ) : (
-                            <>
-                              <CreditCard className="w-4 h-4 mr-2" />
-                              Pay & Create Account
-                            </>
                           )}
-                        </Button>
+
+                          <div className="space-y-2 mb-4">
+                            {features.slice(0, 4).map((feature, i) => (
+                              <div key={i} className="flex items-center gap-2 text-xs">
+                                <div className="w-4 h-4 rounded-full bg-green-500/10 flex items-center justify-center flex-shrink-0">
+                                  <Check className="w-2.5 h-2.5 text-green-600 dark:text-green-400" />
+                                </div>
+                                <span className="text-muted-foreground">{feature}</span>
+                              </div>
+                            ))}
+                          </div>
+
+                          <Button
+                            onClick={() => !paymentLoading && handleSelectPlan(plan.id)}
+                            className={`w-full rounded-xl h-11 font-semibold transition-all duration-300 ${
+                              isStandard
+                                ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-md hover:shadow-lg'
+                                : 'bg-foreground text-background hover:bg-foreground/90'
+                            }`}
+                            disabled={paymentLoading}
+                          >
+                            {isSelected && paymentLoading ? (
+                              <>
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                Processing...
+                              </>
+                            ) : (
+                              <>
+                                <CreditCard className="w-4 h-4 mr-2" />
+                                Choose {plan.name}
+                              </>
+                            )}
+                          </Button>
+                        </div>
                       </div>
                     );
                   })}
 
                   {/* Pro plans available on the full platform */}
-                  <div className="rounded-2xl border border-dashed border-border bg-muted/30 p-4 text-center">
-                    <p className="text-xs font-medium mb-1">Need menu categories or full ordering?</p>
-                    <p className="text-[11px] text-muted-foreground mb-3">
-                      Advanced & Premium plans include categories, unlimited items, and order management.
-                    </p>
+                  <div className="rounded-2xl border border-dashed border-border bg-muted/20 p-4 flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center flex-shrink-0">
+                      <ArrowRight className="w-5 h-5 text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold">Need more power?</p>
+                      <p className="text-[11px] text-muted-foreground">Categories, unlimited items & order management</p>
+                    </div>
                     <Button
                       variant="outline"
                       size="sm"
-                      className="rounded-xl text-xs"
+                      className="rounded-xl text-xs flex-shrink-0"
                       onClick={() => window.open('https://addmenu.site/?mode=signup', '_blank')}
                     >
-                      Explore Pro Plans
-                      <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
+                      Pro Plans
                     </Button>
                   </div>
                 </div>
               )}
 
-              <p className="text-xs text-center text-muted-foreground pt-2">
-                🔒 Secure payment via Razorpay • 7-day refund guarantee
-              </p>
+              <div className="flex items-center justify-center gap-4 pt-1 text-[11px] text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <Shield className="w-3 h-3" />
+                  Secure via Razorpay
+                </span>
+                <span className="w-1 h-1 rounded-full bg-muted-foreground/40" />
+                <span>7-day refund guarantee</span>
+              </div>
             </div>
           ) : (
             <Tabs defaultValue={searchParams.get('plan') ? 'signup' : 'signin'} className="w-full">
