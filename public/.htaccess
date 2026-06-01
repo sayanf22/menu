@@ -32,6 +32,8 @@
   Header set X-Frame-Options "SAMEORIGIN"
   Header set X-XSS-Protection "1; mode=block"
   Header set Referrer-Policy "strict-origin-when-cross-origin"
+  # Content Security Policy - allows Supabase, Razorpay (incl. cdn risk-detection), Cloudflare R2
+  Header set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.razorpay.com https://checkout.razorpay.com https://api.razorpay.com https://cdn.razorpay.com https://*.supabase.co; script-src-elem 'self' 'unsafe-inline' https://*.razorpay.com https://checkout.razorpay.com https://api.razorpay.com https://cdn.razorpay.com https://*.supabase.co; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https: http:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.razorpay.com https://api.razorpay.com https://checkout.razorpay.com https://lumberjack.razorpay.com https://cdn.razorpay.com https://*.r2.dev https://*.workers.dev; frame-src 'self' https://*.razorpay.com https://api.razorpay.com https://checkout.razorpay.com; object-src 'none'; base-uri 'self'; form-action 'self';"
 </IfModule>
 
 # Force HTTPS

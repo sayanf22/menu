@@ -389,23 +389,23 @@ const Auth = () => {
                     return (
                       <div
                         key={plan.id}
-                        className={`relative p-4 rounded-xl border-2 cursor-pointer transition-all hover:shadow-md ${
-                          isStandard 
-                            ? 'border-primary bg-primary/5' 
-                            : 'border-border hover:border-primary/50'
+                        className={`relative p-4 rounded-2xl border-2 cursor-pointer transition-all duration-300 hover:shadow-lg ${
+                          isStandard
+                            ? 'border-primary bg-gradient-to-br from-primary/10 to-accent/5 shadow-md'
+                            : 'border-border hover:border-primary/50 bg-card'
                         } ${isSelected && paymentLoading ? 'opacity-75' : ''}`}
                         onClick={() => !paymentLoading && handleSelectPlan(plan.id)}
                       >
                         {isStandard && (
-                          <Badge className="absolute -top-2 right-3 bg-primary text-[10px]">
-                            Bell Feature
+                          <Badge className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 text-[10px] px-3 shadow-sm">
+                            ⭐ Most Popular
                           </Badge>
                         )}
-                        
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-2">
-                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                              isStandard ? 'bg-primary' : 'bg-primary/10'
+
+                        <div className="flex items-center justify-between mb-3 mt-1">
+                          <div className="flex items-center gap-2.5">
+                            <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${
+                              isStandard ? 'bg-gradient-to-br from-amber-500 to-orange-500' : 'bg-primary/10'
                             }`}>
                               {isStandard ? (
                                 <Crown className="w-4 h-4 text-white" />
@@ -414,19 +414,26 @@ const Auth = () => {
                               )}
                             </div>
                             <div>
-                              <h3 className="font-semibold text-sm">{plan.name}</h3>
+                              <h3 className="font-bold text-sm">{plan.name}</h3>
                               <p className="text-xs text-muted-foreground">{plan.max_images} images{plan.bell_feature_enabled ? ' + Bell' : ''}</p>
                             </div>
                           </div>
                           <div className="text-right">
-                            <div className="font-bold text-lg">{formatPrice(price || 0)}</div>
-                            <div className="text-xs text-muted-foreground">
-                              /{billingCycle === 'yearly' ? 'yr' : 'mo'}
+                            <div className="font-bold text-xl">{formatPrice(price || 0)}</div>
+                            <div className="text-[11px] text-muted-foreground">
+                              /{billingCycle === 'yearly' ? 'year' : 'month'}
                             </div>
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-1 mb-3">
+                        {billingCycle === 'yearly' && plan.price_yearly && (
+                          <div className="flex items-center gap-1 text-[11px] text-green-600 dark:text-green-400 font-medium mb-2">
+                            <Check className="w-3 h-3" />
+                            1 month free — pay for 11, get 12
+                          </div>
+                        )}
+
+                        <div className="grid grid-cols-2 gap-1.5 mb-3">
                           {features.slice(0, 4).map((feature, i) => (
                             <div key={i} className="flex items-center gap-1 text-xs text-muted-foreground">
                               <Check className="w-3 h-3 text-green-500 flex-shrink-0" />
@@ -436,7 +443,7 @@ const Auth = () => {
                         </div>
 
                         <Button
-                          className={`w-full ${isStandard ? '' : 'bg-primary/90'}`}
+                          className={`w-full rounded-xl h-10 ${isStandard ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:opacity-90 text-white' : ''}`}
                           size="sm"
                           disabled={paymentLoading}
                         >
@@ -455,6 +462,23 @@ const Auth = () => {
                       </div>
                     );
                   })}
+
+                  {/* Pro plans available on the full platform */}
+                  <div className="rounded-2xl border border-dashed border-border bg-muted/30 p-4 text-center">
+                    <p className="text-xs font-medium mb-1">Need menu categories or full ordering?</p>
+                    <p className="text-[11px] text-muted-foreground mb-3">
+                      Advanced & Premium plans include categories, unlimited items, and order management.
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="rounded-xl text-xs"
+                      onClick={() => window.open('https://addmenu.site/?mode=signup', '_blank')}
+                    >
+                      Explore Pro Plans
+                      <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
+                    </Button>
+                  </div>
                 </div>
               )}
 
