@@ -396,6 +396,7 @@ export type Database = {
           id: string
           is_disabled: boolean | null
           logo_url: string | null
+          menu_display_mode: string | null
           restaurant_description: string | null
           restaurant_name: string
           updated_at: string | null
@@ -414,6 +415,7 @@ export type Database = {
           id: string
           is_disabled?: boolean | null
           logo_url?: string | null
+          menu_display_mode?: string | null
           restaurant_description?: string | null
           restaurant_name: string
           updated_at?: string | null
@@ -432,6 +434,7 @@ export type Database = {
           id?: string
           is_disabled?: boolean | null
           logo_url?: string | null
+          menu_display_mode?: string | null
           restaurant_description?: string | null
           restaurant_name?: string
           updated_at?: string | null

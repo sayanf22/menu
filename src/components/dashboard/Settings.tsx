@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Loader2, Save, Edit, Upload, X, Bell, BellOff, Crown, Lock, KeyRound, Eye, EyeOff, Phone, PhoneOff, User, Shield } from "lucide-react";
+import { Loader2, Save, Edit, Upload, X, Bell, BellOff, Crown, Lock, KeyRound, Eye, EyeOff, Phone, PhoneOff, User, Shield, LayoutGrid, GalleryHorizontal, Layers, Check } from "lucide-react";
 import { compressImage, COMPRESSION_PRESETS, getCompressionStats } from "@/lib/image-compression";
 import { useRazorpay } from "@/hooks/useRazorpay";
 import { checkRateLimit, RATE_LIMITS, validatePasswordStrength } from "@/lib/security";
@@ -54,7 +54,9 @@ const Settings = ({ restaurantId, onProfileUpdate }: SettingsProps) => {
     call_service_enabled: false,
     call_phone_number: "",
     business_type: "restaurant" as "hotel" | "restaurant",
+    menu_display_mode: "scroll" as "scroll" | "swipe" | "story",
   });
+  const [displayModeSaving, setDisplayModeSaving] = useState(false);
   
   const [bellServiceSaving, setBellServiceSaving] = useState(false);
   const [callServiceSaving, setCallServiceSaving] = useState(false);
@@ -132,7 +134,7 @@ const Settings = ({ restaurantId, onProfileUpdate }: SettingsProps) => {
     try {
       const { data, error } = await supabase
         .from("profiles")
-        .select("restaurant_name, restaurant_description, logo_url, bell_service_enabled, call_service_enabled, call_phone_number, business_type")
+        .select("restaurant_name, restaurant_description, logo_url, bell_service_enabled, call_service_enabled, call_phone_number, business_type, menu_display_mode")
         .eq("id", restaurantId)
         .single();
 
@@ -148,6 +150,7 @@ const Settings = ({ restaurantId, onProfileUpdate }: SettingsProps) => {
           call_service_enabled: profileData.call_service_enabled === true,
           call_phone_number: profileData.call_phone_number as string || "",
           business_type: (profileData.business_type as "hotel" | "restaurant") || "restaurant",
+          menu_display_mode: (profileData.menu_display_mode as "scroll" | "swipe" | "story") || "scroll",
         });
         if (profileData.logo_url) {
           setLogoPreview(profileData.logo_url as string);
@@ -359,6 +362,31 @@ const Settings = ({ restaurantId, onProfileUpdate }: SettingsProps) => {
       toast.error("Failed to update call service setting");
     } finally {
       setCallServiceSaving(false);
+    }
+  };
+
+  const handleDisplayModeChange = async (mode: "scroll" | "swipe" | "story") => {
+    if (mode === profile.menu_display_mode) return;
+    setDisplayModeSaving(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ menu_display_mode: mode })
+        .eq("id", restaurantId);
+
+      if (error) throw error;
+
+      setProfile(prev => ({ ...prev, menu_display_mode: mode }));
+      toast.success("Menu display style updated");
+
+      if (onProfileUpdate) {
+        onProfileUpdate({ ...profile, menu_display_mode: mode });
+      }
+    } catch (error) {
+      console.error("Error updating display mode:", error);
+      toast.error("Failed to update display style");
+    } finally {
+      setDisplayModeSaving(false);
     }
   };
 
@@ -604,6 +632,79 @@ const Settings = ({ restaurantId, onProfileUpdate }: SettingsProps) => {
                   <p className="text-sm">{profile.restaurant_description || "Not provided"}</p>
                 </div>
               </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Menu Display Style Section */}
+      <Card>
+        <CardHeader className="pb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center">
+              <LayoutGrid className="h-5 w-5 text-purple-500" />
+            </div>
+            <div>
+              <CardTitle>Menu Display Style</CardTitle>
+              <CardDescription>Choose how customers view your menu</CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid sm:grid-cols-3 gap-3">
+            {([
+              {
+                mode: "scroll" as const,
+                icon: LayoutGrid,
+                title: "Scroll",
+                desc: "Classic vertical list. Customers scroll through pages top to bottom.",
+              },
+              {
+                mode: "swipe" as const,
+                icon: GalleryHorizontal,
+                title: "Swipe",
+                desc: "Instagram-style. Swipe left/right through menu pages one at a time.",
+              },
+              {
+                mode: "story" as const,
+                icon: Layers,
+                title: "Story",
+                desc: "WhatsApp status-style. Fullscreen with tap navigation and progress bar.",
+              },
+            ]).map(({ mode, icon: Icon, title, desc }) => {
+              const active = profile.menu_display_mode === mode;
+              return (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => handleDisplayModeChange(mode)}
+                  disabled={displayModeSaving}
+                  className={`relative text-left p-4 rounded-2xl border-2 transition-all duration-300 hover:shadow-md disabled:opacity-60 ${
+                    active
+                      ? "border-purple-500 bg-purple-500/5 shadow-sm"
+                      : "border-border hover:border-purple-300"
+                  }`}
+                >
+                  {active && (
+                    <span className="absolute top-3 right-3 w-5 h-5 rounded-full bg-purple-500 flex items-center justify-center">
+                      <Check className="w-3 h-3 text-white" />
+                    </span>
+                  )}
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 ${
+                    active ? "bg-purple-500 text-white" : "bg-muted text-muted-foreground"
+                  }`}>
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <p className="font-semibold text-sm mb-1">{title}</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{desc}</p>
+                </button>
+              );
+            })}
+          </div>
+          {displayModeSaving && (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground mt-3">
+              <Loader2 className="h-3 w-3 animate-spin" />
+              Saving...
             </div>
           )}
         </CardContent>
@@ -907,7 +1008,7 @@ const Settings = ({ restaurantId, onProfileUpdate }: SettingsProps) => {
                 <span>Bell Calling Feature</span>
               </div>
               <div className="flex items-center gap-2 text-sm">
-                <span className="h-4 w-4 flex items-center justify-center text-primary font-medium">10</span>
+                <span className="h-4 w-4 flex items-center justify-center text-primary font-medium">15</span>
                 <span>Menu Image Uploads</span>
               </div>
               <div className="flex items-center gap-2 text-sm">

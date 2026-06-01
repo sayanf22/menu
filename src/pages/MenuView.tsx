@@ -8,9 +8,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { toast } from "sonner";
-import { Star, Loader2, X, ChevronDown, Send, MessageSquare, UtensilsCrossed, Coffee, Pizza, Salad } from "lucide-react";
+import { Star, Loader2, X, ChevronDown, ChevronLeft, ChevronRight, Send, MessageSquare, UtensilsCrossed, Coffee, Pizza, Salad } from "lucide-react";
 import { generateDeviceFingerprint } from "@/lib/deviceFingerprint";
-import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
+import { motion, AnimatePresence, useScroll, useTransform, type PanInfo } from "framer-motion";
 import { BellButton } from "@/components/BellButton";
 import { CallButton } from "@/components/CallButton";
 import SessionExpired from "./SessionExpired";
@@ -167,6 +167,221 @@ const MenuCard = memo(({ image, index, onClick }: { image: MenuImage; index: num
 });
 MenuCard.displayName = "MenuCard";
 
+// Swipe menu view - Instagram-style horizontal carousel
+const SwipeMenuView = memo(({ images, onZoom }: { images: MenuImage[]; onZoom: (url: string, index: number) => void }) => {
+  const [current, setCurrent] = useState(0);
+  const [direction, setDirection] = useState(0);
+
+  const paginate = (newDirection: number) => {
+    const next = current + newDirection;
+    if (next < 0 || next >= images.length) return;
+    setDirection(newDirection);
+    setCurrent(next);
+  };
+
+  const handleDragEnd = (_e: unknown, info: PanInfo) => {
+    const swipeThreshold = 50;
+    if (info.offset.x < -swipeThreshold) paginate(1);
+    else if (info.offset.x > swipeThreshold) paginate(-1);
+  };
+
+  const variants = {
+    enter: (dir: number) => ({ x: dir > 0 ? 300 : -300, opacity: 0 }),
+    center: { x: 0, opacity: 1 },
+    exit: (dir: number) => ({ x: dir > 0 ? -300 : 300, opacity: 0 }),
+  };
+
+  return (
+    <div className="w-full">
+      <div className="relative w-full overflow-hidden rounded-2xl sm:rounded-3xl bg-white dark:bg-slate-900 border-2 border-orange-200/40 dark:border-orange-800/30 shadow-lg">
+        <div className="relative aspect-[3/4] sm:aspect-[4/5]">
+          <AnimatePresence initial={false} custom={direction} mode="popLayout">
+            <motion.div
+              key={current}
+              custom={direction}
+              variants={variants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ x: { type: "spring", stiffness: 300, damping: 30 }, opacity: { duration: 0.2 } }}
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.7}
+              onDragEnd={handleDragEnd}
+              className="absolute inset-0 flex items-center justify-center cursor-grab active:cursor-grabbing"
+            >
+              <img
+                src={images[current].image_url}
+                alt={`Menu page ${current + 1}`}
+                className="w-full h-full object-contain select-none"
+                draggable={false}
+                onClick={() => onZoom(images[current].image_url, current)}
+              />
+            </motion.div>
+          </AnimatePresence>
+
+          {/* Page badge */}
+          <div className="absolute top-3 right-3 z-10 bg-gradient-to-br from-orange-500 to-amber-500 text-white text-sm font-bold px-3.5 py-1.5 rounded-full shadow-lg ring-2 ring-white/50">
+            {current + 1} / {images.length}
+          </div>
+
+          {/* Nav arrows */}
+          {current > 0 && (
+            <button
+              onClick={() => paginate(-1)}
+              aria-label="Previous"
+              className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 flex items-center justify-center rounded-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm text-orange-600 dark:text-orange-400 shadow-md hover:bg-white dark:hover:bg-slate-800 transition-colors"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+          )}
+          {current < images.length - 1 && (
+            <button
+              onClick={() => paginate(1)}
+              aria-label="Next"
+              className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 flex items-center justify-center rounded-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm text-orange-600 dark:text-orange-400 shadow-md hover:bg-white dark:hover:bg-slate-800 transition-colors"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Dot indicators */}
+      <div className="flex items-center justify-center gap-1.5 mt-4 flex-wrap">
+        {images.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => { setDirection(i > current ? 1 : -1); setCurrent(i); }}
+            aria-label={`Go to page ${i + 1}`}
+            className={`h-2 rounded-full transition-all duration-300 ${
+              i === current ? "w-6 bg-gradient-to-r from-orange-500 to-amber-500" : "w-2 bg-orange-200 dark:bg-orange-900"
+            }`}
+          />
+        ))}
+      </div>
+      <p className="text-center text-xs text-muted-foreground mt-3">Swipe or tap arrows to browse · Tap image to zoom</p>
+    </div>
+  );
+});
+SwipeMenuView.displayName = "SwipeMenuView";
+
+// Story menu view - WhatsApp/Instagram status-style fullscreen with progress bars
+const StoryMenuView = memo(({ images, onClose }: { images: MenuImage[]; onClose: () => void }) => {
+  const [current, setCurrent] = useState(0);
+  const [direction, setDirection] = useState(0);
+
+  const goTo = useCallback((newDirection: number) => {
+    setCurrent((prev) => {
+      const next = prev + newDirection;
+      if (next < 0) return 0;
+      if (next >= images.length) return prev;
+      setDirection(newDirection);
+      return next;
+    });
+  }, [images.length]);
+
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "ArrowRight") goTo(1);
+      if (e.key === "ArrowLeft") goTo(-1);
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [goTo, onClose]);
+
+  const handleTap = (e: React.MouseEvent<HTMLDivElement>) => {
+    const { clientX, currentTarget } = e;
+    const { left, width } = currentTarget.getBoundingClientRect();
+    const x = clientX - left;
+    if (x < width * 0.35) goTo(-1);
+    else goTo(1);
+  };
+
+  const handleDragEnd = (_e: unknown, info: PanInfo) => {
+    if (info.offset.x < -50) goTo(1);
+    else if (info.offset.x > 50) goTo(-1);
+  };
+
+  const variants = {
+    enter: (dir: number) => ({ x: dir > 0 ? 200 : -200, opacity: 0 }),
+    center: { x: 0, opacity: 1 },
+    exit: (dir: number) => ({ x: dir > 0 ? -200 : 200, opacity: 0 }),
+  };
+
+  return (
+    <div className="fixed inset-0 z-[90] bg-black flex flex-col">
+      {/* Progress bars */}
+      <div className="flex gap-1 p-2 pt-3 sm:p-3 z-20">
+        {images.map((_, i) => (
+          <div key={i} className="flex-1 h-1 rounded-full bg-white/30 overflow-hidden">
+            <div
+              className={`h-full rounded-full bg-white transition-all duration-300 ${
+                i < current ? "w-full" : i === current ? "w-full" : "w-0"
+              }`}
+            />
+          </div>
+        ))}
+      </div>
+
+      {/* Close button */}
+      <button
+        onClick={onClose}
+        aria-label="Close"
+        className="absolute top-3 right-3 z-30 w-9 h-9 flex items-center justify-center rounded-full bg-white/15 hover:bg-white/25 text-white transition-colors"
+      >
+        <X className="h-5 w-5" />
+      </button>
+
+      {/* Image area */}
+      <div className="flex-1 relative overflow-hidden" onClick={handleTap}>
+        <AnimatePresence initial={false} custom={direction} mode="popLayout">
+          <motion.div
+            key={current}
+            custom={direction}
+            variants={variants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{ x: { type: "spring", stiffness: 300, damping: 30 }, opacity: { duration: 0.2 } }}
+            drag="x"
+            dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={0.7}
+            onDragEnd={handleDragEnd}
+            className="absolute inset-0 flex items-center justify-center px-2"
+          >
+            <img
+              src={images[current].image_url}
+              alt={`Menu page ${current + 1}`}
+              className="max-w-full max-h-full object-contain select-none"
+              draggable={false}
+            />
+          </motion.div>
+        </AnimatePresence>
+
+        {/* Tap hint zones (visual arrows on larger screens) */}
+        {current > 0 && (
+          <div className="hidden sm:flex absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 items-center justify-center rounded-full bg-white/15 text-white pointer-events-none">
+            <ChevronLeft className="h-5 w-5" />
+          </div>
+        )}
+        {current < images.length - 1 && (
+          <div className="hidden sm:flex absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 items-center justify-center rounded-full bg-white/15 text-white pointer-events-none">
+            <ChevronRight className="h-5 w-5" />
+          </div>
+        )}
+      </div>
+
+      {/* Footer counter */}
+      <div className="p-3 text-center z-20">
+        <p className="text-white/70 text-xs">{current + 1} of {images.length} · Tap right/left to navigate</p>
+      </div>
+    </div>
+  );
+});
+StoryMenuView.displayName = "StoryMenuView";
+
 // Empty menu state - simple
 const EmptyMenuState = memo(() => {
   return (
@@ -216,6 +431,7 @@ interface RestaurantProfile {
   bell_service_enabled?: boolean;
   call_service_enabled?: boolean;
   call_phone_number?: string;
+  menu_display_mode?: "scroll" | "swipe" | "story";
   disabled?: boolean;
   subscriptionExpired?: boolean;
   subscriptionReason?: string;
@@ -257,6 +473,7 @@ const MenuView = () => {
   const [sessionExpired, setSessionExpired] = useState<{ expired: boolean; reason?: string; message?: string }>({ expired: false });
   const [sessionRestaurantId, setSessionRestaurantId] = useState<string | null>(null);
   const [bellFeatureEnabled, setBellFeatureEnabled] = useState(false);
+  const [storyOpen, setStoryOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll();
   const headerOpacity = useTransform(scrollYProgress, [0, 0.03], [0, 1]);
@@ -411,7 +628,7 @@ const MenuView = () => {
       setBellFeatureEnabled(bellAccess === true);
       
       const [profileResult, imagesResult, socialResult] = await Promise.all([
-        supabase.from("profiles").select("restaurant_name, restaurant_description, logo_url, is_disabled, bell_service_enabled, call_service_enabled, call_phone_number").eq("id", restaurantId).maybeSingle(),
+        supabase.from("profiles").select("restaurant_name, restaurant_description, logo_url, is_disabled, bell_service_enabled, call_service_enabled, call_phone_number, menu_display_mode").eq("id", restaurantId).maybeSingle(),
         supabase.from("menu_images").select("*").eq("restaurant_id", restaurantId).order("display_order", { ascending: true }),
         supabase.from("social_links").select("*").eq("restaurant_id", restaurantId).maybeSingle()
       ]);
@@ -427,6 +644,7 @@ const MenuView = () => {
           bell_service_enabled: profileResult.data.bell_service_enabled,
           call_service_enabled: profileResult.data.call_service_enabled,
           call_phone_number: profileResult.data.call_phone_number,
+          menu_display_mode: (profileResult.data.menu_display_mode as "scroll" | "swipe" | "story") || "scroll",
           disabled: isDisabled,
           subscriptionExpired: isDisabled ? !subscriptionCheck.active : undefined,
           subscriptionReason: isDisabled ? subscriptionCheck.reason : undefined,
@@ -452,7 +670,7 @@ const MenuView = () => {
       setBellFeatureEnabled(bellAccess === true);
       
       const [profileResult, imagesResult, socialResult] = await Promise.all([
-        supabase.from("profiles").select("restaurant_name, restaurant_description, logo_url, is_disabled, bell_service_enabled, call_service_enabled, call_phone_number").eq("id", restId).maybeSingle(),
+        supabase.from("profiles").select("restaurant_name, restaurant_description, logo_url, is_disabled, bell_service_enabled, call_service_enabled, call_phone_number, menu_display_mode").eq("id", restId).maybeSingle(),
         supabase.from("menu_images").select("*").eq("restaurant_id", restId).order("display_order", { ascending: true }),
         supabase.from("social_links").select("*").eq("restaurant_id", restId).maybeSingle()
       ]);
@@ -468,6 +686,7 @@ const MenuView = () => {
           bell_service_enabled: profileResult.data.bell_service_enabled,
           call_service_enabled: profileResult.data.call_service_enabled,
           call_phone_number: profileResult.data.call_phone_number,
+          menu_display_mode: (profileResult.data.menu_display_mode as "scroll" | "swipe" | "story") || "scroll",
           disabled: isDisabled,
           subscriptionExpired: isDisabled ? !subscriptionCheck.active : undefined,
           subscriptionReason: isDisabled ? subscriptionCheck.reason : undefined,
@@ -689,21 +908,66 @@ const handleSubmitFeedback = async (e: React.FormEvent) => {
 
       {/* Main Content */}
       <main className="max-w-2xl mx-auto px-3 sm:px-4 pb-6 sm:pb-8 relative z-10">
-        {/* Menu Images */}
-        <div className="space-y-4 sm:space-y-5">
-          {menuImages.length > 0 ? (
-            menuImages.map((image, index) => (
-              <MenuCard
-                key={image.id}
-                image={image}
-                index={index}
-                onClick={() => openZoom(image.image_url, index)}
-              />
-            ))
+        {/* Menu Images - rendered based on owner's chosen display mode */}
+        {menuImages.length > 0 ? (
+          profile?.menu_display_mode === "swipe" ? (
+            <SwipeMenuView images={menuImages} onZoom={openZoom} />
+          ) : profile?.menu_display_mode === "story" ? (
+            <div className="space-y-4">
+              <motion.button
+                onClick={() => setStoryOpen(true)}
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
+                className="w-full overflow-hidden rounded-2xl sm:rounded-3xl bg-white dark:bg-slate-900 border-2 border-orange-200/40 dark:border-orange-800/30 shadow-lg relative group"
+              >
+                <div className="relative aspect-[16/10]">
+                  <img
+                    src={menuImages[0].image_url}
+                    alt="Menu cover"
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
+                    <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-3 ring-2 ring-white/50 group-hover:scale-110 transition-transform">
+                      <ChevronRight className="w-8 h-8" />
+                    </div>
+                    <p className="font-bold text-lg">View Menu</p>
+                    <p className="text-sm text-white/80">{menuImages.length} pages · Tap to start</p>
+                  </div>
+                </div>
+              </motion.button>
+              <div className="grid grid-cols-4 gap-2">
+                {menuImages.slice(0, 8).map((image, index) => (
+                  <button
+                    key={image.id}
+                    onClick={() => { setStoryOpen(true); }}
+                    className="relative aspect-square rounded-lg overflow-hidden border border-orange-200/40 dark:border-orange-800/30"
+                  >
+                    <img src={image.image_url} alt={`Page ${index + 1}`} className="w-full h-full object-cover" />
+                    {index === 7 && menuImages.length > 8 && (
+                      <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white text-sm font-semibold">
+                        +{menuImages.length - 8}
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
           ) : (
-            <EmptyMenuState />
-          )}
-        </div>
+            <div className="space-y-4 sm:space-y-5">
+              {menuImages.map((image, index) => (
+                <MenuCard
+                  key={image.id}
+                  image={image}
+                  index={index}
+                  onClick={() => openZoom(image.image_url, index)}
+                />
+              ))}
+            </div>
+          )
+        ) : (
+          <EmptyMenuState />
+        )}
 
 
         {/* Social Links */}
@@ -832,6 +1096,13 @@ const handleSubmitFeedback = async (e: React.FormEvent) => {
 
       {/* Bell Button - Call Waiter (only show if bell feature is enabled in subscription AND profile) */}
       {effectiveRestaurantId && bellFeatureEnabled && profile?.bell_service_enabled !== false && <BellButton restaurantId={effectiveRestaurantId} />}
+      
+      {/* Story mode fullscreen viewer */}
+      <AnimatePresence>
+        {storyOpen && menuImages.length > 0 && (
+          <StoryMenuView images={menuImages} onClose={() => setStoryOpen(false)} />
+        )}
+      </AnimatePresence>
       
       {/* Call Button - Direct call to restaurant (only show if call service is enabled AND phone number exists) */}
       {profile?.call_service_enabled && profile?.call_phone_number && <CallButton phoneNumber={profile.call_phone_number} />}
